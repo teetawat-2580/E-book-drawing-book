@@ -120,7 +120,7 @@ async function initDb() {
     try {
         const connection = await pool.getConnection();
         
-        // Ensure books table exists
+        // Ensure books table exists with LONGTEXT columns for Base64 Data URIs
         await connection.query(`
             CREATE TABLE IF NOT EXISTS books (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -128,12 +128,12 @@ async function initDb() {
                 author_id INT DEFAULT 1,
                 description TEXT,
                 price DECIMAL(10, 2) NOT NULL,
-                cover_image_url VARCHAR(255),
-                file_path VARCHAR(255),
+                cover_image_url LONGTEXT,
+                file_path LONGTEXT,
                 category VARCHAR(255) DEFAULT 'สมุดระบายสี',
                 author_name VARCHAR(255) DEFAULT '',
                 publisher VARCHAR(255) DEFAULT '',
-                sample_file_path VARCHAR(255) DEFAULT '',
+                sample_file_path LONGTEXT,
                 file_type VARCHAR(100) DEFAULT 'pdf',
                 pages_count VARCHAR(100) DEFAULT '',
                 original_price DECIMAL(10, 2) DEFAULT NULL,
