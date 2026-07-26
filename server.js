@@ -31,7 +31,8 @@ const CATEGORIES = [
     { id: 'นิทานเด็ก AI', name: 'นิทานเด็ก AI', icon: '📚' }
 ];
 
-// Set EJS as templating engine
+// Set EJS as templating engine and set explicit views directory for Vercel Serverless
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -70,11 +71,16 @@ const upload = multer({ storage: storage });
 let pool;
 if (process.env.DATABASE_URL) {
     console.log("Connecting to Cloud Database using process.env.DATABASE_URL...");
+    
+    // Clean up query parameters like ?ssl-mode=REQUIRED which mysql2 does not recognize
+    let cleanDbUrl = process.env.DATABASE_URL.trim().split('?')[0];
+
     pool = mysql.createPool({
-        uri: process.env.DATABASE_URL,
+        uri: cleanDbUrl,
         ssl: { rejectUnauthorized: false }, // Required for Aiven MySQL SSL connections
         waitForConnections: true,
         connectionLimit: 10,
+        connectTimeout: 10000,
         queueLimit: 0
     });
 } else {
