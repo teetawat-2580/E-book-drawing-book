@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Batch Edit & Batch Input</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; color: #333; }
+        .batch-container { max-width: 1300px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin: auto; }
+        h2 { color: #00b140; margin-top: 0; font-size: 22px; border-bottom: 2px solid #e6f7ec; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-nav { background: #f0f2f5; color: #444; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold; }
+        .btn-nav:hover { background: #e4e6eb; }
+        
+        .alert { padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: 500; }
+        .alert-success { background: #e6f7ec; border: 1px solid #b7edc9; color: #2e7d32; }
+        .alert-error { background: #fff2f0; border: 1px solid #ffccc7; color: #d90429; }
+
+        /* Tabs */
+        .tabs { display: flex; border-bottom: 2px solid #edf0f2; margin-bottom: 20px; gap: 5px; }
+        .tab-btn { padding: 12px 20px; border: none; background: none; font-size: 15px; font-weight: bold; color: #777; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .tab-btn.active { color: #00b140; border-bottom-color: #00b140; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        textarea { width: 100%; height: 260px; font-family: monospace; font-size: 13.5px; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; background: #fafafa; }
+        
+        .btn-primary { background-color: #00b140; color: white; border: none; padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 15px; transition: background 0.2s; }
+        .btn-primary:hover { background-color: #009635; }
+
+        .btn-secondary { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-bottom: 12px; }
+        .btn-secondary:hover { background-color: #bae6fd; }
+
+        /* Full Width Interactive Table with Scroll */
+        .table-responsive { overflow-x: auto; max-width: 100%; border: 1px solid #e1e8ed; border-radius: 8px; margin-top: 10px; max-height: 550px; overflow-y: auto; }
+        .table-batch { width: 100%; border-collapse: collapse; min-width: 1600px; }
+        .table-batch th { position: sticky; top: 0; background: #00b140; color: white; padding: 10px; font-size: 12.5px; font-weight: bold; border: 1px solid #009635; z-index: 10; text-align: left; }
+        .table-batch td { border: 1px solid #e1e8ed; padding: 6px; font-size: 12px; background: white; vertical-align: top; }
+        .table-batch tr:nth-child(even) td { background: #fafafa; }
+        .table-batch input, .table-batch select, .table-batch textarea { width: 100%; padding: 5px 7px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 12px; font-family: inherit; }
+        .table-batch textarea { height: 35px; resize: vertical; }
+
+        .hint-box { background: #f8fafc; border-left: 4px solid #0284c7; padding: 12px; border-radius: 4px; margin-bottom: 15px; font-size: 13px; color: #334155; }
+    </style>
+</head>
+<body>
+
+    <div class="batch-container">
+        <h2>
+            <span>⚡ ระบบ Batch Upload & Batch Edit (Admin Only)</span>
+            <div>
+                <a href="/admin/manage" class="btn-nav">← จัดการหนังสือ</a>
+                <a href="/admin/upload" class="btn-nav">➕ อัปโหลดรายเล่ม</a>
+            </div>
+        </h2>
+
+        <% if (successMessage) { %>
+            <div class="alert alert-success">✅ <%= successMessage %></div>
+        <% } %>
+        <% if (errorMessage) { %>
+            <div class="alert alert-error">⚠️ <%= errorMessage %></div>
+        <% } %>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('visualTab', this)">✏️ Interactive Table Input & Batch Edit Mode</button>
+            <button class="tab-btn" onclick="switchTab('jsonTab', this)">📄 JSON Batch Import</button>
+            <button class="tab-btn" onclick="switchTab('sqlTab', this)">⚡ SQL Code Batch Execution</button>
+        </div>
+
+        <!-- Tab 1: Interactive Table Input & Edit Mode (Whole Details) -->
+        <div id="visualTab" class="tab-content active">
+            <div class="hint-box">
+                🛠️ <strong>Batch Edit Mode (เฉพาะ Admin):</strong> แก้ไขรายละเอียดหนังสือทุกเล่มในระบบได้พร้อมกัน สามารถแก้ไข ชื่อ, ผู้แต่ง, สำนักพิมพ์, หมวดหมู่, ราคา, ราคาปกติ, ความยาว, รูปปก (`/uploads/covers/...`), ไฟล์ PDF เต็ม (`/uploads/books/...`), ไฟล์ตัวอย่าง (`/uploads/samples/...`) และกด <strong>"บันทึก Batch Edit ทั้งหมด"</strong>
+            </div>
+
+            <form action="/admin/batch-update" method="POST" id="visualBatchForm">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <button type="button" class="btn-secondary" onclick="addTableRow()">➕ เพิ่มหนังสือเล่มใหม่ (Add New Row)</button>
+                    <span style="font-size:13px; color:#666;">มีทั้งหมด <strong><%= books ? books.length : 0 %></strong> รายการในตาราง</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table-batch" id="batchTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 45px;">ID</th>
+                                <th style="width: 140px;">ชื่อหนังสือ (Title)</th>
+                                <th style="width: 100px;">ผู้แต่ง (Author)</th>
+                                <th style="width: 110px;">สำนักพิมพ์ (Publisher)</th>
+                                <th style="width: 120px;">หมวดหมู่ (Category)</th>
+                                <th style="width: 75px;">ราคาขาย</th>
+                                <th style="width: 75px;">ราคาปกติ</th>
+                                <th style="width: 100px;">ความยาว/หน้า</th>
+                                <th style="width: 80px;">ประเภทไฟล์</th>
+                                <th style="width: 85px;">ป้ายกำกับ</th>
+                                <th style="width: 130px;">🖼️ Cover Path</th>
+                                <th style="width: 130px;">📖 Book PDF Path</th>
+                                <th style="width: 130px;">📄 Sample PDF Path</th>
+                                <th style="width: 150px;">รายละเอียด (Description)</th>
+                                <th style="width: 45px;">ลบ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <% if (books && books.length > 0) { %>
+                                <% books.forEach(book => { %>
+                                    <tr>
+                                        <td>
+                                            <input type="text" class="v-id" value="<%= book.id %>" readonly style="background:#eee; text-align:center; font-weight:bold;">
+                                        </td>
+                                        <td><input type="text" class="v-title" value="<%= book.title %>" required></td>
+                                        <td><input type="text" class="v-author" value="<%= book.author_name || '' %>"></td>
+                                        <td><input type="text" class="v-publisher" value="<%= book.publisher || '' %>"></td>
+                                        <td>
+                                            <select class="v-category">
+                                                <option value="สมุดระบายสี" <%= book.category === 'สมุดระบายสี' ? 'selected' : '' %>>สมุดระบายสี</option>
+                                                <option value="รับทำรูปโปรไฟล์" <%= book.category === 'รับทำรูปโปรไฟล์' ? 'selected' : '' %>>รับทำรูปโปรไฟล์</option>
+                                                <option value="ชีทฝึกเขียน" <%= book.category === 'ชีทฝึกเขียน' ? 'selected' : '' %>>ชีทฝึกเขียน</option>
+                                                <option value="ฉากไลฟ์สด" <%= book.category === 'ฉากไลฟ์สด' ? 'selected' : '' %>>ฉากไลฟ์สด</option>
+                                                <option value="แฟลชการ์ด 2 ภาษา" <%= book.category === 'แฟลชการ์ด 2 ภาษา' ? 'selected' : '' %>>แฟลชการ์ด 2 ภาษา</option>
+                                                <option value="เกมฝึกสมองเด็ก" <%= book.category === 'เกมฝึกสมองเด็ก' ? 'selected' : '' %>>เกมฝึกสมองเด็ก</option>
+                                                <option value="รูปชุดข้าราชการ" <%= book.category === 'รูปชุดข้าราชการ' ? 'selected' : '' %>>รูปชุดข้าราชการ</option>
+                                                <option value="สื่อครูตกแต่งห้องเรียน" <%= book.category === 'สื่อครูตกแต่งห้องเรียน' ? 'selected' : '' %>>สื่อครูตกแต่งห้องเรียน</option>
+                                                <option value="ชีทคณิตอนุบาล ป.1" <%= book.category === 'ชีทคณิตอนุบาล ป.1' ? 'selected' : '' %>>ชีทคณิตอนุบาล ป.1</option>
+                                                <option value="นิทานเด็ก AI" <%= book.category === 'นิทานเด็ก AI' ? 'selected' : '' %>>นิทานเด็ก AI</option>
+                                            </select>
+                                        </td>
+                                        <td><input type="number" step="0.01" class="v-price" value="<%= book.price %>" required></td>
+                                        <td><input type="number" step="0.01" class="v-original-price" value="<%= book.original_price || '' %>"></td>
+                                        <td><input type="text" class="v-pages" value="<%= book.pages_count || '' %>"></td>
+                                        <td><input type="text" class="v-file-type" value="<%= book.file_type || 'pdf' %>"></td>
+                                        <td><input type="text" class="v-badge" value="<%= book.badge || '' %>"></td>
+                                        <td><input type="text" class="v-cover" value="<%= book.cover_image_url || '' %>" placeholder="/uploads/covers/..."></td>
+                                        <td><input type="text" class="v-book-file" value="<%= book.file_path || '' %>" placeholder="/uploads/books/..."></td>
+                                        <td><input type="text" class="v-sample-file" value="<%= book.sample_file_path || '' %>" placeholder="/uploads/samples/..."></td>
+                                        <td><textarea class="v-description"><%= book.description || '' %></textarea></td>
+                                        <td style="text-align:center;"><button type="button" style="color:red; cursor:pointer; border:none; background:none;" onclick="removeRow(this)">❌</button></td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td><input type="text" class="v-id" value="" placeholder="NEW" readonly style="background:#eee; text-align:center;"></td>
+                                    <td><input type="text" class="v-title" placeholder="สุดทาง... หัวใจ" required></td>
+                                    <td><input type="text" class="v-author" placeholder="Bacteria"></td>
+                                    <td><input type="text" class="v-publisher" placeholder="Nabu Publishing"></td>
+                                    <td>
+                                        <select class="v-category">
+                                            <option value="สมุดระบายสี">สมุดระบายสี</option>
+                                            <option value="รับทำรูปโปรไฟล์">รับทำรูปโปรไฟล์</option>
+                                            <option value="ชีทฝึกเขียน">ชีทฝึกเขียน</option>
+                                            <option value="ฉากไลฟ์สด">ฉากไลฟ์สด</option>
+                                            <option value="แฟลชการ์ด 2 ภาษา">แฟลชการ์ด 2 ภาษา</option>
+                                            <option value="เกมฝึกสมองเด็ก">เกมฝึกสมองเด็ก</option>
+                                            <option value="รูปชุดข้าราชการ">รูปชุดข้าราชการ</option>
+                                            <option value="สื่อครูตกแต่งห้องเรียน">สื่อครูตกแต่งห้องเรียน</option>
+                                            <option value="ชีทคณิตอนุบาล ป.1">ชีทคณิตอนุบาล ป.1</option>
+                                            <option value="นิทานเด็ก AI">นิทานเด็ก AI</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="number" step="0.01" class="v-price" placeholder="279" required></td>
+                                    <td><input type="number" step="0.01" class="v-original-price" placeholder="299"></td>
+                                    <td><input type="text" class="v-pages" placeholder="273 หน้า"></td>
+                                    <td><input type="text" class="v-file-type" value="pdf, epub"></td>
+                                    <td><input type="text" class="v-badge" placeholder="Movie"></td>
+                                    <td><input type="text" class="v-cover" placeholder="/uploads/covers/..."></td>
+                                    <td><input type="text" class="v-book-file" placeholder="/uploads/books/..."></td>
+                                    <td><input type="text" class="v-sample-file" placeholder="/uploads/samples/..."></td>
+                                    <td><textarea class="v-description" placeholder="รายละเอียด..."></textarea></td>
+                                    <td style="text-align:center;"><button type="button" style="color:red; cursor:pointer; border:none; background:none;" onclick="removeRow(this)">❌</button></td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <input type="hidden" name="json_data" id="visualJsonOutput">
+                <button type="submit" class="btn-primary" onclick="prepareVisualSubmit()">💾 บันทึก Batch Edit ทั้งหมด (Save All Batch Edits)</button>
+            </form>
+        </div>
+
+        <!-- Tab 2: JSON Batch Input -->
+        <div id="jsonTab" class="tab-content">
+            <div class="hint-box">
+                💡 <strong>นำเข้า JSON Batch:</strong> วาง JSON Array เพื่อเพิ่มหนังสือหลายเล่ม
+            </div>
+            <button type="button" class="btn-secondary" onclick="fillJsonDemo()">✨ เติมข้อมูลตัวอย่าง (Load Demo JSON)</button>
+            <form action="/admin/batch-json" method="POST">
+                <textarea name="json_data" id="jsonDataInput" placeholder='[&#10;  {&#10;    "title": "สุดทาง... หัวใจ",&#10;    "author_name": "Bacteria",&#10;    "publisher": "Nabu Publishing",&#10;    "category": "สมุดระบายสี",&#10;    "price": 279,&#10;    "original_price": 299,&#10;    "pages_count": "273 หน้า (~ 92,664 คำ)",&#10;    "file_type": "pdf, epub",&#10;    "cover_image_url": "/uploads/covers/cover.jpg",&#10;    "file_path": "/uploads/books/full.pdf",&#10;    "sample_file_path": "/uploads/samples/preview.pdf"&#10;  }&#10;]'></textarea>
+                <button type="submit" class="btn-primary">🚀 นำเข้าข้อมูล Batch (Batch Insert)</button>
+            </form>
+        </div>
+
+        <!-- Tab 3: SQL Batch Execution -->
+        <div id="sqlTab" class="tab-content">
+            <div class="hint-box">
+                💡 <strong>รัน SQL Code โดยตรง:</strong> วางคำสั่ง <code>INSERT INTO books ...</code> หรือ <code>UPDATE books ...</code>
+            </div>
+            <button type="button" class="btn-secondary" onclick="fillSqlDemo()">✨ เติมตัวอย่างคำสั่ง SQL (Load Demo SQL)</button>
+            <form action="/admin/batch-sql" method="POST">
+                <textarea name="sql_query" id="sqlQueryInput" placeholder="INSERT INTO books (title, author_name, publisher, category, price, original_price, pages_count, description) VALUES ..."></textarea>
+                <button type="submit" class="btn-primary" onclick="return confirm('ยืนยันการรันคำสั่ง SQL เข้าสู่ฐานข้อมูล?');">⚡ ประมวลผลคำสั่ง SQL (Execute SQL Batch)</button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function fillJsonDemo() {
+            const demo = [
+                {
+                    "title": "สุดทาง... หัวใจ",
+                    "author_name": "Bacteria",
+                    "publisher": "Nabu Publishing",
+                    "category": "สมุดระบายสี",
+                    "price": 279,
+                    "original_price": 299,
+                    "pages_count": "273 หน้า (~ 92,664 คำ)",
+                    "file_type": "pdf, epub",
+                    "badge": "Movie",
+                    "cover_image_url": "/uploads/covers/sud-tang.jpg",
+                    "file_path": "/uploads/books/sud-tang-full.pdf",
+                    "sample_file_path": "/uploads/samples/sud-tang-preview.pdf",
+                    "description": "เนื้อเรื่องย่อ..."
+                }
+            ];
+            document.getElementById('jsonDataInput').value = JSON.stringify(demo, null, 2);
+        }
+
+        function fillSqlDemo() {
+            const sql = `INSERT INTO books (title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, cover_image_url, file_path, sample_file_path) 
+VALUES 
+('สุดทาง... หัวใจ', 'Bacteria', 'Nabu Publishing', 'สมุดระบายสี', 279.00, 299.00, '273 หน้า', 'pdf, epub', 'Movie', '/uploads/covers/cover1.jpg', '/uploads/books/book1.pdf', '/uploads/samples/sample1.pdf');`;
+            document.getElementById('sqlQueryInput').value = sql;
+        }
+
+        function addTableRow() {
+            const tbody = document.getElementById('tableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="v-id" value="" placeholder="NEW" readonly style="background:#eee; text-align:center;"></td>
+                <td><input type="text" class="v-title" placeholder="ชื่อหนังสือ" required></td>
+                <td><input type="text" class="v-author" placeholder="ผู้แต่ง"></td>
+                <td><input type="text" class="v-publisher" placeholder="สำนักพิมพ์"></td>
+                <td>
+                    <select class="v-category">
+                        <option value="สมุดระบายสี">สมุดระบายสี</option>
+                        <option value="รับทำรูปโปรไฟล์">รับทำรูปโปรไฟล์</option>
+                        <option value="ชีทฝึกเขียน">ชีทฝึกเขียน</option>
+                        <option value="ฉากไลฟ์สด">ฉากไลฟ์สด</option>
+                        <option value="แฟลชการ์ด 2 ภาษา">แฟลชการ์ด 2 ภาษา</option>
+                        <option value="เกมฝึกสมองเด็ก">เกมฝึกสมองเด็ก</option>
+                        <option value="รูปชุดข้าราชการ">รูปชุดข้าราชการ</option>
+                        <option value="สื่อครูตกแต่งห้องเรียน">สื่อครูตกแต่งห้องเรียน</option>
+                        <option value="ชีทคณิตอนุบาล ป.1">ชีทคณิตอนุบาล ป.1</option>
+                        <option value="นิทานเด็ก AI">นิทานเด็ก AI</option>
+                    </select>
+                </td>
+                <td><input type="number" step="0.01" class="v-price" placeholder="99" required></td>
+                <td><input type="number" step="0.01" class="v-original-price" placeholder="120"></td>
+                <td><input type="text" class="v-pages" placeholder="50 หน้า"></td>
+                <td><input type="text" class="v-file-type" value="pdf"></td>
+                <td><input type="text" class="v-badge" placeholder="Best Seller"></td>
+                <td><input type="text" class="v-cover" placeholder="/uploads/covers/..."></td>
+                <td><input type="text" class="v-book-file" placeholder="/uploads/books/..."></td>
+                <td><input type="text" class="v-sample-file" placeholder="/uploads/samples/..."></td>
+                <td><textarea class="v-description" placeholder="รายละเอียด..."></textarea></td>
+                <td style="text-align:center;"><button type="button" style="color:red; cursor:pointer; border:none; background:none;" onclick="removeRow(this)">❌</button></td>
+            `;
+            tbody.insertBefore(tr, tbody.firstChild);
+        }
+
+        function removeRow(btn) {
+            const tr = btn.closest('tr');
+            if (confirm('ต้องการลบแถวนี้ออกจากตารางแก้ไขหรือไม่?')) {
+                tr.remove();
+            }
+        }
+
+        function prepareVisualSubmit() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            const data = [];
+            rows.forEach(tr => {
+                const id = tr.querySelector('.v-id') ? tr.querySelector('.v-id').value : '';
+                const title = tr.querySelector('.v-title').value;
+                const author = tr.querySelector('.v-author').value;
+                const publisher = tr.querySelector('.v-publisher').value;
+                const category = tr.querySelector('.v-category').value;
+                const price = tr.querySelector('.v-price').value;
+                const originalPrice = tr.querySelector('.v-original-price').value;
+                const pages = tr.querySelector('.v-pages').value;
+                const fileType = tr.querySelector('.v-file-type').value;
+                const badge = tr.querySelector('.v-badge').value;
+                const cover = tr.querySelector('.v-cover').value;
+                const bookFile = tr.querySelector('.v-book-file').value;
+                const sampleFile = tr.querySelector('.v-sample-file').value;
+                const description = tr.querySelector('.v-description').value;
+
+                if (title && title.trim()) {
+                    data.push({
+                        id: id ? parseInt(id) : null,
+                        title: title,
+                        author_name: author,
+                        publisher: publisher,
+                        category: category,
+                        price: parseFloat(price) || 0,
+                        original_price: originalPrice ? parseFloat(originalPrice) : null,
+                        pages_count: pages,
+                        file_type: fileType,
+                        badge: badge,
+                        cover_image_url: cover,
+                        file_path: bookFile,
+                        sample_file_path: sampleFile,
+                        description: description
+                    });
+                }
+            });
+            document.getElementById('visualJsonOutput').value = JSON.stringify(data);
+        }
+    </script>
+</body>
+</html>

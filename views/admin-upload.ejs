@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Upload E-Book</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; margin: 0; padding: 30px; color: #333; }
+        .form-container { max-width: 650px; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin: auto; }
+        h2 { color: #00b140; margin-top: 0; font-size: 22px; border-bottom: 2px solid #e6f7ec; padding-bottom: 10px; }
+        .form-group { margin-bottom: 18px; }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #444; }
+        input[type="text"], input[type="number"], select, textarea, input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        textarea { height: 90px; resize: vertical; }
+        button { background-color: #00b140; color: white; border: none; padding: 12px 20px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
+        button:hover { background-color: #009635; }
+        .back-link { display: inline-block; margin-top: 15px; color: #666; text-decoration: none; font-size: 14px; text-align: center; width: 100%; }
+        .back-link:hover { color: #00b140; text-decoration: underline; }
+        .section-tag { font-weight: bold; color: #00b140; margin: 20px 0 10px 0; border-left: 3px solid #00b140; padding-left: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h2>➕ อัปโหลดหนังสือใหม่ (Admin Panel)</h2>
+        <form action="/admin/upload" method="POST" enctype="multipart/form-data">
+            
+            <div class="section-tag">ข้อมูลพื้นฐาน</div>
+
+            <div class="form-group">
+                <label>หมวดหมู่หนังสือ (Category):</label>
+                <select name="category" required>
+                    <option value="สมุดระบายสี">✏️ สมุดระบายสี</option>
+                    <option value="รับทำรูปโปรไฟล์">📷 รับทำรูปโปรไฟล์</option>
+                    <option value="ชีทฝึกเขียน">✏️ ชีทฝึกเขียน</option>
+                    <option value="ฉากไลฟ์สด">🎬 ฉากไลฟ์สด</option>
+                    <option value="แฟลชการ์ด 2 ภาษา">🎴 แฟลชการ์ด 2 ภาษา</option>
+                    <option value="เกมฝึกสมองเด็ก">🧩 เกมฝึกสมองเด็ก</option>
+                    <option value="รูปชุดข้าราชการ">🏛️ รูปชุดข้าราชการ</option>
+                    <option value="สื่อครูตกแต่งห้องเรียน">🏫 สื่อครูตกแต่งห้องเรียน</option>
+                    <option value="ชีทคณิตอนุบาล ป.1">🔢 ชีทคณิตอนุบาล ป.1</option>
+                    <option value="นิทานเด็ก AI">📚 นิทานเด็ก AI</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>ชื่อหนังสือ (Book Title):</label>
+                <input type="text" name="title" required placeholder="เช่น สุดทาง... หัวใจ">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ชื่อผู้แต่ง (Author Name):</label>
+                    <input type="text" name="author_name" placeholder="เช่น Bacteria">
+                </div>
+                <div class="form-group">
+                    <label>สำนักพิมพ์ (Publisher):</label>
+                    <input type="text" name="publisher" placeholder="เช่น Nabu Publishing">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>รายละเอียด / เรื่องย่อ (Description):</label>
+                <textarea name="description" placeholder="เนื้อเรื่องย่อหรือคำนำหนังสือ..."></textarea>
+            </div>
+
+            <div class="section-tag">การตั้งราคา & ข้อมูลเพิ่มเติม</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ราคาขายจริง (Price THB):</label>
+                    <input type="number" step="0.01" name="price" required placeholder="เช่น 279">
+                </div>
+                <div class="form-group">
+                    <label>ราคาปกติ (Original Price THB - optional):</label>
+                    <input type="number" step="0.01" name="original_price" placeholder="เช่น 299">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ความยาว (Pages / Words):</label>
+                    <input type="text" name="pages_count" placeholder="เช่น 273 หน้า (~ 92,664 คำ)">
+                </div>
+                <div class="form-group">
+                    <label>ประเภทไฟล์ (File Format):</label>
+                    <input type="text" name="file_type" value="pdf, epub">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>ป้ายกำกับพิเศษ (Badge / Tag):</label>
+                <input type="text" name="badge" placeholder="เช่น Movie, Best Seller">
+            </div>
+
+            <div class="section-tag">อัปโหลดไฟล์</div>
+
+            <div class="form-group">
+                <label>🖼️ รูปภาพปกหนังสือ (Cover Image):</label>
+                <input type="file" name="cover_image" accept="image/*" required>
+            </div>
+
+            <div class="form-group">
+                <label>📖 ไฟล์หนังสือฉบับเต็ม PDF (Full Book PDF):</label>
+                <input type="file" name="book_file" accept=".pdf" required>
+            </div>
+
+            <div class="form-group" style="background: #e6f7ec; padding: 12px; border-radius: 6px; border: 1px dashed #00b140;">
+                <label style="color: #00b140;">📄 ไฟล์ตัวอย่างสำหรับ "ทดลองอ่าน" (Sample Preview PDF):</label>
+                <input type="file" name="sample_file" accept=".pdf">
+                <small style="color: #666; display: block; margin-top: 4px;">* ไฟล์ PDF ฉบับสั้นสำหรับปุ่ม "ทดลองอ่าน" หน้าซับเพจ</small>
+            </div>
+
+            <button type="submit">🚀 อัปโหลดหนังสือขึ้นเว็บไซต์</button>
+        </form>
+        <a href="/admin/manage" class="back-link">← กลับไปหน้าระบบจัดการหนังสือ</a>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= book.title %> - รายละเอียดหนังสือ</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 0; }
+        
+        /* Header */
+        header { background-color: white; border-bottom: 1px solid #e1e8ed; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .logo-area { text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .logo-area h1 { color: #00b140; margin: 0; font-size: 24px; font-weight: 800; }
+        .user-nav { display: flex; align-items: center; gap: 12px; }
+        .btn-header { background: #e6f7ec; color: #00b140; border: 1px solid #b7edc9; padding: 7px 15px; border-radius: 20px; text-decoration: none; font-size: 13.5px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-header:hover { background: #00b140; color: white; }
+
+        /* Main Sub Page Container */
+        .detail-container { max-width: 900px; margin: 30px auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); position: relative; }
+        
+        /* Badge Ribbon (Top Right) */
+        .ribbon-container { position: absolute; top: 0; right: 35px; display: flex; flex-direction: column; align-items: center; }
+        .ribbon-bestseller { background: #d90429; color: white; font-size: 10px; font-weight: bold; text-align: center; padding: 6px 8px; line-height: 1.1; width: 42px; border-radius: 0 0 3px 3px; }
+        .ribbon-movie { background: #00b140; color: white; font-size: 10px; font-weight: bold; text-align: center; padding: 4px 8px; margin-top: 2px; width: 42px; border-radius: 0 0 3px 3px; }
+
+        /* Book Title Header */
+        .book-main-title { text-align: center; font-size: 26px; font-weight: bold; color: #111; margin-top: 10px; margin-bottom: 35px; }
+
+        /* Layout Grid */
+        .detail-grid { display: flex; gap: 45px; align-items: flex-start; }
+        .cover-wrapper { width: 300px; flex-shrink: 0; }
+        .cover-img { width: 100%; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); object-fit: cover; }
+
+        /* Meta Information Right Side */
+        .info-wrapper { flex-grow: 1; }
+        .meta-line { font-size: 15px; margin-bottom: 12px; color: #444; }
+        .meta-line span.label { color: #666; width: 90px; display: inline-block; }
+        .meta-line a { color: #00b140; text-decoration: none; font-weight: 600; }
+        .meta-line a:hover { text-decoration: underline; }
+
+        /* Action Buttons Row */
+        .action-buttons { display: flex; gap: 15px; margin: 25px 0 20px 0; align-items: center; }
+        
+        /* "ทดลองอ่าน" Button (Outline Green) */
+        .btn-sample { display: inline-flex; align-items: center; justify-content: center; width: 140px; padding: 12px 0; border: 2px solid #00b140; color: #00b140; background: white; border-radius: 25px; text-decoration: none; font-size: 16px; font-weight: bold; transition: background 0.2s; }
+        .btn-sample:hover { background: #e6f7ec; }
+
+        /* "ดาวน์โหลด PDF" Button (Filled Green - Login Gated) */
+        .btn-buy-download { display: inline-flex; align-items: center; justify-content: center; min-width: 170px; padding: 13px 25px; background: #00b140; color: white; border-radius: 25px; text-decoration: none; font-size: 16px; font-weight: bold; box-shadow: 0 4px 12px rgba(0, 177, 64, 0.3); transition: transform 0.15s, background 0.2s; cursor: pointer; }
+        .btn-buy-download:hover { background: #009635; transform: translateY(-2px); }
+
+        /* Rating Row */
+        .rating-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #666; margin-bottom: 25px; margin-left: 20px; }
+        .rating-score { color: #e74c3c; font-weight: bold; }
+        .stars { color: #e74c3c; letter-spacing: 2px; }
+
+        /* Quick Icons */
+        .icon-actions { display: flex; gap: 25px; margin-bottom: 30px; border-bottom: 1px solid #f0f0f0; padding-bottom: 20px; }
+        .icon-item { display: flex; flex-direction: column; align-items: center; color: #00b140; font-size: 12px; text-decoration: none; font-weight: 500; cursor: pointer; }
+        .icon-item .icon-circle { font-size: 18px; margin-bottom: 4px; }
+        .icon-item:hover { color: #008430; }
+
+        /* Detail Metadata Table */
+        .meta-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .meta-table td { padding: 10px 0; font-size: 14px; border-bottom: 1px dashed #eee; }
+        .meta-table td.td-label { color: #888; width: 140px; }
+        .meta-table td.td-val { color: #333; text-align: right; }
+
+        /* Description Section */
+        .description-section { margin-top: 45px; border-top: 1px solid #eee; padding-top: 30px; }
+        .description-title { font-size: 18px; font-weight: bold; color: #222; margin-bottom: 15px; border-left: 4px solid #00b140; padding-left: 10px; }
+        .description-text { font-size: 15px; line-height: 1.8; color: #444; white-space: pre-line; }
+
+        /* Login Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; border-radius: 12px; width: 90%; max-width: 400px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
+        .modal-close { position: absolute; top: 15px; right: 15px; border: none; background: none; font-size: 20px; cursor: pointer; color: #888; }
+        .modal-title { font-size: 20px; font-weight: bold; margin-bottom: 15px; color: #00b140; text-align: center; }
+        .form-field { margin-bottom: 15px; }
+        .form-field label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555; }
+        .form-field input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        .btn-submit { width: 100%; background: #00b140; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .btn-submit:hover { background: #009635; }
+        .quick-credentials { background: #f8f9fa; border: 1px dashed #ccc; border-radius: 8px; padding: 12px; margin-top: 15px; font-size: 12px; }
+        .quick-credentials button { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; border-radius: 4px; padding: 4px 8px; margin-top: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .detail-container { padding: 20px; margin: 10px; }
+            .detail-grid { flex-direction: column; align-items: center; gap: 25px; }
+            .cover-wrapper { width: 220px; }
+            .action-buttons { justify-content: center; }
+            .icon-actions { justify-content: space-around; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <a href="/" class="logo-area">
+            <h1>meb (Clone)</h1>
+        </a>
+
+        <div class="user-nav">
+            <a href="/" class="btn-header">← กลับหน้าหลัก</a>
+            <% if (currentUser) { %>
+                <span style="font-size: 13.5px;">
+                    <% if (currentUser.role === 'admin') { %>
+                        👑 <strong><%= currentUser.username %></strong> <small>(Admin)</small>
+                    <% } else { %>
+                        👤 <strong><%= currentUser.username %></strong>
+                    <% } %>
+                </span>
+                <a href="/logout" class="btn-header" style="background:#fff1f0; border-color:#ffa39e; color:#ff4d4f;">ออกจากระบบ</a>
+            <% } else { %>
+                <button class="btn-header" onclick="openLoginModal()">🔑 เข้าสู่ระบบ</button>
+            <% } %>
+        </div>
+    </header>
+
+    <!-- Main Detail Sub-Page Container -->
+    <div class="detail-container">
+        
+        <!-- Top Right BestSeller/Movie Ribbon -->
+        <div class="ribbon-container">
+            <div class="ribbon-bestseller">Best<br>Seller</div>
+            <% if (book.badge) { %>
+                <div class="ribbon-movie"><%= book.badge %></div>
+            <% } else { %>
+                <div class="ribbon-movie">PDF</div>
+            <% } %>
+        </div>
+
+        <!-- Book Title -->
+        <h2 class="book-main-title"><%= book.title %></h2>
+
+        <div class="detail-grid">
+            <!-- Left: Cover Image -->
+            <div class="cover-wrapper">
+                <img src="<%= book.cover_image_url || 'https://via.placeholder.com/300x420?text=No+Cover' %>" alt="<%= book.title %>" class="cover-img">
+            </div>
+
+            <!-- Right: Info & Actions -->
+            <div class="info-wrapper">
+                <div class="meta-line">
+                    <span class="label">โดย</span>
+                    <a href="#"><%= book.author_name || 'Bacteria' %></a>
+                </div>
+                <div class="meta-line">
+                    <span class="label">สำนักพิมพ์</span>
+                    <a href="#"><%= book.publisher || 'Nabu Publishing' %></a>
+                </div>
+                <div class="meta-line">
+                    <span class="label">หมวดหมู่</span>
+                    <a href="/?category=<%= encodeURIComponent(book.category) %>"><%= book.category || 'สมุดระบายสี' %></a>
+                </div>
+
+                <!-- Action Buttons: "ทดลองอ่าน" & "ดาวน์โหลด PDF" -->
+                <div class="action-buttons">
+                    <!-- "ทดลองอ่าน" Button (opens sample shortened PDF) -->
+                    <% if (book.sample_file_path) { %>
+                        <a href="<%= book.sample_file_path %>" target="_blank" class="btn-sample">ทดลองอ่าน</a>
+                    <% } else { %>
+                        <a href="#" onclick="alert('แอดมินยังไม่ได้อัปโหลดไฟล์ทดลองอ่านสำหรับเล่มนี้'); return false;" class="btn-sample">ทดลองอ่าน</a>
+                    <% } %>
+
+                    <!-- "ดาวน์โหลด PDF" Button: REQUIRES LOGIN FIRST -->
+                    <% if (book.file_path) { %>
+                        <% if (currentUser) { %>
+                            <a href="<%= book.file_path %>" download class="btn-buy-download">
+                                📥 ดาวน์โหลด ฿<%= parseFloat(book.price).toFixed(0) %>
+                            </a>
+                        <% } else { %>
+                            <a href="#" onclick="openLoginModal('🔒 กรุณาเข้าสู่ระบบก่อนดาวน์โหลดไฟล์ PDF'); return false;" class="btn-buy-download">
+                                🔒 เข้าสู่ระบบเพื่อดาวน์โหลด ฿<%= parseFloat(book.price).toFixed(0) %>
+                            </a>
+                        <% } %>
+                    <% } else { %>
+                        <a href="#" onclick="alert('ไม่มีไฟล์ PDF พร้อมดาวน์โหลดสำหรับเล่มนี้'); return false;" class="btn-buy-download" style="background:#ccc; box-shadow:none;">
+                            ไม่มีไฟล์ PDF
+                        </a>
+                    <% } %>
+                </div>
+
+                <!-- Rating -->
+                <div class="rating-row">
+                    <span class="rating-score">4.93</span>
+                    <span class="stars">❤️❤️❤️❤️❤️</span>
+                    <span>352 Rating</span>
+                </div>
+
+                <!-- Icons Row -->
+                <div class="icon-actions">
+                    <div class="icon-item" onclick="alert('เพิ่มลงรายการอยากได้เรียบร้อย!');">
+                        <div class="icon-circle">🔒</div>
+                        <div>อยากได้</div>
+                    </div>
+                    <div class="icon-item" onclick="alert('ฟีเจอร์ซื้อเป็นของขวัญ');">
+                        <div class="icon-circle">🎁</div>
+                        <div>ซื้อเป็นของขวัญ</div>
+                    </div>
+                    <div class="icon-item" onclick="alert('ติดตามผลงานผู้แต่งสำเร็จ');">
+                        <div class="icon-circle">➕</div>
+                        <div>ติดตาม</div>
+                    </div>
+                    <div class="icon-item" onclick="navigator.clipboard.writeText(window.location.href); alert('คัดลอกลิงก์เรียบร้อยแล้ว!');">
+                        <div class="icon-circle">🔗</div>
+                        <div>แชร์</div>
+                    </div>
+                </div>
+
+                <!-- Metadata Details Table -->
+                <table class="meta-table">
+                    <tr>
+                        <td class="td-label">ประเภทไฟล์</td>
+                        <td class="td-val"><%= book.file_type || 'pdf, epub' %></td>
+                    </tr>
+                    <tr>
+                        <td class="td-label">วันที่วางขาย</td>
+                        <td class="td-val">
+                            <%= book.created_at ? new Date(book.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '15 พฤษภาคม 2560' %>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td-label">ความยาว</td>
+                        <td class="td-val"><%= book.pages_count || '273 หน้า (~ 92,664 คำ)' %></td>
+                    </tr>
+                    <tr>
+                        <td class="td-label">ราคาปกติ</td>
+                        <td class="td-val">
+                            <% if (book.original_price && parseFloat(book.original_price) > parseFloat(book.price)) { %>
+                                <%= parseFloat(book.original_price).toFixed(0) %> บาท 
+                                (ประหยัด <%= Math.round((1 - parseFloat(book.price)/parseFloat(book.original_price)) * 100) %>%)
+                            <% } else { %>
+                                <%= parseFloat(book.price).toFixed(0) %> บาท
+                            <% } %>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Book Description Section -->
+        <div class="description-section">
+            <div class="description-title">คำนำ / รายละเอียดหนังสือ</div>
+            <div class="description-text">
+                <%= book.description || 'ไม่มีรายละเอียดเพิ่มเติมสำหรับหนังสือเล่มนี้' %>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+            <div class="modal-title">เข้าสู่ระบบ (Login)</div>
+            <div id="modalNotice" style="background:#fff7ed; border:1px solid #ffedd5; color:#c2410c; padding:8px; border-radius:6px; font-size:13px; margin-bottom:15px; text-align:center; display:none;"></div>
+
+            <form action="/login" method="POST">
+                <div class="form-field">
+                    <label>ชื่อผู้ใช้งาน (Username):</label>
+                    <input type="text" name="username" id="loginUsername" required placeholder="กรอก username">
+                </div>
+                <div class="form-field">
+                    <label>รหัสผ่าน (Password):</label>
+                    <input type="password" name="password" id="loginPassword" required placeholder="กรอก password">
+                </div>
+                <button type="submit" class="btn-submit">เข้าสู่ระบบเพื่อดาวน์โหลด</button>
+            </form>
+
+            <div class="quick-credentials">
+                <strong>💡 ข้อมูลเข้าสู่ระบบทดสอบ:</strong><br>
+                • <strong>User:</strong> <code>user</code> / <code>user123</code>
+                <button onclick="fillLogin('user', 'user123')">เติมข้อมูล User</button><br>
+                • <strong>Admin:</strong> <code>admin</code> / <code>admin123</code>
+                <button onclick="fillLogin('admin', 'admin123')">เติมข้อมูล Admin</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openLoginModal(msg) {
+            const notice = document.getElementById('modalNotice');
+            if (msg) {
+                notice.innerText = msg;
+                notice.style.display = 'block';
+            } else {
+                notice.style.display = 'none';
+            }
+            document.getElementById('loginModal').classList.add('active');
+        }
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+        }
+        function fillLogin(u, p) {
+            document.getElementById('loginUsername').value = u;
+            document.getElementById('loginPassword').value = p;
+        }
+    </script>
+</body>
+</html>
