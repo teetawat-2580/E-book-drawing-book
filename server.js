@@ -45,33 +45,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Dynamic Multer Storage: MemoryStorage for Vercel (read-only filesystem) & DiskStorage for Local Development
-const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-
-const storage = isVercel ? multer.memoryStorage() : multer.diskStorage({
-    destination: (req, file, cb) => {
-        let subFolder = 'covers';
-        if (file.fieldname === 'book_file') {
-            subFolder = 'books';
-        } else if (file.fieldname === 'sample_file') {
-            subFolder = 'samples';
-        }
-        const uploadDir = path.join(__dirname, 'public/uploads', subFolder);
-        try {
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-            cb(null, uploadDir);
-        } catch (err) {
-            cb(null, '/tmp');
-        }
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
+// Require @vercel/blob if available
 let vercelBlob = null;
 try {
     vercelBlob = require('@vercel/blob');
@@ -79,17 +53,18 @@ try {
     vercelBlob = null;
 }
 
+// MemoryStorage prevents Multer from attempting to write directly to read-only serverless filesystems (/var/task)
 const upload = multer({ 
-    storage: storage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
-// Helper function to resolve file URL (Vercel Blob / Data URI / Local relative path)
+// Helper function to resolve file URL (Vercel Blob / Safe Local Disk / Base64 Data URI)
 async function resolveFileUrl(reqFile, subFolder) {
-    if (!reqFile) return '';
+    if (!reqFile || !reqFile.buffer) return '';
     
-    // If Vercel Blob Token is set, upload file directly to Vercel Blob Storage
-    if (process.env.BLOB_READ_WRITE_TOKEN && vercelBlob && reqFile.buffer) {
+    // 1. If Vercel Blob Token is set, upload file directly to Vercel Blob Storage
+    if (process.env.BLOB_READ_WRITE_TOKEN && vercelBlob) {
         try {
             const cleanName = reqFile.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
             const blob = await vercelBlob.put(`${subFolder}/${Date.now()}-${cleanName}`, reqFile.buffer, {
@@ -98,14 +73,29 @@ async function resolveFileUrl(reqFile, subFolder) {
             console.log(`Uploaded ${reqFile.originalname} to Vercel Blob: ${blob.url}`);
             return blob.url;
         } catch (err) {
-            console.error("Vercel Blob upload failed, falling back to Base64:", err.message);
+            console.error("Vercel Blob upload failed, falling back:", err.message);
         }
     }
 
-    if (reqFile.buffer) {
-        return `data:${reqFile.mimetype};base64,${reqFile.buffer.toString('base64')}`;
+    // 2. If running locally, attempt to save buffer to local disk safely wrapped in try...catch
+    const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NOW_REGION);
+    if (!isVercel) {
+        try {
+            const uploadDir = path.join(__dirname, 'public/uploads', subFolder);
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(reqFile.originalname)}`;
+            const targetPath = path.join(uploadDir, filename);
+            fs.writeFileSync(targetPath, reqFile.buffer);
+            return `/uploads/${subFolder}/${filename}`;
+        } catch (err) {
+            console.log("Local disk save notice, falling back to Data URI:", err.message);
+        }
     }
-    return `/uploads/${subFolder}/${reqFile.filename}`;
+
+    // 3. Fallback to Data URI (100% safe for read-only serverless environments)
+    return `data:${reqFile.mimetype};base64,${reqFile.buffer.toString('base64')}`;
 }
 
 // MySQL Database Connection Pool - Supporting process.env.DATABASE_URL (Aiven MySQL) & Local MySQL
