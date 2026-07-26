@@ -45,8 +45,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// Configure Multer Storage for PDFs and Covers into separated subdirectories
-const storage = multer.diskStorage({
+// Dynamic Multer Storage: MemoryStorage for Vercel (read-only filesystem) & DiskStorage for Local Development
+const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
+const storage = isVercel ? multer.memoryStorage() : multer.diskStorage({
     destination: (req, file, cb) => {
         let subFolder = 'covers';
         if (file.fieldname === 'book_file') {
@@ -55,17 +57,34 @@ const storage = multer.diskStorage({
             subFolder = 'samples';
         }
         const uploadDir = path.join(__dirname, 'public/uploads', subFolder);
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
+        try {
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            cb(null, uploadDir);
+        } catch (err) {
+            cb(null, '/tmp');
         }
-        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, uniqueSuffix + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage: storage });
+
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 15 * 1024 * 1024 } // 15MB limit per file
+});
+
+// Helper function to resolve file URL (Data URI for Vercel/MemoryStorage, relative URL for local disk)
+function resolveFileUrl(reqFile, subFolder) {
+    if (!reqFile) return '';
+    if (reqFile.buffer) {
+        return `data:${reqFile.mimetype};base64,${reqFile.buffer.toString('base64')}`;
+    }
+    return `/uploads/${subFolder}/${reqFile.filename}`;
+}
 
 // MySQL Database Connection Pool - Supporting process.env.DATABASE_URL (Aiven MySQL) & Local MySQL
 let pool;
@@ -143,8 +162,14 @@ async function initDb() {
             }
         }
 
-        connection.release();
-        console.log("Database initialized successfully.");
+        // Modify image and file path columns to LONGTEXT so Base64 Data URIs fit without truncation
+        try {
+            await connection.query(`ALTER TABLE books MODIFY COLUMN cover_image_url LONGTEXT`);
+            await connection.query(`ALTER TABLE books MODIFY COLUMN file_path LONGTEXT`);
+            await connection.query(`ALTER TABLE books MODIFY COLUMN sample_file_path LONGTEXT`);
+        } catch (colErr) {
+            console.log("Column type check notice:", colErr.message);
+        }
     } catch (err) {
         console.error("Database initialization error:", err.message);
     }
@@ -280,9 +305,9 @@ app.post('/admin/upload', requireAdmin, upload.fields([
             author_name, publisher, file_type, pages_count, original_price, badge 
         } = req.body;
 
-        const coverImageFile = req.files['cover_image'] ? `/uploads/covers/${req.files['cover_image'][0].filename}` : '';
-        const bookFile = req.files['book_file'] ? `/uploads/books/${req.files['book_file'][0].filename}` : '';
-        const sampleFile = req.files['sample_file'] ? `/uploads/samples/${req.files['sample_file'][0].filename}` : '';
+        const coverImageFile = req.files['cover_image'] ? resolveFileUrl(req.files['cover_image'][0], 'covers') : '';
+        const bookFile = req.files['book_file'] ? resolveFileUrl(req.files['book_file'][0], 'books') : '';
+        const sampleFile = req.files['sample_file'] ? resolveFileUrl(req.files['sample_file'][0], 'samples') : '';
 
         const query = `
             INSERT INTO books (
