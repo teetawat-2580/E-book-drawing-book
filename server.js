@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2/promise');
 const path = require('path');
@@ -65,16 +66,29 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// MySQL Database Connection Pool
-const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'ebook_store',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+// MySQL Database Connection Pool - Supporting process.env.DATABASE_URL (Aiven MySQL) & Local MySQL
+let pool;
+if (process.env.DATABASE_URL) {
+    console.log("Connecting to Cloud Database using process.env.DATABASE_URL...");
+    pool = mysql.createPool({
+        uri: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }, // Required for Aiven MySQL SSL connections
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0
+    });
+} else {
+    pool = mysql.createPool({
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: process.env.DB_NAME || 'ebook_store',
+        port: process.env.DB_PORT || 3306,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0
+    });
+}
 
 // Initialize database table & column verification
 async function initDb() {
@@ -479,6 +493,9 @@ app.post('/admin/delete-book/:id', requireAdmin, async (req, res) => {
     }
 });
 
-app.listen(3000, () => {
-    console.log('E-book marketplace server running on http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`E-book marketplace server running on port ${PORT}`);
 });
+
+module.exports = app;
