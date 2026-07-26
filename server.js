@@ -72,14 +72,36 @@ const storage = isVercel ? multer.memoryStorage() : multer.diskStorage({
     }
 });
 
+let vercelBlob = null;
+try {
+    vercelBlob = require('@vercel/blob');
+} catch (e) {
+    vercelBlob = null;
+}
+
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 15 * 1024 * 1024 } // 15MB limit per file
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
-// Helper function to resolve file URL (Data URI for Vercel/MemoryStorage, relative URL for local disk)
-function resolveFileUrl(reqFile, subFolder) {
+// Helper function to resolve file URL (Vercel Blob / Data URI / Local relative path)
+async function resolveFileUrl(reqFile, subFolder) {
     if (!reqFile) return '';
+    
+    // If Vercel Blob Token is set, upload file directly to Vercel Blob Storage
+    if (process.env.BLOB_READ_WRITE_TOKEN && vercelBlob && reqFile.buffer) {
+        try {
+            const cleanName = reqFile.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const blob = await vercelBlob.put(`${subFolder}/${Date.now()}-${cleanName}`, reqFile.buffer, {
+                access: 'public'
+            });
+            console.log(`Uploaded ${reqFile.originalname} to Vercel Blob: ${blob.url}`);
+            return blob.url;
+        } catch (err) {
+            console.error("Vercel Blob upload failed, falling back to Base64:", err.message);
+        }
+    }
+
     if (reqFile.buffer) {
         return `data:${reqFile.mimetype};base64,${reqFile.buffer.toString('base64')}`;
     }
@@ -305,9 +327,9 @@ app.post('/admin/upload', requireAdmin, upload.fields([
             author_name, publisher, file_type, pages_count, original_price, badge 
         } = req.body;
 
-        const coverImageFile = req.files['cover_image'] ? resolveFileUrl(req.files['cover_image'][0], 'covers') : '';
-        const bookFile = req.files['book_file'] ? resolveFileUrl(req.files['book_file'][0], 'books') : '';
-        const sampleFile = req.files['sample_file'] ? resolveFileUrl(req.files['sample_file'][0], 'samples') : '';
+        const coverImageFile = req.files['cover_image'] ? await resolveFileUrl(req.files['cover_image'][0], 'covers') : '';
+        const bookFile = req.files['book_file'] ? await resolveFileUrl(req.files['book_file'][0], 'books') : '';
+        const sampleFile = req.files['sample_file'] ? await resolveFileUrl(req.files['sample_file'][0], 'samples') : '';
 
         const query = `
             INSERT INTO books (
