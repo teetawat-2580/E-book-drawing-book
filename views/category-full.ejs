@@ -136,15 +136,27 @@
             </div>
 
             <!-- Main Big Green Download All Button -->
-            <button class="btn-download-all" onclick="downloadAllFiles()">
-                <div class="btn-download-all-title">
-                    <span>📥</span>
-                    <span>โหลดทั้งหมดทีเดียว</span>
-                </div>
-                <div class="btn-download-all-sub">
-                    ได้รับครบ <%= books.length %> ไฟล์ (คลิกเพื่อดาวน์โหลดทุกไฟล์)
-                </div>
-            </button>
+            <% if (typeof driveFolderUrl !== 'undefined' && driveFolderUrl) { %>
+                <a href="<%= driveFolderUrl %>" target="_blank" rel="noopener noreferrer" class="btn-download-all" style="text-decoration: none;">
+                    <div class="btn-download-all-title">
+                        <span>📥</span>
+                        <span>โหลดทั้งหมดทีเดียว (ผ่าน Google Drive)</span>
+                    </div>
+                    <div class="btn-download-all-sub">
+                        เปิดโฟลเดอร์ Google Drive รวมครบ <%= books.length %> ไฟล์ (คลิกเพื่อเปิด)
+                    </div>
+                </a>
+            <% } else { %>
+                <button class="btn-download-all" onclick="downloadAllFiles()">
+                    <div class="btn-download-all-title">
+                        <span>📥</span>
+                        <span>โหลดทั้งหมดทีเดียว</span>
+                    </div>
+                    <div class="btn-download-all-sub">
+                        ได้รับครบ <%= books.length %> ไฟล์ (คลิกเพื่อดาวน์โหลดทุกไฟล์)
+                    </div>
+                </button>
+            <% } %>
 
             <!-- Divider Text -->
             <div class="divider-wrapper">

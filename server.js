@@ -180,6 +180,25 @@ async function initDb() {
         } catch (colErr) {
             console.log("Column type check notice:", colErr.message);
         }
+        // Create category_settings table if it doesn't exist
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS category_settings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                category_slug VARCHAR(100) UNIQUE NOT NULL,
+                category_name VARCHAR(100) NOT NULL,
+                drive_folder_url LONGTEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Populate initial categories if missing
+        for (const cat of CATEGORIES) {
+            if (cat.id === 'all') continue;
+            await connection.query(
+                `INSERT IGNORE INTO category_settings (category_slug, category_name) VALUES (?, ?)`,
+                [cat.id, cat.name]
+            );
+        }
     } catch (err) {
         console.error("Database initialization error:", err.message);
     }
@@ -302,10 +321,53 @@ app.get('/book/:id', requireAdmin, async (req, res) => {
 app.get('/admin/manage', requireAdmin, async (req, res) => {
     try {
         const [books] = await pool.query('SELECT * FROM books ORDER BY id DESC');
-        res.render('admin-manage', { books });
+        
+        let categorySettingsList = [];
+        try {
+            const [catSettings] = await pool.query('SELECT * FROM category_settings');
+            categorySettingsList = CATEGORIES.filter(c => c.id !== 'all').map(c => {
+                const found = catSettings.find(s => s.category_slug === c.id || s.category_slug === c.slug);
+                return {
+                    id: c.id,
+                    slug: c.id,
+                    name: c.name,
+                    drive_folder_url: found ? found.drive_folder_url : ''
+                };
+            });
+        } catch (catErr) {
+            console.log("Category settings query notice:", catErr.message);
+            categorySettingsList = CATEGORIES.filter(c => c.id !== 'all').map(c => ({ id: c.id, slug: c.id, name: c.name, drive_folder_url: '' }));
+        }
+
+        res.render('admin-manage', { books, categorySettingsList });
     } catch (err) {
         console.error(err);
         res.status(500).send('Database error: ' + err.message);
+    }
+});
+
+// 2.1 Admin Route: Update Category Google Drive Folder Link
+app.post('/admin/update-category-drive', requireAdmin, async (req, res) => {
+    try {
+        const { category_slug, drive_folder_url } = req.body;
+        if (!category_slug) {
+            return res.status(400).json({ success: false, message: 'category_slug is required' });
+        }
+
+        const catObj = CATEGORIES.find(c => c.id === category_slug || c.slug === category_slug);
+        const catName = catObj ? catObj.name : category_slug;
+
+        const query = `
+            INSERT INTO category_settings (category_slug, category_name, drive_folder_url)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE drive_folder_url = VALUES(drive_folder_url)
+        `;
+        await pool.query(query, [category_slug, catName, drive_folder_url || '']);
+
+        return res.json({ success: true, message: 'อัปเดตลิงก์ Google Drive สำเร็จเรียบร้อย' });
+    } catch (err) {
+        console.error('Update category drive error:', err);
+        return res.status(500).json({ success: false, message: err.message });
     }
 });
 
@@ -965,9 +1027,23 @@ async function handleCategoryFullPage(req, res, matchedCat) {
 
         const [books] = await pool.query(query, params);
 
+        // Fetch category Google Drive folder URL if available
+        let driveFolderUrl = '';
+        if (matchedCat && matchedCat.id !== 'all') {
+            try {
+                const [cats] = await pool.query('SELECT drive_folder_url FROM category_settings WHERE category_slug = ? OR category_slug = ?', [matchedCat.id, matchedCat.slug]);
+                if (cats.length > 0 && cats[0].drive_folder_url) {
+                    driveFolderUrl = cats[0].drive_folder_url;
+                }
+            } catch (catErr) {
+                console.log("Notice: category_settings lookup:", catErr.message);
+            }
+        }
+
         res.render('category-full', {
             books,
-            categoryObj: matchedCat || { name: 'สื่อการเรียนรู้ทั้งหมด', id: 'all' }
+            categoryObj: matchedCat || { name: 'สื่อการเรียนรู้ทั้งหมด', id: 'all' },
+            driveFolderUrl
         });
     } catch (err) {
         console.error(err);

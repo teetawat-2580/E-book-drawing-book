@@ -93,6 +93,37 @@
             </div>
         </div>
 
+        <!-- Category Google Drive Folder Manager Section -->
+        <div style="background: #f0f9ff; border: 1.5px solid #7dd3fc; border-radius: 12px; padding: 18px 20px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);">
+            <h3 style="margin: 0 0 8px 0; color: var(--primary-navy); font-size: 16.5px; display: flex; align-items: center; gap: 8px;">
+                <span>📁</span>
+                <span>จัดการลิงก์ Google Drive โฟลเดอร์รวมประจำหมวดหมู่ (สำหรับปุ่ม "ดาวน์โหลดทั้งหมดทีเดียว" ในหน้า -full)</span>
+            </h3>
+            <p style="margin: 0 0 14px 0; font-size: 13px; color: #0369a1; line-height: 1.5;">
+                เมื่อลูกค้านำลิงก์หน้าดาวน์โหลด (-full) ไปเปิด แล้วกดปุ่มใหญ่ <strong>"📥 โหลดทั้งหมดทีเดียว (ผ่าน Google Drive)"</strong> ระบบจะพาลูกค้าไปยังลิงก์โฟลเดอร์ Google Drive ของหมวดหมู่นั้นๆ ทันที
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px;">
+                <% if (typeof categorySettingsList !== 'undefined' && categorySettingsList.length > 0) { %>
+                    <% categorySettingsList.forEach(cat => { %>
+                        <% const safeId = cat.id.replace(/[^a-zA-Z0-9_-]/g, '_'); %>
+                        <div style="background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+                            <div style="font-weight: 700; font-size: 13.5px; color: var(--primary-navy); margin-bottom: 6px;">
+                                <%= cat.name %> (<code style="font-size:11px; background:#eee; padding:2px 4px; border-radius:4px;"><%= cat.slug %></code>)
+                            </div>
+                            <input type="text" id="drive_cat_<%= safeId %>" value="<%= cat.drive_folder_url || '' %>" placeholder="วางลิงก์โฟลเดอร์ Google Drive..." style="font-size:12px; margin-bottom:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <button type="button" onclick="saveCategoryDrive('<%= cat.id %>', 'drive_cat_<%= safeId %>', 'save_status_<%= safeId %>')" style="background: #0284c7; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; font-family: inherit;">
+                                    💾 บันทึกลิงก์
+                                </button>
+                                <span id="save_status_<%= safeId %>" style="font-size:11.5px; font-weight:bold;"></span>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } %>
+            </div>
+        </div>
+
         <div class="book-table-container">
             <% if (books.length > 0) { %>
                 <table>
@@ -455,6 +486,35 @@
                 submitBtn.disabled = false;
             }
         });
+
+        async function saveCategoryDrive(slug, inputId, statusId) {
+            const input = document.getElementById(inputId);
+            const statusBox = document.getElementById(statusId);
+            const url = input.value.trim();
+
+            statusBox.style.color = '#0284c7';
+            statusBox.textContent = '⏳ กำลังบันทึก...';
+
+            try {
+                const res = await fetch('/admin/update-category-drive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category_slug: slug, drive_folder_url: url })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    statusBox.style.color = '#16a34a';
+                    statusBox.textContent = '✅ บันทึกสำเร็จ!';
+                    setTimeout(() => { statusBox.textContent = ''; }, 3000);
+                } else {
+                    throw new Error(data.message || 'บันทึกไม่สำเร็จ');
+                }
+            } catch (err) {
+                statusBox.style.color = '#dc2626';
+                statusBox.textContent = '❌ ' + err.message;
+            }
+        }
 
         window.onclick = function(event) {
             const editModal = document.getElementById('editModal');
