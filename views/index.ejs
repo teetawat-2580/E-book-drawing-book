@@ -271,6 +271,20 @@
 
     </div>
 
+    <!-- Sample PDF / Image In-Page Viewer Modal -->
+    <div class="modal-overlay" id="sampleViewerModal" style="z-index: 1200;">
+        <div class="sample-viewer-box" style="background: white; width: 92%; max-width: 900px; height: 85vh; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+            <button class="modal-close" onclick="closeSampleViewerModal()">&times;</button>
+            <h3 style="margin: 0 0 15px 0; font-size: 18px; color: var(--primary-navy); display: flex; align-items: center; gap: 8px;">
+                <span>👁️</span>
+                <span id="sampleViewerTitle">ตัวอย่างสื่อการเรียนรู้</span>
+            </h3>
+            <div id="sampleViewerContainer" style="flex: 1; width: 100%; height: 100%; border-radius: 10px; overflow: hidden; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center;">
+                <!-- Dynamic iframe / img content -->
+            </div>
+        </div>
+    </div>
+
     <!-- Image & Book Preview Popup Modal -->
     <div class="modal-overlay" id="previewModal">
         <div class="preview-modal-box">
@@ -302,12 +316,8 @@
                     <div class="preview-description" id="prevDesc">รายละเอียดสื่อ...</div>
 
                     <div class="preview-actions-group">
-                        <a href="#" id="prevSampleBtn" target="_blank" class="btn-modal-sample" style="display:none;">
+                        <button type="button" id="prevSampleBtn" class="btn-modal-sample" style="display:none; cursor:pointer;">
                             👁️ อ่าน / ดูตัวอย่าง PDF
-                        </a>
-
-                        <button id="prevDownloadBtn" class="btn-modal-download">
-                            📥 ดาวน์โหลด PDF ฉบับเต็ม
                         </button>
                     </div>
                 </div>
@@ -386,36 +396,37 @@
             document.getElementById('prevType').textContent = book.file_type || 'PDF';
             document.getElementById('prevDesc').textContent = book.description || 'ไม่มีรายละเอียดเพิ่มเติมสำหรับสื่อรายการนี้';
 
-            // Sample PDF Preview Button
+            // Sample PDF Preview Button (Opens In-Page Viewer Modal)
             const sampleBtn = document.getElementById('prevSampleBtn');
-            if (book.sample_file_path) {
-                sampleBtn.href = book.sample_file_path;
+            const sampleUrl = book.sample_file_path || book.cover_image_url;
+            if (sampleUrl) {
                 sampleBtn.style.display = 'inline-flex';
+                sampleBtn.onclick = function() {
+                    openSampleViewerModal(sampleUrl, book.title);
+                };
             } else {
                 sampleBtn.style.display = 'none';
             }
 
-            // Full Download PDF Button (Login-Gated)
-            const downloadBtn = document.getElementById('prevDownloadBtn');
-            downloadBtn.onclick = function() {
-                if (!currentUser) {
-                    closePreviewModal();
-                    openLoginModal();
-                } else {
-                    if (book.file_path) {
-                        const a = document.createElement('a');
-                        a.href = book.file_path;
-                        a.download = book.title + '.pdf';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                    } else {
-                        alert('ไฟล์ PDF ฉบับเต็มยังไม่ได้ถูกอัปโหลดสำหรับรายการนี้');
-                    }
-                }
-            };
-
             document.getElementById('previewModal').classList.add('active');
+        }
+
+        function openSampleViewerModal(url, title) {
+            document.getElementById('sampleViewerTitle').textContent = 'ตัวอย่าง: ' + (title || 'สื่อการเรียนรู้');
+            const container = document.getElementById('sampleViewerContainer');
+            
+            if (url.startsWith('data:application/pdf') || url.endsWith('.pdf') || url.includes('/samples/') || url.includes('/books/')) {
+                container.innerHTML = '<iframe src="' + url + '#toolbar=0" style="width:100%; height:100%; border:none;"></iframe>';
+            } else {
+                container.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">';
+            }
+            
+            document.getElementById('sampleViewerModal').classList.add('active');
+        }
+
+        function closeSampleViewerModal() {
+            document.getElementById('sampleViewerModal').classList.remove('active');
+            document.getElementById('sampleViewerContainer').innerHTML = '';
         }
 
         function closePreviewModal() {
@@ -437,8 +448,10 @@
         window.onclick = function(event) {
             const prevModal = document.getElementById('previewModal');
             const loginModal = document.getElementById('loginModal');
+            const sampleModal = document.getElementById('sampleViewerModal');
             if (event.target === prevModal) closePreviewModal();
             if (event.target === loginModal) closeLoginModal();
+            if (event.target === sampleModal) closeSampleViewerModal();
         };
 
         const loginError = JSON.parse('<%- JSON.stringify(Boolean(typeof loginError !== "undefined" && loginError)) %>');
