@@ -17,90 +17,94 @@
             --fresh-green: #22C55E;
             --green-hover: #16a34a;
             --sun-yellow: #FACC15;
-            --bg-light: #F8FAFC;
+            --bg-light: #EEF2F6;
             --text-dark: #1E293B;
             --text-muted: #64748B;
         }
 
         * { box-sizing: border-box; }
-        body { font-family: 'Prompt', 'Kanit', sans-serif; margin: 0; background-color: #EEF2F6; color: var(--text-dark); }
+        body { font-family: 'Prompt', 'Kanit', sans-serif; margin: 0; background-color: var(--bg-light); color: var(--text-dark); }
         
-        /* Top Navigation Bar */
-        header { background-color: var(--primary-navy); color: white; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2); }
-        .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; color: white; }
-        .brand-logo-img { height: 42px; border-radius: 8px; background: white; padding: 2px; }
-        .brand-text-group { display: flex; flex-direction: column; }
-        .brand-title { font-size: 20px; font-weight: 700; color: white; margin: 0; line-height: 1.1; }
-        .brand-tagline { font-size: 11px; color: var(--sky-blue); font-weight: 500; }
-        .btn-home { background: rgba(255,255,255,0.15); color: white; padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 12.5px; font-weight: 600; border: 1px solid rgba(255,255,255,0.3); transition: background 0.2s; }
-        .btn-home:hover { background: rgba(255,255,255,0.3); }
-
         /* Outer Full Page Wrapper */
-        .full-page-wrapper { max-width: 680px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 25px rgba(0,0,0,0.08); padding-bottom: 50px; }
+        .full-page-wrapper { max-width: 680px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 25px rgba(0,0,0,0.08); padding-bottom: 50px; overflow: hidden; }
+
+        /* Top Header inside Container */
+        header { background-color: var(--primary-navy); color: white; padding: 14px 20px; display: flex; justify-content: center; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; justify-content: center; }
+        .brand-logo-img { height: 40px; border-radius: 8px; background: white; padding: 2px; }
+        .brand-text-group { display: flex; flex-direction: column; text-align: left; }
+        .brand-title { font-size: 19px; font-weight: 700; color: white; margin: 0; line-height: 1.1; }
+        .brand-tagline { font-size: 10.5px; color: var(--sky-blue); font-weight: 500; }
 
         /* Top Hero Header Section (Deep Blue Navy - Matching Attached Screenshot) */
-        .hero-banner { background: linear-gradient(180deg, #10265B 0%, #1E3A8A 100%); color: white; text-align: center; padding: 35px 20px 30px 20px; position: relative; }
+        .hero-banner { background: linear-gradient(180deg, #10265B 0%, #1E3A8A 100%); color: white; text-align: center; padding: 30px 20px 25px 20px; position: relative; }
         
-        .ready-pill-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); color: #fef08a; padding: 5px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+        .ready-pill-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); color: #fef08a; padding: 5px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
         
-        .hero-title { font-size: 28px; font-weight: 800; margin: 5px 0 10px 0; color: white; letter-spacing: -0.5px; }
-        .hero-subtitle { font-size: 15px; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; }
-        .hero-count { font-size: 14px; color: var(--sky-blue); font-weight: 700; }
+        .hero-title { font-size: 26px; font-weight: 800; margin: 5px 0 8px 0; color: white; letter-spacing: -0.5px; }
+        .hero-subtitle { font-size: 14.5px; font-weight: 600; color: #e2e8f0; margin-bottom: 3px; }
+        .hero-count { font-size: 13.5px; color: var(--sky-blue); font-weight: 700; }
 
         /* Content Body Container */
-        .full-content { padding: 25px 20px; }
+        .full-content { padding: 20px; width: 100%; box-sizing: border-box; }
 
         /* Light Yellow Notice Box (Matching Screenshot) */
-        .notice-box { background: #FEFCE8; border: 1px solid #FDE047; border-radius: 14px; padding: 18px 20px; margin-bottom: 22px; font-size: 13.5px; color: #713F12; line-height: 1.6; }
-        .notice-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+        .notice-box { background: #FEFCE8; border: 1px solid #FDE047; border-radius: 14px; padding: 16px 18px; margin-bottom: 20px; font-size: 13px; color: #713F12; line-height: 1.6; width: 100%; box-sizing: border-box; }
+        .notice-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: flex-start; }
         .notice-row:last-child { margin-bottom: 0; }
-        .notice-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .notice-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
 
         /* Main Big Green Download All Button (Matching Screenshot) */
-        .btn-download-all { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; background: var(--fresh-green); color: white; text-decoration: none; padding: 16px 20px; border-radius: 16px; box-shadow: 0 6px 18px rgba(34, 197, 94, 0.35); transition: transform 0.2s, background 0.2s; border: none; cursor: pointer; text-align: center; }
+        .btn-download-all { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; background: var(--fresh-green); color: white; text-decoration: none; padding: 15px 18px; border-radius: 16px; box-shadow: 0 6px 18px rgba(34, 197, 94, 0.35); transition: transform 0.2s, background 0.2s; border: none; cursor: pointer; text-align: center; box-sizing: border-box; }
         .btn-download-all:hover { background: var(--green-hover); transform: translateY(-2px); }
-        .btn-download-all-title { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-        .btn-download-all-sub { font-size: 12.5px; opacity: 0.95; font-weight: 500; margin-top: 4px; }
+        .btn-download-all-title { font-size: 19px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .btn-download-all-sub { font-size: 12px; opacity: 0.95; font-weight: 500; margin-top: 4px; }
 
         /* Divider Line (Matching Screenshot) */
-        .divider-wrapper { text-align: center; margin: 30px 0 25px 0; position: relative; }
+        .divider-wrapper { text-align: center; margin: 25px 0 20px 0; position: relative; }
         .divider-wrapper::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: #e2e8f0; z-index: 1; }
-        .divider-text { position: relative; z-index: 2; background: white; padding: 0 16px; font-size: 13.5px; color: var(--text-muted); font-weight: 600; }
+        .divider-text { position: relative; z-index: 2; background: white; padding: 0 14px; font-size: 13px; color: var(--text-muted); font-weight: 600; }
 
-        /* 2-Column Item Grid (Matching Attached Screenshot) */
-        .full-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        /* 2-Column Responsive Item Grid (Contained inside bounds) */
+        .full-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; width: 100%; box-sizing: border-box; }
         
-        .full-card { background: white; border-radius: 14px; border: 1.5px solid #e2e8f0; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; }
+        .full-card { background: white; border-radius: 14px; border: 1.5px solid #e2e8f0; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; width: 100%; min-width: 0; box-sizing: border-box; overflow: hidden; }
         .full-card:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.08); border-color: var(--sky-blue); }
         
-        .full-card-img { width: 100%; height: auto; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; background: #f8fafc; border: 1px solid #f1f5f9; display: block; }
-        .full-card-title { font-size: 14px; font-weight: 700; color: #1e293b; margin: 10px 0 10px 0; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .full-card-img { width: 100%; max-width: 100%; height: auto; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; background: #f8fafc; border: 1px solid #f1f5f9; display: block; box-sizing: border-box; }
+        .full-card-title { font-size: 13px; font-weight: 700; color: #1e293b; margin: 8px 0 8px 0; line-height: 1.35; white-space: normal; word-break: break-word; }
 
         /* Dark Navy Item Download Button (Matching Screenshot) */
-        .btn-download-item { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: var(--dark-navy); color: white; text-decoration: none; padding: 10px 0; border-radius: 8px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; transition: background 0.2s, transform 0.15s; font-family: inherit; }
+        .btn-download-item { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: var(--dark-navy); color: white; text-decoration: none; padding: 9px 0; border-radius: 8px; font-size: 13.5px; font-weight: 700; border: none; cursor: pointer; transition: background 0.2s, transform 0.15s; font-family: inherit; box-sizing: border-box; }
         .btn-download-item:hover { background: #1e293b; transform: translateY(-1px); }
 
         /* Footer */
-        footer { text-align: center; padding: 25px 20px; font-size: 13px; color: #94a3b8; border-top: 1px solid #f1f5f9; margin-top: 40px; }
+        footer { text-align: center; padding: 25px 20px; font-size: 12.5px; color: #94a3b8; border-top: 1px solid #f1f5f9; margin-top: 35px; }
         footer strong { color: var(--primary-navy); }
+
+        @media (max-width: 480px) {
+            .full-content { padding: 12px; }
+            .full-grid { gap: 10px; }
+            .full-card { padding: 8px; }
+            .hero-title { font-size: 22px; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Header Navigation Bar -->
-    <header>
-        <a href="/" class="logo-container">
-            <img src="/images/logo.png" alt="คลังสมอง KLANGSAMONG" class="brand-logo-img" onerror="this.style.display='none';">
-            <div class="brand-text-group">
-                <h1 class="brand-title">คลังสมอง</h1>
-                <span class="brand-tagline">KLANGSAMONG — เรียนวันนี้ เก่งได้ทุกวัน —</span>
-            </div>
-        </a>
-        <a href="/" class="btn-home">🏠 หน้าหลัก</a>
-    </header>
-
     <div class="full-page-wrapper">
         
+        <!-- Header Navigation Bar inside Container -->
+        <header>
+            <a href="/" class="logo-container">
+                <img src="/images/logo.png" alt="คลังสมอง KLANGSAMONG" class="brand-logo-img" onerror="this.style.display='none';">
+                <div class="brand-text-group">
+                    <h1 class="brand-title">คลังสมอง</h1>
+                    <span class="brand-tagline">KLANGSAMONG — เรียนวันนี้ เก่งได้ทุกวัน —</span>
+                </div>
+            </a>
+        </header>
+
         <!-- Hero Banner Header (Deep Blue Navy Theme) -->
         <div class="hero-banner">
             <div class="ready-pill-badge">
@@ -147,7 +151,7 @@
                 <span class="divider-text">หรือเลือกโหลดทีละไฟล์</span>
             </div>
 
-            <!-- 2-Column Grid (Matching Screenshot) -->
+            <!-- 2-Column Grid (Contained Bounds) -->
             <% if (books.length > 0) { %>
                 <div class="full-grid">
                     <% books.forEach((book, index) => { %>
@@ -201,7 +205,7 @@
                         a.click();
                         document.body.removeChild(a);
                     }, delay);
-                    delay += 600; // Trigger download sequentially every 600ms
+                    delay += 600;
                 }
             });
         }
