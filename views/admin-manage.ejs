@@ -177,9 +177,7 @@
             <div class="modal-title">✏️ แก้ไขสื่อ & อัปโหลดไฟล์ทับเดิม</div>
 
             <form id="editForm" action="" method="POST">
-                <input type="hidden" name="cover_image_url" id="edit_cover_url">
-                <input type="hidden" name="file_path" id="edit_book_url">
-                <input type="hidden" name="sample_file_path" id="edit_sample_url">
+
 
                 <div class="form-group">
                     <label>ชื่อสื่อการเรียนรู้ (Title):</label>
@@ -233,24 +231,30 @@
                     <textarea name="description" id="editDesc"></textarea>
                 </div>
 
-                <div class="section-tag">📁 อัปโหลดไฟล์ใหม่เข้าไปทับของเดิม (Direct Upload - ไม่จำกัด 4.5MB)</div>
+                <div class="section-tag">☁️ กำหนดไฟล์สื่อ (รองรับลิงก์ Google Drive หรือ เลือกไฟล์จากเครื่อง)</div>
 
                 <div class="form-group">
-                    <label>🖼️ รูปภาพปกใหม่ (ทับรูปเดิม):</label>
-                    <input type="file" id="edit_cover_file" accept="image/*">
-                    <small id="currentCoverNotice" style="color:#64748b; font-size:11px;"></small>
-                </div>
-
-                <div class="form-group">
-                    <label>📖 ไฟล์ PDF ฉบับเต็มใหม่ (ทับไฟล์เดิม):</label>
+                    <label>📖 ลิงก์ PDF ฉบับเต็ม / Google Drive Link:</label>
+                    <input type="text" name="file_path" id="edit_book_url" placeholder="https://drive.google.com/file/d/...">
+                    <label style="font-size:12px; color:#64748b; margin-top:4px;">หรือเลือกไฟล์จากเครื่องเพื่ออัปโหลดทับเดิม:</label>
                     <input type="file" id="edit_book_file" accept=".pdf">
                     <small id="currentBookNotice" style="color:#64748b; font-size:11px;"></small>
                 </div>
 
                 <div class="form-group">
-                    <label>📄 ไฟล์ตัวอย่างสำหรับ "ทดลองอ่าน" ใหม่ (ทับไฟล์เดิม):</label>
+                    <label>📄 ลิงก์ PDF ตัวอย่าง / Google Drive Link:</label>
+                    <input type="text" name="sample_file_path" id="edit_sample_url" placeholder="https://drive.google.com/file/d/...">
+                    <label style="font-size:12px; color:#64748b; margin-top:4px;">หรือเลือกไฟล์ตัวอย่างจากเครื่องเพื่ออัปโหลดทับเดิม:</label>
                     <input type="file" id="edit_sample_file" accept=".pdf">
                     <small id="currentSampleNotice" style="color:#64748b; font-size:11px;"></small>
+                </div>
+
+                <div class="form-group">
+                    <label>🖼️ รูปภาพปกสื่อ (Cover Image URL):</label>
+                    <input type="text" name="cover_image_url" id="edit_cover_url" placeholder="https://...">
+                    <label style="font-size:12px; color:#64748b; margin-top:4px;">หรือเลือกรูปภาพใหม่จากเครื่องเพื่ออัปโหลดทับเดิม:</label>
+                    <input type="file" id="edit_cover_file" accept="image/*">
+                    <small id="currentCoverNotice" style="color:#64748b; font-size:11px;"></small>
                 </div>
 
                 <div id="editStatusBox" style="display:none; background:#e0f2fe; color:#0369a1; padding:10px; border-radius:6px; margin-bottom:10px; font-size:13px; text-align:center; font-weight:bold;">

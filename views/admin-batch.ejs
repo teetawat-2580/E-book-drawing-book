@@ -90,7 +90,7 @@
         <!-- Tab 1: Interactive Table Input & Edit Mode -->
         <div id="visualTab" class="tab-content active">
             <div class="hint-box">
-                🛠️ <strong>Batch Edit & Direct File Overwrite Mode (เฉพาะ Admin):</strong> ท่านสามารถกดปุ่ม <code>📁 เลือกไฟล์ใหม่ทับเดิม</code> ในช่อง รูปปก, ไฟล์ PDF ฉบับเต็ม หรือไฟล์ตัวอย่าง เพื่ออัปโหลดไฟล์ใหม่ขึ้นไปทับไฟล์เดิมได้ทันที โดยระบบจะอัปโหลดและอัปเดต URL อัตโนมัติเมื่อกด <strong>"บันทึก Batch Edit ทั้งหมด"</strong>
+                ☁️ <strong>Batch Edit & Google Drive Link Mode:</strong> ท่านสามารถ <strong>วางลิงก์ Google Drive</strong> (เช่น <code>https://drive.google.com/file/d/...</code> หรือ โฟลเดอร์) ลงในช่องไฟล์ PDF ฉบับเต็ม / PDF ตัวอย่าง ได้โดยตรงทันที เพื่อความสะดวก รวดเร็ว คมชัด 100% ไม่จำกัดขนาด หรือกดปุ่ม <code>📁 อัปโหลดใหม่</code> เพื่อเลือกไฟล์จากเครื่องได้ตามปกติ
             </div>
 
             <form action="/admin/batch-update" method="POST" id="visualBatchForm" onsubmit="return handleVisualSubmit(event)">

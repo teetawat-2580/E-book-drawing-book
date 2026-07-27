@@ -415,10 +415,19 @@
             document.getElementById('sampleViewerTitle').textContent = 'ตัวอย่าง: ' + (title || 'สื่อการเรียนรู้');
             const container = document.getElementById('sampleViewerContainer');
             
-            if (url.startsWith('data:application/pdf') || url.endsWith('.pdf') || url.includes('/samples/') || url.includes('/books/')) {
-                container.innerHTML = '<iframe src="' + url + '#toolbar=0" style="width:100%; height:100%; border:none;"></iframe>';
+            let targetUrl = url;
+            if (url.includes('drive.google.com/file/d/')) {
+                // Convert Google Drive view URL to preview URL for iframe embedding
+                targetUrl = url.replace(/\/view(\?.*)?$/, '/preview').replace(/\/edit(\?.*)?$/, '/preview');
+                if (!targetUrl.endsWith('/preview') && !targetUrl.includes('/preview')) {
+                    targetUrl = targetUrl.split('?')[0] + '/preview';
+                }
+            }
+            
+            if (targetUrl.includes('drive.google.com') || targetUrl.startsWith('data:application/pdf') || targetUrl.endsWith('.pdf') || targetUrl.includes('/samples/') || targetUrl.includes('/books/')) {
+                container.innerHTML = '<iframe src="' + targetUrl + '#toolbar=0" style="width:100%; height:100%; border:none;"></iframe>';
             } else {
-                container.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">';
+                container.innerHTML = '<img src="' + targetUrl + '" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">';
             }
             
             document.getElementById('sampleViewerModal').classList.add('active');

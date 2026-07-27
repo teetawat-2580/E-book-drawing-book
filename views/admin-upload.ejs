@@ -116,22 +116,25 @@
                 <input type="text" name="badge" placeholder="เช่น เล่มยอดฮิต, แนะนำ">
             </div>
 
-            <div class="section-tag">อัปโหลดไฟล์ (Direct Client Upload - ไม่จำกัดขนาด 4.5MB)</div>
+            <div class="section-tag">☁️ กำหนดไฟล์สื่อ (รองรับลิงก์ Google Drive หรือ เลือกไฟล์จากเครื่อง)</div>
 
             <div class="form-group">
-                <label>🖼️ รูปภาพปกสื่อ (Cover Image):</label>
-                <input type="file" id="cover_file_input" accept="image/*" required>
-            </div>
-
-            <div class="form-group">
-                <label>📖 ไฟล์ PDF ฉบับเต็ม (Full PDF File):</label>
-                <input type="file" id="book_file_input" accept=".pdf" required>
+                <label>📖 ลิงก์ PDF ฉบับเต็ม / Google Drive Link (Full File):</label>
+                <input type="text" name="file_path" id="file_path" placeholder="วางลิงก์ Google Drive เช่น https://drive.google.com/file/d/... หรือใช้ปุ่มล่าง">
+                <input type="file" id="book_file_input" accept=".pdf" style="margin-top:5px;">
+                <small style="color: #0369a1; display: block; margin-top: 4px;">💡 แนะนำวางลิงก์ Google Drive โดยตรงเพื่อความคมชัด 100% และไม่มีข้อจำกัดขนาดไฟล์</small>
             </div>
 
             <div class="form-group" style="background: #f0fdf4; padding: 14px; border-radius: 8px; border: 1px dashed var(--fresh-green);">
-                <label style="color: #15803d;">📄 ไฟล์ตัวอย่างสำหรับ "ทดลองอ่าน" (Sample Preview PDF):</label>
-                <input type="file" id="sample_file_input" accept=".pdf">
-                <small style="color: #64748b; display: block; margin-top: 4px;">* ไฟล์ PDF ตัวอย่างฉบับสั้นสำหรับปุ่ม "ทดลองอ่าน"</small>
+                <label style="color: #15803d;">📄 ลิงก์ PDF ตัวอย่าง / Google Drive Link (Sample Preview PDF):</label>
+                <input type="text" name="sample_file_path" id="sample_file_path" placeholder="วางลิงก์ Google Drive หรือเลือกไฟล์ตัวอย่าง">
+                <input type="file" id="sample_file_input" accept=".pdf" style="margin-top:5px;">
+            </div>
+
+            <div class="form-group">
+                <label>🖼️ รูปภาพปกสื่อ (Cover Image URL / File):</label>
+                <input type="text" name="cover_image_url" id="cover_image_url" placeholder="วาง URL รูปภาพปก หรือเลือกไฟล์ภาพด้านล่าง">
+                <input type="file" id="cover_file_input" accept="image/*" style="margin-top:5px;">
             </div>
 
             <div class="upload-status-box" id="uploadStatus">

@@ -122,15 +122,15 @@
             <!-- Yellow Notice Box -->
             <div class="notice-box">
                 <div class="notice-row">
-                    <span class="notice-icon">💻</span>
+                    <span class="notice-icon">☁️</span>
                     <div>
-                        <strong>เปิดในคอมพิวเตอร์จะง่ายที่สุดค่ะ</strong> กด "โหลดทั้งหมด" แล้วแตกไฟล์ zip เอาไปปริ้นได้เลย · ถ้าใช้มือถือ เลื่อนลงไปกดโหลดทีละไฟล์ได้ค่ะ
+                        <strong>ดาวน์โหลดผ่าน Google Drive คมชัด 100%:</strong> กดปุ่ม "โหลดผ่าน Google Drive" เพื่อรับไฟล์ต้นฉบับคุณภาพสูงทันที หรือกด "โหลดทั้งหมดทีเดียว"
                     </div>
                 </div>
                 <div class="notice-row">
                     <span class="notice-icon">💡</span>
                     <div>
-                        <strong>จะเอาไปปริ้นที่ร้าน?</strong> ส่งลิงก์หน้านี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปคอม กดง่ายกว่า
+                        <strong>จะเอาไปปริ้นที่ร้าน?</strong> ส่งลิงก์หน้านี้ให้ร้านเปิดดาวน์โหลดได้เลยค่ะ ไม่ต้องส่งไฟล์ทางแชทให้เสียความละเอียด
                     </div>
                 </div>
             </div>
@@ -161,10 +161,13 @@
                                 <%= book.title %>
                             </div>
                             
-                            <% const downloadUrl = book.file_path || book.sample_file_path || book.cover_image_url; %>
-                            <a href="<%= downloadUrl %>" download="<%= book.title %>.pdf" class="btn-download-item" target="_blank">
-                                <span>⬇️</span>
-                                <span>โหลด</span>
+                            <% 
+                                const downloadUrl = book.file_path || book.sample_file_path || book.cover_image_url; 
+                                const isGDrive = downloadUrl && (downloadUrl.includes('drive.google.com') || downloadUrl.includes('google.com'));
+                            %>
+                            <a href="<%= downloadUrl %>" class="btn-download-item" target="_blank" rel="noopener noreferrer">
+                                <span><%= isGDrive ? '☁️' : '⬇️' %></span>
+                                <span><%= isGDrive ? 'โหลดผ่าน Google Drive' : 'โหลด' %></span>
                             </a>
                         </div>
                     <% }) %>
@@ -192,18 +195,12 @@
                 return;
             }
 
-            alert('กำลังเริ่มดาวน์โหลดไฟล์ทั้งหมด (' + allFileUrls.length + ' ไฟล์)...');
+            alert('กำลังเริ่มเปิดลิงก์ดาวน์โหลดทั้งหมด (' + allFileUrls.length + ' ไฟล์)...');
             let delay = 0;
             allFileUrls.forEach(item => {
                 if (item.url) {
                     setTimeout(() => {
-                        const a = document.createElement('a');
-                        a.href = item.url;
-                        a.download = (item.title || 'file') + '.pdf';
-                        a.target = '_blank';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
+                        window.open(item.url, '_blank');
                     }, delay);
                     delay += 600;
                 }
