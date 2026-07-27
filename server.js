@@ -599,6 +599,90 @@ app.post('/admin/batch-json', requireAdmin, async (req, res) => {
     }
 });
 
+// 5.2 Admin Route: Process Interactive Table Batch Updates (Chunked compliant)
+app.post('/admin/batch-update', requireAdmin, async (req, res) => {
+    try {
+        let booksData = [];
+        if (typeof req.body.json_data === 'string') {
+            booksData = JSON.parse(req.body.json_data);
+        } else if (Array.isArray(req.body.books)) {
+            booksData = req.body.books;
+        }
+
+        if (!Array.isArray(booksData) || booksData.length === 0) {
+            if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json')) {
+                return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลรายการที่จะบันทึก' });
+            }
+            return res.redirect('/admin/batch?error=' + encodeURIComponent('ไม่มีข้อมูลรายการที่จะบันทึก'));
+        }
+
+        for (const b of booksData) {
+            if (b.id) {
+                // Update existing record
+                const updateQuery = `
+                    UPDATE books SET 
+                        title = ?, author_name = ?, publisher = ?, category = ?, price = ?, 
+                        original_price = ?, pages_count = ?, file_type = ?, badge = ?, 
+                        cover_image_url = ?, file_path = ?, sample_file_path = ?, description = ?
+                    WHERE id = ?
+                `;
+                await pool.query(updateQuery, [
+                    b.title || 'Untitled',
+                    b.author_name || '',
+                    b.publisher || '',
+                    b.category || 'สมุดระบายสีเด็ก',
+                    b.price || 0,
+                    b.original_price ? parseFloat(b.original_price) : null,
+                    b.pages_count || '',
+                    b.file_type || 'PDF',
+                    b.badge || '',
+                    b.cover_image_url || '',
+                    b.file_path || '',
+                    b.sample_file_path || '',
+                    b.description || '',
+                    b.id
+                ]);
+            } else {
+                // Insert new record
+                const insertQuery = `
+                    INSERT INTO books (
+                        title, author_id, description, price, cover_image_url, file_path, category,
+                        author_name, publisher, sample_file_path, file_type, pages_count, original_price, badge
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `;
+                await pool.query(insertQuery, [
+                    b.title || 'Untitled',
+                    1,
+                    b.description || '',
+                    b.price || 0,
+                    b.cover_image_url || '',
+                    b.file_path || '',
+                    b.category || 'สมุดระบายสีเด็ก',
+                    b.author_name || 'คลังสมอง',
+                    b.publisher || 'คลังสมอง KLANGSAMONG',
+                    b.sample_file_path || '',
+                    b.file_type || 'PDF',
+                    b.pages_count || '',
+                    b.original_price ? parseFloat(b.original_price) : null,
+                    b.badge || ''
+                ]);
+            }
+        }
+
+        if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json')) {
+            return res.json({ success: true, count: booksData.length, redirect: '/admin/batch?success=' + encodeURIComponent(`บันทึกข้อมูล Batch Edit ทั้งหมด ${booksData.length} รายการสำเร็จเรียบร้อย`) });
+        }
+
+        res.redirect('/admin/batch?success=' + encodeURIComponent(`บันทึกข้อมูล Batch Edit ทั้งหมด ${booksData.length} รายการสำเร็จเรียบร้อย`));
+    } catch (err) {
+        console.error('Batch update error:', err);
+        if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json')) {
+            return res.status(500).json({ success: false, message: err.message });
+        }
+        res.redirect('/admin/batch?error=' + encodeURIComponent('เกิดข้อผิดพลาดในการบันทึก Batch: ' + err.message));
+    }
+});
+
 // 5.2 Admin Route: Process Batch SQL Execution
 app.post('/admin/batch-sql', requireAdmin, async (req, res) => {
     try {

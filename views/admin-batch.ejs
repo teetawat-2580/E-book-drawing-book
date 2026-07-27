@@ -93,7 +93,7 @@
                 🛠️ <strong>Batch Edit & Direct File Overwrite Mode (เฉพาะ Admin):</strong> ท่านสามารถกดปุ่ม <code>📁 เลือกไฟล์ใหม่ทับเดิม</code> ในช่อง รูปปก, ไฟล์ PDF ฉบับเต็ม หรือไฟล์ตัวอย่าง เพื่ออัปโหลดไฟล์ใหม่ขึ้นไปทับไฟล์เดิมได้ทันที โดยระบบจะอัปโหลดและอัปเดต URL อัตโนมัติเมื่อกด <strong>"บันทึก Batch Edit ทั้งหมด"</strong>
             </div>
 
-            <form action="/admin/batch-update" method="POST" id="visualBatchForm">
+            <form action="/admin/batch-update" method="POST" id="visualBatchForm" onsubmit="return handleVisualSubmit(event)">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <button type="button" class="btn-secondary" onclick="addTableRow()">➕ เพิ่มสื่อเล่มใหม่ (Add New Row)</button>
                     <span style="font-size:13px; color:#64748b;">มีทั้งหมด <strong><%= books ? books.length : 0 %></strong> รายการในตาราง</span>
@@ -259,7 +259,7 @@
                 </div>
 
                 <input type="hidden" name="json_data" id="visualJsonOutput">
-                <button type="submit" class="btn-primary" onclick="prepareVisualSubmit()">💾 บันทึก Batch Edit ทั้งหมด (Save All Batch Edits)</button>
+                <button type="submit" id="btnSaveBatch" class="btn-primary">💾 บันทึก Batch Edit ทั้งหมด (Save All Batch Edits)</button>
             </form>
         </div>
 
@@ -474,45 +474,84 @@ VALUES
             }
         }
 
-        function prepareVisualSubmit() {
-            const rows = document.querySelectorAll('#tableBody tr');
-            const data = [];
-            rows.forEach(tr => {
-                const id = tr.querySelector('.v-id') ? tr.querySelector('.v-id').value : '';
-                const title = tr.querySelector('.v-title').value;
-                const author = tr.querySelector('.v-author').value;
-                const publisher = tr.querySelector('.v-publisher').value;
-                const category = tr.querySelector('.v-category').value;
-                const price = tr.querySelector('.v-price').value;
-                const originalPrice = tr.querySelector('.v-original-price').value;
-                const pages = tr.querySelector('.v-pages').value;
-                const fileType = tr.querySelector('.v-file-type').value;
-                const badge = tr.querySelector('.v-badge').value;
-                const cover = tr.querySelector('.v-cover').value;
-                const bookFile = tr.querySelector('.v-book-file').value;
-                const sampleFile = tr.querySelector('.v-sample-file').value;
-                const description = tr.querySelector('.v-description').value;
+        async function handleVisualSubmit(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            const submitBtn = document.getElementById('btnSaveBatch');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ กำลังบันทึก Batch Edit (Chunked)...';
 
-                if (title && title.trim()) {
-                    data.push({
-                        id: id ? parseInt(id) : null,
-                        title: title,
-                        author_name: author,
-                        publisher: publisher,
-                        category: category,
-                        price: parseFloat(price) || 0,
-                        original_price: originalPrice ? parseFloat(originalPrice) : null,
-                        pages_count: pages,
-                        file_type: fileType,
-                        badge: badge,
-                        cover_image_url: cover,
-                        file_path: bookFile,
-                        sample_file_path: sampleFile,
-                        description: description
-                    });
+            try {
+                const rows = document.querySelectorAll('#tableBody tr');
+                const data = [];
+                rows.forEach(tr => {
+                    const id = tr.querySelector('.v-id') ? tr.querySelector('.v-id').value : '';
+                    const title = tr.querySelector('.v-title').value;
+                    const author = tr.querySelector('.v-author').value;
+                    const publisher = tr.querySelector('.v-publisher').value;
+                    const category = tr.querySelector('.v-category').value;
+                    const price = tr.querySelector('.v-price').value;
+                    const originalPrice = tr.querySelector('.v-original-price').value;
+                    const pages = tr.querySelector('.v-pages').value;
+                    const fileType = tr.querySelector('.v-file-type').value;
+                    const badge = tr.querySelector('.v-badge').value;
+                    const cover = tr.querySelector('.v-cover').value;
+                    const bookFile = tr.querySelector('.v-book-file').value;
+                    const sampleFile = tr.querySelector('.v-sample-file').value;
+                    const description = tr.querySelector('.v-description').value;
+
+                    if (title && title.trim()) {
+                        data.push({
+                            id: id ? parseInt(id) : null,
+                            title: title,
+                            author_name: author,
+                            publisher: publisher,
+                            category: category,
+                            price: parseFloat(price) || 0,
+                            original_price: originalPrice ? parseFloat(originalPrice) : null,
+                            pages_count: pages,
+                            file_type: fileType,
+                            badge: badge,
+                            cover_image_url: cover,
+                            file_path: bookFile,
+                            sample_file_path: sampleFile,
+                            description: description
+                        });
+                    }
+                });
+
+                if (data.length === 0) {
+                    alert('ไม่มีข้อมูลในตารางที่จะบันทึก');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '💾 บันทึก Batch Edit ทั้งหมด (Save All Batch Edits)';
+                    return false;
                 }
-            });
-            document.getElementById('visualJsonOutput').value = JSON.stringify(data);
+
+                // Chunk batch submit into groups of 5 books per request (Guarantees < 200KB payload per request!)
+                const BATCH_SIZE = 5;
+                for (let i = 0; i < data.length; i += BATCH_SIZE) {
+                    const chunk = data.slice(i, i + BATCH_SIZE);
+                    const pct = Math.round(((i + chunk.length) / data.length) * 100);
+                    submitBtn.textContent = '⏳ กำลังบันทึก Batch Edit (' + pct + '%)...';
+
+                    const res = await fetch('/admin/batch-update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ books: chunk })
+                    });
+
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        throw new Error('บันทึกผิดพลาดที่รายการที่ ' + (i + 1) + ' (HTTP ' + res.status + ')');
+                    }
+                }
+
+                window.location.href = '/admin/batch?success=' + encodeURIComponent('บันทึกข้อมูล Batch Edit ทั้งหมด ' + data.length + ' รายการเรียบร้อยแล้ว');
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = '💾 บันทึก Batch Edit ทั้งหมด (Save All Batch Edits)';
+            }
+            return false;
         }
     </script>
 </body>
