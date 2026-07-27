@@ -242,10 +242,7 @@
                         <button class="btn-submit" style="max-width: 220px; margin: 0 auto; display: block;" onclick="openLoginModal()">🔑 เข้าสู่ระบบ Admin</button>
                     </div>
                 <% } else { %>
-                    <p>📭 ยังไม่มีรายการสื่อการเรียนรู้ในระบบ</p>
-                    <% if (currentUser && currentUser.role === 'admin') { %>
-                        <a href="/admin/upload" style="color: var(--fresh-green); font-weight: bold; text-decoration: none;">+ เพิ่มรายการใหม่</a>
-                    <% } %>
+                    <p>📭 ยังไม่มีรายการสื่อการเรียนรู้ในหมวดหมู่นี้ (อยู่ระหว่างจัดเตรียมข้อมูล)</p>
                 <% } %>
             </div>
         <% } %>

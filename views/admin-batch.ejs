@@ -387,18 +387,23 @@ VALUES
 
             const fullSql = sqlLines.join('\n\n');
 
-            // Trigger direct file download (.sql file) ONLY - Do NOT set textarea value to avoid browser freeze!
-            const blob = new Blob([fullSql], { type: 'text/plain;charset=utf-8;' });
-            const link = document.createElement('a');
+            // Force browser native Save/Download file dialog window
             const today = new Date().toISOString().slice(0, 10);
             const fileName = `klangsamong_books_export_${today}.sql`;
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
+            const blob = new Blob([fullSql], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName);
+            link.style.display = 'none';
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
 
-            alert(`✅ ดาวน์โหลดไฟล์ ${fileName} (${DB_BOOKS.length} รายการ) สำเร็จเรียบร้อยแล้ว!`);
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 1000);
         }
 
         function addTableRow() {
