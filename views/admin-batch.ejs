@@ -387,10 +387,7 @@ VALUES
 
             const fullSql = sqlLines.join('\n\n');
 
-            // Populate textarea for editing
-            document.getElementById('sqlQueryInput').value = fullSql;
-
-            // Trigger direct file download (.sql file)
+            // Trigger direct file download (.sql file) ONLY - Do NOT set textarea value to avoid browser freeze!
             const blob = new Blob([fullSql], { type: 'text/plain;charset=utf-8;' });
             const link = document.createElement('a');
             const today = new Date().toISOString().slice(0, 10);
@@ -401,7 +398,7 @@ VALUES
             link.click();
             document.body.removeChild(link);
 
-            alert(`✅ ดาวน์โหลดไฟล์ ${fileName} (${DB_BOOKS.length} รายการ) เรียบร้อยแล้ว!`);
+            alert(`✅ ดาวน์โหลดไฟล์ ${fileName} (${DB_BOOKS.length} รายการ) สำเร็จเรียบร้อยแล้ว!`);
         }
 
         function addTableRow() {

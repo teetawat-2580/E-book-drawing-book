@@ -167,25 +167,6 @@
             </form>
         </div>
 
-        <div class="user-nav">
-            <% if (currentUser) { %>
-                <span style="font-size: 13px;">
-                    <% if (currentUser.role === 'admin') { %>
-                        👑 <strong><%= currentUser.username %></strong> <small>(Admin)</small>
-                    <% } else { %>
-                        👤 <strong><%= currentUser.username %></strong>
-                    <% } %>
-                </span>
-
-                <% if (currentUser.role === 'admin') { %>
-                    <a href="/admin/manage" class="btn-header btn-admin">⚙️ จัดการสื่อ</a>
-                <% } %>
-
-                <a href="/logout" class="btn-header">ออกจากระบบ</a>
-            <% } else { %>
-                <button class="btn-header" onclick="openLoginModal()">🔑 เข้าสู่ระบบ</button>
-            <% } %>
-        </div>
     </header>
 
     <!-- Main Container (Full Width) -->
