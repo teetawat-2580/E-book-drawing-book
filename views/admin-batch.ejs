@@ -94,15 +94,39 @@
             </div>
 
             <form action="/admin/batch-update" method="POST" id="visualBatchForm" onsubmit="return handleVisualSubmit(event)">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <button type="button" class="btn-secondary" onclick="addTableRow()">➕ เพิ่มสื่อเล่มใหม่ (Add New Row)</button>
-                    <span style="font-size:13px; color:#64748b;">มีทั้งหมด <strong><%= books ? books.length : 0 %></strong> รายการในตาราง</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" class="btn-secondary" onclick="addTableRow()" style="margin-bottom:0;">➕ เพิ่มสื่อเล่มใหม่ (Add New Row)</button>
+                        
+                        <!-- Category Filter Dropdown -->
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <label style="font-weight: 700; font-size: 13px; color: var(--primary-navy);">🔍 กรองตามหมวดหมู่:</label>
+                            <select id="categoryFilter" onchange="filterBatchTable()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700; color: var(--primary-navy); cursor: pointer;">
+                                <option value="all">แสดงทุกหมวดหมู่ (All)</option>
+                                <option value="สมุดระบายสีเด็ก">สมุดระบายสีเด็ก</option>
+                                <option value="คณิตศาสตร์">คณิตศาสตร์ (ชีทคณิต)</option>
+                                <option value="พื้นฐานการบวกเลข">พื้นฐานการบวกเลข</option>
+                                <option value="ชีทฝึกเขียน">ชีทฝึกเขียนภาษา</option>
+                                <option value="แฟลชการ์ด">แฟลชการ์ด 2 ภาษา</option>
+                                <option value="เกมฝึกสมอง">เกมฝึกสมองเด็ก</option>
+                                <option value="นิทานเด็ก AI">นิทานและแบบเรียน</option>
+                                <option value="สื่อครูตกแต่ง">สื่อครูตกแต่งห้องเรียน</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 13px; color: #64748b; font-weight: 500;">
+                        แสดงในตาราง <strong id="visibleRowCount"><%= books ? books.length : 0 %></strong> / <%= books ? books.length : 0 %> รายการ | เลือกแล้ว <strong id="selectedRowCount" style="color:var(--fresh-green); font-size:14px;">0</strong> รายการ
+                    </div>
                 </div>
 
                 <div class="table-responsive">
                     <table class="table-batch" id="batchTable">
                         <thead>
                             <tr>
+                                <th style="width: 35px; text-align: center;">
+                                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllRows(this)" title="เลือกทั้งหมด / ยกเลิกทั้งหมด" style="cursor: pointer; width: 16px; height: 16px;">
+                                </th>
                                 <th style="width: 40px;">ID</th>
                                 <th style="width: 140px;">ชื่อสื่อ (Title)</th>
                                 <th style="width: 95px;">ผู้จัดทำ (Author)</th>
@@ -113,9 +137,9 @@
                                 <th style="width: 90px;">ความยาว/หน้า</th>
                                 <th style="width: 75px;">ประเภทไฟล์</th>
                                 <th style="width: 80px;">ป้ายกำกับ</th>
-                                <th style="width: 145px;">🖼️ รูปปก (Cover File)</th>
-                                <th style="width: 145px;">📖 PDF ฉบับเต็ม (Book PDF)</th>
-                                <th style="width: 145px;">📄 PDF ตัวอย่าง (Sample)</th>
+                                <th style="width: 155px;">🖼️ ลิงก์/ไฟล์รูปปก</th>
+                                <th style="width: 165px;">📖 ลิงก์ PDF ฉบับเต็ม (Link Only)</th>
+                                <th style="width: 155px;">📄 ลิงก์/ไฟล์ PDF ตัวอย่าง</th>
                                 <th style="width: 140px;">รายละเอียด (Description)</th>
                                 <th style="width: 40px;">ลบ</th>
                             </tr>
@@ -124,6 +148,9 @@
                             <% if (books && books.length > 0) { %>
                                 <% books.forEach(book => { %>
                                     <tr>
+                                        <td style="text-align: center; vertical-align: middle;">
+                                            <input type="checkbox" class="v-select-row" onchange="updateSelectedCount()" style="cursor: pointer; width: 16px; height: 16px;">
+                                        </td>
                                         <td>
                                             <input type="text" class="v-id" value="<%= book.id %>" readonly style="background:#eee; text-align:center; font-weight:bold;">
                                         </td>
@@ -148,52 +175,30 @@
                                         <td><input type="text" class="v-file-type" value="<%= book.file_type || 'PDF' %>"></td>
                                         <td><input type="text" class="v-badge" value="<%= book.badge || '' %>"></td>
                                         
-                                        <!-- Cover File Picker Cell -->
+                                        <!-- Cover Image (Input Link + Direct Upload Button) -->
                                         <td>
-                                            <input type="hidden" class="v-cover" value="<%= book.cover_image_url || '' %>">
+                                            <input type="text" class="v-cover" value="<%= book.cover_image_url || '' %>" placeholder="ลิงก์รูปปก..." style="font-size:11px; margin-bottom:3px;">
                                             <label class="btn-file-upload">
-                                                📁 อัปโหลดรูปทับเดิม
+                                                📁 อัปโหลดรูปทับ
                                                 <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
                                             </label>
-                                            <div class="status-indicator" style="margin-top:3px;">
-                                                <% if (book.cover_image_url) { %>
-                                                    <a href="<%= book.cover_image_url %>" target="_blank" style="color:#0284c7; font-size:11px; text-decoration:none;">👁️ ดูภาพเดิม</a>
-                                                <% } else { %>
-                                                    <small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small>
-                                                <% } %>
-                                            </div>
                                         </td>
 
-                                        <!-- Full PDF File Picker Cell -->
+                                        <!-- Full PDF File (Input Link Only - Direct Link to Google Drive etc.) -->
                                         <td>
-                                            <input type="hidden" class="v-book-file" value="<%= book.file_path || '' %>">
-                                            <label class="btn-file-upload">
-                                                📁 อัปโหลด PDF ทับเดิม
-                                                <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'books', 'v-book-file')" style="display:none;">
-                                            </label>
-                                            <div class="status-indicator" style="margin-top:3px;">
-                                                <% if (book.file_path) { %>
-                                                    <a href="<%= book.file_path %>" target="_blank" style="color:#0284c7; font-size:11px; text-decoration:none;">📖 เปิด PDF เดิม</a>
-                                                <% } else { %>
-                                                    <small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small>
-                                                <% } %>
-                                            </div>
+                                            <input type="text" class="v-book-file" value="<%= book.file_path || '' %>" placeholder="วางลิงก์ Google Drive..." style="font-size:11px;">
+                                            <% if (book.file_path) { %>
+                                                <div style="margin-top:2px;"><a href="<%= book.file_path %>" target="_blank" style="color:#0284c7; font-size:10.5px; text-decoration:none;">📖 เปิดลิงก์เดิม</a></div>
+                                            <% } %>
                                         </td>
 
-                                        <!-- Sample PDF File Picker Cell -->
+                                        <!-- Sample PDF (Input Link + Direct Upload Button) -->
                                         <td>
-                                            <input type="hidden" class="v-sample-file" value="<%= book.sample_file_path || '' %>">
+                                            <input type="text" class="v-sample-file" value="<%= book.sample_file_path || '' %>" placeholder="ลิงก์ตัวอย่าง..." style="font-size:11px; margin-bottom:3px;">
                                             <label class="btn-file-upload">
-                                                📁 อัปโหลดตัวอย่างทับเดิม
+                                                📁 อัปโหลดตัวอย่างทับ
                                                 <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
                                             </label>
-                                            <div class="status-indicator" style="margin-top:3px;">
-                                                <% if (book.sample_file_path) { %>
-                                                    <a href="<%= book.sample_file_path %>" target="_blank" style="color:#0284c7; font-size:11px; text-decoration:none;">📄 เปิดตัวอย่างเดิม</a>
-                                                <% } else { %>
-                                                    <small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small>
-                                                <% } %>
-                                            </div>
                                         </td>
 
                                         <td><textarea class="v-description"><%= book.description || '' %></textarea></td>
@@ -202,6 +207,9 @@
                                 <% }) %>
                             <% } else { %>
                                 <tr>
+                                    <td style="text-align: center; vertical-align: middle;">
+                                        <input type="checkbox" class="v-select-row" checked onchange="updateSelectedCount()" style="cursor: pointer; width: 16px; height: 16px;">
+                                    </td>
                                     <td><input type="text" class="v-id" value="" placeholder="NEW" readonly style="background:#eee; text-align:center;"></td>
                                     <td><input type="text" class="v-title" placeholder="เล่ม 1 : สัตว์แสนรัก" required></td>
                                     <td><input type="text" class="v-author" placeholder="คลังสมอง"></td>
@@ -224,30 +232,23 @@
                                     <td><input type="text" class="v-badge" placeholder="แนะนำ"></td>
                                     
                                     <td>
-                                        <input type="hidden" class="v-cover" value="">
+                                        <input type="text" class="v-cover" value="" placeholder="ลิงก์รูปปก..." style="font-size:11px; margin-bottom:3px;">
                                         <label class="btn-file-upload">
                                             📁 อัปโหลดรูปใหม่
                                             <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
                                         </label>
-                                        <div class="status-indicator" style="margin-top:3px;"><small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small></div>
                                     </td>
 
                                     <td>
-                                        <input type="hidden" class="v-book-file" value="">
-                                        <label class="btn-file-upload">
-                                            📁 อัปโหลด PDF ใหม่
-                                            <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'books', 'v-book-file')" style="display:none;">
-                                        </label>
-                                        <div class="status-indicator" style="margin-top:3px;"><small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small></div>
+                                        <input type="text" class="v-book-file" value="" placeholder="วางลิงก์ Google Drive..." style="font-size:11px;">
                                     </td>
 
                                     <td>
-                                        <input type="hidden" class="v-sample-file" value="">
+                                        <input type="text" class="v-sample-file" value="" placeholder="ลิงก์ตัวอย่าง..." style="font-size:11px; margin-bottom:3px;">
                                         <label class="btn-file-upload">
                                             📁 อัปโหลดตัวอย่างใหม่
                                             <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
                                         </label>
-                                        <div class="status-indicator" style="margin-top:3px;"><small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small></div>
                                     </td>
 
                                     <td><textarea class="v-description" placeholder="รายละเอียด..."></textarea></td>
@@ -467,23 +468,143 @@ VALUES
             tbody.insertBefore(tr, tbody.firstChild);
         }
 
+        function filterBatchTable() {
+            const selectedCat = document.getElementById('categoryFilter').value;
+            const rows = document.querySelectorAll('#tableBody tr');
+            let visibleCount = 0;
+
+            rows.forEach(tr => {
+                const catSelect = tr.querySelector('.v-category');
+                if (!catSelect) return;
+                const rowCat = catSelect.value;
+                
+                const isMatch = selectedCat === 'all' || 
+                                rowCat === selectedCat || 
+                                (selectedCat === 'คณิตศาสตร์' && (rowCat === 'คณิตศาสตร์' || rowCat === 'ชีทคณิตอนุบาล ป.1')) || 
+                                (selectedCat === 'แฟลชการ์ด' && (rowCat === 'แฟลชการ์ด' || rowCat === 'แฟลชการ์ด 2 ภาษา')) ||
+                                (selectedCat === 'เกมฝึกสมอง' && (rowCat === 'เกมฝึกสมอง' || rowCat === 'เกมฝึกสมองเด็ก')) ||
+                                (selectedCat === 'สื่อครูตกแต่ง' && (rowCat === 'สื่อครูตกแต่ง' || rowCat === 'สื่อครูตกแต่งห้องเรียน'));
+
+                if (isMatch) {
+                    tr.style.display = '';
+                    visibleCount++;
+                } else {
+                    tr.style.display = 'none';
+                }
+            });
+
+            document.getElementById('visibleRowCount').textContent = visibleCount;
+            updateSelectedCount();
+        }
+
+        function toggleSelectAllRows(masterCheckbox) {
+            const isChecked = masterCheckbox.checked;
+            const rows = document.querySelectorAll('#tableBody tr');
+
+            rows.forEach(tr => {
+                if (tr.style.display !== 'none') {
+                    const cb = tr.querySelector('.v-select-row');
+                    if (cb) cb.checked = isChecked;
+                }
+            });
+
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const selectedBoxes = document.querySelectorAll('#tableBody tr:not([style*="display: none"]) .v-select-row:checked');
+            const count = selectedBoxes.length;
+            document.getElementById('selectedRowCount').textContent = count;
+            
+            const submitBtn = document.getElementById('btnSaveBatch');
+            if (submitBtn) {
+                submitBtn.textContent = count > 0 
+                    ? `💾 บันทึก Batch Edit (เลือกแล้ว ${count} รายการ)` 
+                    : '💾 บันทึก Batch Edit (กรุณาเลือกรายการที่ต้องการบันทึก)';
+            }
+        }
+
+        function addTableRow() {
+            const tbody = document.getElementById('tableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align: center; vertical-align: middle;">
+                    <input type="checkbox" class="v-select-row" checked onchange="updateSelectedCount()" style="cursor: pointer; width: 16px; height: 16px;">
+                </td>
+                <td><input type="text" class="v-id" value="" placeholder="NEW" readonly style="background:#eee; text-align:center;"></td>
+                <td><input type="text" class="v-title" placeholder="ชื่อสื่อ" required></td>
+                <td><input type="text" class="v-author" placeholder="คลังสมอง"></td>
+                <td><input type="text" class="v-publisher" placeholder="คลังสมอง"></td>
+                <td>
+                    <select class="v-category">
+                        <option value="สมุดระบายสีเด็ก">สมุดระบายสีเด็ก</option>
+                        <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                        <option value="พื้นฐานการบวกเลข">พื้นฐานการบวกเลข</option>
+                        <option value="ชีทฝึกเขียน">ชีทฝึกเขียน</option>
+                        <option value="แฟลชการ์ด">แฟลชการ์ด 2 ภาษา</option>
+                        <option value="เกมฝึกสมอง">เกมฝึกสมองเด็ก</option>
+                        <option value="นิทานเด็ก AI">นิทานและแบบเรียน</option>
+                        <option value="สื่อครูตกแต่ง">สื่อครูตกแต่งห้องเรียน</option>
+                    </select>
+                </td>
+                <td><input type="number" step="0.01" class="v-price" placeholder="159" required></td>
+                <td><input type="number" step="0.01" class="v-original-price" placeholder="199"></td>
+                <td><input type="text" class="v-pages" placeholder="20 หน้า"></td>
+                <td><input type="text" class="v-file-type" value="PDF"></td>
+                <td><input type="text" class="v-badge" placeholder="แนะนำ"></td>
+                
+                <td>
+                    <input type="text" class="v-cover" value="" placeholder="ลิงก์รูปปก..." style="font-size:11px; margin-bottom:3px;">
+                    <label class="btn-file-upload">
+                        📁 อัปโหลดรูปใหม่
+                        <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
+                    </label>
+                </td>
+
+                <td>
+                    <input type="text" class="v-book-file" value="" placeholder="วางลิงก์ Google Drive..." style="font-size:11px;">
+                </td>
+
+                <td>
+                    <input type="text" class="v-sample-file" value="" placeholder="ลิงก์ตัวอย่าง..." style="font-size:11px; margin-bottom:3px;">
+                    <label class="btn-file-upload">
+                        📁 อัปโหลดตัวอย่างใหม่
+                        <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
+                    </label>
+                </td>
+
+                <td><textarea class="v-description" placeholder="รายละเอียด..."></textarea></td>
+                <td style="text-align:center;"><button type="button" style="color:red; cursor:pointer; border:none; background:none;" onclick="removeRow(this)">❌</button></td>
+            `;
+            tbody.insertBefore(tr, tbody.firstChild);
+            updateSelectedCount();
+        }
+
         function removeRow(btn) {
             const tr = btn.closest('tr');
             if (confirm('ต้องการลบแถวนี้ออกจากตารางแก้ไขหรือไม่?')) {
                 tr.remove();
+                updateSelectedCount();
             }
         }
 
         async function handleVisualSubmit(e) {
             if (e && e.preventDefault) e.preventDefault();
             const submitBtn = document.getElementById('btnSaveBatch');
+
+            const selectedRows = document.querySelectorAll('#tableBody tr:not([style*="display: none"]) .v-select-row:checked');
+            if (selectedRows.length === 0) {
+                alert('⚠️ กรุณาติ๊กเลือกช่องด้านหน้าอย่างน้อย 1 รายการที่ต้องการบันทึกข้อมูล');
+                return false;
+            }
+
             submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ กำลังบันทึก Batch Edit (Chunked)...';
+            submitBtn.textContent = '⏳ กำลังบันทึกรายการที่เลือก (Chunked)...';
 
             try {
-                const rows = document.querySelectorAll('#tableBody tr');
                 const data = [];
-                rows.forEach(tr => {
+                selectedRows.forEach(cb => {
+                    const tr = cb.closest('tr');
                     const id = tr.querySelector('.v-id') ? tr.querySelector('.v-id').value : '';
                     const title = tr.querySelector('.v-title').value;
                     const author = tr.querySelector('.v-author').value;
@@ -520,9 +641,9 @@ VALUES
                 });
 
                 if (data.length === 0) {
-                    alert('ไม่มีข้อมูลในตารางที่จะบันทึก');
+                    alert('ไม่มีข้อมูลที่ถูกต้องในการบันทึก');
                     submitBtn.disabled = false;
-                    submitBtn.textContent = '💾 บันทึก Batch Edit ทั้งหมด (Save All Batch Edits)';
+                    updateSelectedCount();
                     return false;
                 }
 
@@ -531,7 +652,7 @@ VALUES
                 for (let i = 0; i < data.length; i += BATCH_SIZE) {
                     const chunk = data.slice(i, i + BATCH_SIZE);
                     const pct = Math.round(((i + chunk.length) / data.length) * 100);
-                    submitBtn.textContent = '⏳ กำลังบันทึก Batch Edit (' + pct + '%)...';
+                    submitBtn.textContent = '⏳ กำลังบันทึกรายการที่เลือก (' + pct + '%)...';
 
                     const res = await fetch('/admin/batch-update', {
                         method: 'POST',
@@ -545,11 +666,11 @@ VALUES
                     }
                 }
 
-                window.location.href = '/admin/batch?success=' + encodeURIComponent('บันทึกข้อมูล Batch Edit ทั้งหมด ' + data.length + ' รายการเรียบร้อยแล้ว');
+                window.location.href = '/admin/batch?success=' + encodeURIComponent('บันทึกข้อมูลที่เลือกทั้งหมด ' + data.length + ' รายการเรียบร้อยแล้ว');
             } catch (err) {
                 alert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
                 submitBtn.disabled = false;
-                submitBtn.textContent = '💾 บันทึก Batch Edit ทั้งหมด (Save All Batch Edits)';
+                updateSelectedCount();
             }
             return false;
         }
