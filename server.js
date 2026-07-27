@@ -676,14 +676,61 @@ async function handleCategoryPage(req, res, slugParam) {
     }
 }
 
+// Category Full Download Page handler function
+async function handleCategoryFullPage(req, res, matchedCat) {
+    try {
+        const categoryId = matchedCat ? matchedCat.id : 'all';
+
+        let query = 'SELECT * FROM books WHERE 1=1';
+        let params = [];
+
+        if (categoryId !== 'all') {
+            query += ' AND (category = ? OR category LIKE ?)';
+            params.push(categoryId, `%${categoryId}%`);
+        }
+
+        query += ' ORDER BY id ASC';
+
+        const [books] = await pool.query(query, params);
+
+        res.render('category-full', {
+            books,
+            categoryObj: matchedCat || { name: 'สื่อการเรียนรู้ทั้งหมด', id: 'all' }
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Database error: ' + err.message);
+    }
+}
+
 // Route for category URL prefix
+app.get('/category/:categorySlug/full', async (req, res) => {
+    const matchedCat = findCategoryBySlug(req.params.categorySlug);
+    handleCategoryFullPage(req, res, matchedCat);
+});
+
 app.get('/category/:categorySlug', async (req, res) => {
     handleCategoryPage(req, res, req.params.categorySlug);
 });
 
-// Dynamic route for direct category links like /แฟลชการ์ด-2-ภาษา, /สมุดระบายสีเด็ก, /ชีทคณิตศาสตร์
+// Dynamic route for direct category links and -full pages
 app.get('/:slug', async (req, res, next) => {
     const slug = req.params.slug;
+    let decoded = '';
+    try {
+        decoded = decodeURIComponent(slug).trim();
+    } catch (e) {
+        decoded = slug.trim();
+    }
+
+    if (decoded.endsWith('-full')) {
+        const baseSlug = decoded.slice(0, -5).trim();
+        const matchedFull = findCategoryBySlug(baseSlug);
+        if (matchedFull) {
+            return handleCategoryFullPage(req, res, matchedFull);
+        }
+    }
+
     const matched = findCategoryBySlug(slug);
     if (matched) {
         return handleCategoryPage(req, res, slug);
