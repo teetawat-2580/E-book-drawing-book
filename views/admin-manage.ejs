@@ -129,10 +129,10 @@
             <div style="display: flex; align-items: center; gap: 8px;">
                 <label style="font-weight: 700; font-size: 14px; color: var(--primary-navy);">🔍 กรองสื่อตามหมวดหมู่:</label>
                 <select id="manageCategoryFilter" onchange="filterManageTable()" style="padding: 7px 14px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-weight: 700; color: var(--primary-navy); cursor: pointer; font-size: 13.5px; font-family: inherit;">
+                    <option value="พื้นฐานการบวกเลข" selected>พื้นฐานการบวกเลข</option>
                     <option value="all">แสดงทุกหมวดหมู่ (All)</option>
                     <option value="สมุดระบายสีเด็ก">สมุดระบายสีเด็ก</option>
                     <option value="คณิตศาสตร์">คณิตศาสตร์ (ชีทคณิต)</option>
-                    <option value="พื้นฐานการบวกเลข">พื้นฐานการบวกเลข</option>
                     <option value="ชีทฝึกเขียน">ชีทฝึกเขียนภาษา</option>
                     <option value="แฟลชการ์ด">แฟลชการ์ด 2 ภาษา</option>
                     <option value="เกมฝึกสมอง">เกมฝึกสมองเด็ก</option>
@@ -569,6 +569,8 @@
             const editModal = document.getElementById('editModal');
             if (event.target === editModal) closeEditModal();
         };
+
+        document.addEventListener('DOMContentLoaded', filterManageTable);
     </script>
 </body>
 </html>
