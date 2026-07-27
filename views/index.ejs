@@ -222,12 +222,6 @@
                         <div class="card-actions">
                             <!-- Click opens Preview Popup Modal -->
                             <button class="btn-preview-modal" onclick="openPreviewModalFromEl(this)">📖 ดูรายละเอียด / ตัวอย่าง</button>
-
-                            <% if (currentUser && currentUser.role === 'admin') { %>
-                                <form action="/admin/delete-book/<%= book.id %>" method="POST" onsubmit="return confirm('คุณต้องการลบสื่อรายการนี้ใช่หรือไม่?');" style="margin-top:2px;">
-                                    <button type="submit" class="btn-delete-card">🗑️ ลบ</button>
-                                </form>
-                            <% } %>
                         </div>
                     </div>
                 <% }) %>
