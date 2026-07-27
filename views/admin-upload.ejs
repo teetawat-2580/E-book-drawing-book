@@ -150,10 +150,10 @@
     </script>
 
     <script>
-        async function directUploadFile(file, subFolder) {
+        async function directUploadFile(file, subFolder, statusCallback) {
             if (!file) return '';
             
-            // Try Client-side Vercel Blob Direct Upload (Bypasses 4.5MB Serverless Payload Limit!)
+            // 1. Try Client-side Vercel Blob Direct Upload (if BLOB_READ_WRITE_TOKEN is configured)
             if (window.vercelBlobUpload) {
                 try {
                     const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -165,36 +165,65 @@
                         return blob.url;
                     }
                 } catch (err) {
-                    console.warn('Vercel blob direct client upload skipped/failed, using fallback:', err);
+                    console.warn('Vercel Blob direct upload unconfigured, switching to 2MB Chunked Upload:', err.message);
                 }
             }
 
-            // Fallback via server AJAX if blob token unavailable
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('subFolder', subFolder);
+            // 2. Chunked Upload (2MB chunks -> 100% compliant with Vercel 4.5MB limit without external token!)
+            const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB per chunk
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+            const uploadId = 'up_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
-            const res = await fetch('/api/upload-file', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const resText = await res.text();
-            let data;
-            try {
-                data = JSON.parse(resText);
-            } catch (e) {
-                if (res.status === 413 || resText.includes('Payload Too Large') || resText.includes('Request Entity')) {
-                    throw new Error('ไฟล์ "' + file.name + '" มีขนาดใหญ่เกินข้อจำกัด 4.5MB ของ Vercel (กรุณาตั้งค่า BLOB_READ_WRITE_TOKEN ใน Vercel เพื่อเปิดใช้อัปโหลดขนาดใหญ่ไม่จำกัด)');
+            for (let i = 0; i < totalChunks; i++) {
+                const start = i * CHUNK_SIZE;
+                const end = Math.min(file.size, start + CHUNK_SIZE);
+                const chunkBlob = file.slice(start, end);
+
+                const base64Data = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const res = reader.result;
+                        resolve(res.substring(res.indexOf(',') + 1));
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(chunkBlob);
+                });
+
+                const pct = Math.round(((i + 1) / totalChunks) * 100);
+                if (statusCallback) statusCallback(pct);
+
+                const res = await fetch('/api/upload-chunk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        uploadId: uploadId,
+                        chunkIndex: i,
+                        totalChunks: totalChunks,
+                        filename: file.name,
+                        subFolder: subFolder,
+                        mimeType: file.type || 'application/pdf',
+                        chunkData: base64Data
+                    })
+                });
+
+                const resText = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(resText);
+                } catch (e) {
+                    throw new Error('Chunk upload server error (HTTP ' + res.status + ')');
                 }
-                throw new Error('ข้อผิดพลาดจากเซิร์ฟเวอร์ (HTTP ' + res.status + ')');
+
+                if (!data.success) {
+                    throw new Error(data.message || 'Chunk upload failed');
+                }
+
+                if (data.file_url) {
+                    return data.file_url;
+                }
             }
 
-            if (data && data.success && data.file_url) {
-                return data.file_url;
-            } else {
-                throw new Error(data ? data.message : 'File upload failed');
-            }
+            throw new Error('Upload completed without file URL');
         }
 
         document.getElementById('uploadForm').addEventListener('submit', async function(e) {
@@ -213,17 +242,23 @@
 
                 if (coverFile) {
                     statusBox.innerHTML = '⏳ กำลังอัปโหลดรูปภาพปก...';
-                    document.getElementById('cover_image_url').value = await directUploadFile(coverFile, 'covers');
+                    document.getElementById('cover_image_url').value = await directUploadFile(coverFile, 'covers', (pct) => {
+                        statusBox.innerHTML = '⏳ กำลังอัปโหลดรูปภาพปก (' + pct + '%)...';
+                    });
                 }
 
                 if (bookFile) {
-                    statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ฉบับเต็ม (Direct Blob Upload)...';
-                    document.getElementById('file_path').value = await directUploadFile(bookFile, 'books');
+                    statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ฉบับเต็ม (Chunked Upload 2MB)...';
+                    document.getElementById('file_path').value = await directUploadFile(bookFile, 'books', (pct) => {
+                        statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ฉบับเต็ม (' + pct + '%)...';
+                    });
                 }
 
                 if (sampleFile) {
                     statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ตัวอย่าง...';
-                    document.getElementById('sample_file_path').value = await directUploadFile(sampleFile, 'samples');
+                    document.getElementById('sample_file_path').value = await directUploadFile(sampleFile, 'samples', (pct) => {
+                        statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ตัวอย่าง (' + pct + '%)...';
+                    });
                 }
 
                 statusBox.innerHTML = '✅ อัปโหลดไฟล์เรียบร้อยแล้ว กำลังบันทึกข้อมูล...';

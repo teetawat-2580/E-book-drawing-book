@@ -303,7 +303,7 @@
             btn.classList.add('active');
         }
 
-        // Direct Vercel Blob Client Upload function for table cells (bypasses 4.5MB limit!)
+        // Direct Vercel Blob / 2MB Chunked Upload function for table cells (bypasses 4.5MB limit!)
         async function uploadRowFile(fileInput, subFolder, hiddenInputClass) {
             if (!fileInput.files || fileInput.files.length === 0) return;
 
@@ -312,13 +312,14 @@
             const hiddenInput = td.querySelector('.' + hiddenInputClass);
             const statusEl = td.querySelector('.status-indicator');
 
-            statusEl.innerHTML = '<span style="color:#d97706; font-size:11px; font-weight:bold;">⏳ กำลังส่งตรงไปยัง Vercel Blob...</span>';
+            statusEl.innerHTML = '<span style="color:#d97706; font-size:11px; font-weight:bold;">⏳ กำลังอัปโหลด...</span>';
 
             try {
                 let fileUrl = '';
                 if (window.vercelBlobUpload) {
                     try {
-                        const blob = await window.vercelBlobUpload(subFolder + '/' + Date.now() + '-' + file.name, file, {
+                        const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                        const blob = await window.vercelBlobUpload(subFolder + '/' + Date.now() + '-' + cleanFileName, file, {
                             access: 'public',
                             handleUploadUrl: '/api/upload/handle-client-upload'
                         });
@@ -329,19 +330,45 @@
                 }
 
                 if (!fileUrl) {
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('subFolder', subFolder);
+                    // Chunked Upload Fallback
+                    const CHUNK_SIZE = 2 * 1024 * 1024;
+                    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+                    const uploadId = 'up_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
-                    const response = await fetch('/api/upload-file', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const result = await response.json();
-                    if (result.success && result.file_url) {
-                        fileUrl = result.file_url;
-                    } else {
-                        throw new Error(result.message || 'Upload failed');
+                    for (let i = 0; i < totalChunks; i++) {
+                        const start = i * CHUNK_SIZE;
+                        const end = Math.min(file.size, start + CHUNK_SIZE);
+                        const chunkBlob = file.slice(start, end);
+
+                        const base64Data = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result.substring(reader.result.indexOf(',') + 1));
+                            reader.onerror = reject;
+                            reader.readAsDataURL(chunkBlob);
+                        });
+
+                        const pct = Math.round(((i + 1) / totalChunks) * 100);
+                        statusEl.innerHTML = `<span style="color:#d97706; font-size:11px; font-weight:bold;">⏳ อัปโหลด (${pct}%)...</span>`;
+
+                        const response = await fetch('/api/upload-chunk', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                uploadId: uploadId,
+                                chunkIndex: i,
+                                totalChunks: totalChunks,
+                                filename: file.name,
+                                subFolder: subFolder,
+                                mimeType: file.type || 'application/pdf',
+                                chunkData: base64Data
+                            })
+                        });
+
+                        const resultText = await response.text();
+                        const result = JSON.parse(resultText);
+                        if (result.file_url) {
+                            fileUrl = result.file_url;
+                        }
                     }
                 }
 

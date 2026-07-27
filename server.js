@@ -314,6 +314,54 @@ app.get('/admin/upload', requireAdmin, (req, res) => {
     res.render('admin-upload');
 });
 
+// Memory map to hold chunk buffers during upload (for files > 4.5MB)
+const chunkStore = new Map();
+
+// Chunked Upload Endpoint (Splits large files into 2MB chunks to bypass Vercel 4.5MB payload limit)
+app.post('/api/upload-chunk', requireAdmin, async (req, res) => {
+    try {
+        const { uploadId, chunkIndex, totalChunks, filename, subFolder, mimeType, chunkData } = req.body;
+
+        if (!uploadId || chunkData === undefined) {
+            return res.status(400).json({ success: false, message: 'Invalid chunk payload' });
+        }
+
+        if (!chunkStore.has(uploadId)) {
+            chunkStore.set(uploadId, {
+                chunks: new Array(totalChunks),
+                count: 0,
+                filename: filename || 'file.pdf',
+                subFolder: subFolder || 'books',
+                mimeType: mimeType || 'application/pdf'
+            });
+        }
+
+        const session = chunkStore.get(uploadId);
+        const buffer = Buffer.from(chunkData, 'base64');
+        session.chunks[chunkIndex] = buffer;
+        session.count++;
+
+        // When all chunks are received, concatenate buffers & resolve URL
+        if (session.count === totalChunks) {
+            const fullBuffer = Buffer.concat(session.chunks);
+            chunkStore.delete(uploadId);
+
+            const fileUrl = await resolveFileUrl({
+                originalname: session.filename,
+                buffer: fullBuffer,
+                mimetype: session.mimeType
+            }, session.subFolder);
+
+            return res.json({ success: true, file_url: fileUrl });
+        }
+
+        return res.json({ success: true, progress: Math.round((session.count / totalChunks) * 100) });
+    } catch (err) {
+        console.error('Chunk upload error:', err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 // Client-side Direct Vercel Blob Upload Token Endpoint (Bypasses Vercel 4.5MB Serverless Limit!)
 app.post('/api/upload/handle-client-upload', async (req, res) => {
     try {
