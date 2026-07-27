@@ -745,6 +745,44 @@ app.post('/admin/batch-sql', requireAdmin, async (req, res) => {
     }
 });
 
+// Admin Route: Export Full Books Table as SQL file download (HTTP Attachment Download)
+app.get('/admin/export-sql', async (req, res) => {
+    try {
+        const [books] = await pool.query('SELECT * FROM books ORDER BY id ASC');
+
+        const esc = (val) => (val === null || val === undefined || val === '') ? 'NULL' : `'${String(val).replace(/'/g, "''")}'`;
+        const num = (val) => (val === null || val === undefined || val === '' || isNaN(val)) ? 'NULL' : val;
+
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 10);
+        const timeStr = now.toLocaleTimeString('th-TH');
+
+        let sqlLines = [
+            `-- 📥 โค้ด SQL ส่งออกหนังสือทั้งหมดในฐานข้อมูล (จำนวนทั้งหมด ${books.length} รายการ)`,
+            `-- แหล่งที่มา: KLANGSAMONG (klangsamong.vercel.app)`,
+            `-- วันที่ส่งออก: ${dateStr} ${timeStr}`,
+            `-- ท่านสามารถนำไฟล์นี้ไปปรับแต่งข้อความ แล้วรันอัปเดตแบบ Batch ได้ทันที\n`
+        ];
+
+        books.forEach(b => {
+            const query = `INSERT INTO books (id, title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, cover_image_url, file_path, sample_file_path, description) ` +
+                          `VALUES (${b.id}, ${esc(b.title)}, ${esc(b.author_name)}, ${esc(b.publisher)}, ${esc(b.category)}, ${num(b.price)}, ${num(b.original_price)}, ${esc(b.pages_count)}, ${esc(b.file_type)}, ${esc(b.badge)}, ${esc(b.cover_image_url)}, ${esc(b.file_path)}, ${esc(b.sample_file_path)}, ${esc(b.description)}) ` +
+                          `ON DUPLICATE KEY UPDATE title = VALUES(title), author_name = VALUES(author_name), publisher = VALUES(publisher), category = VALUES(category), price = VALUES(price), original_price = VALUES(original_price), pages_count = VALUES(pages_count), file_type = VALUES(file_type), badge = VALUES(badge), cover_image_url = VALUES(cover_image_url), file_path = VALUES(file_path), sample_file_path = VALUES(sample_file_path), description = VALUES(description);`;
+            sqlLines.push(query);
+        });
+
+        const fullSql = sqlLines.join('\n\n');
+        const filename = `klangsamong_books_export_${dateStr}.sql`;
+
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        return res.send(fullSql);
+    } catch (err) {
+        console.error('Export SQL error:', err);
+        res.status(500).send('Export SQL Error: ' + err.message);
+    }
+});
+
 // 5.3 Admin Route: Process Interactive Table Batch Edit / Update
 app.post('/admin/batch-update', requireAdmin, async (req, res) => {
     try {

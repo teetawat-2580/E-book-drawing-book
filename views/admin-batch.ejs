@@ -233,7 +233,7 @@
             </div>
             <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
                 <button type="button" class="btn-secondary" onclick="fillSqlDemo()">✨ เติมตัวอย่างคำสั่ง SQL (Load Demo SQL จากโครงสร้าง DB)</button>
-                <button type="button" class="btn-secondary" onclick="exportFullBooksSql()" style="background: #0284c7; border-color: #0284c7; color: white; font-weight: bold;">📥 Export โค้ด SQL หนังสือทั้งหมดใน Database</button>
+                <a href="/admin/export-sql" class="btn-secondary" style="background: #0284c7; border-color: #0284c7; color: white; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">📥 ดาวน์โหลดไฟล์ .SQL หนังสือทั้งหมดใน Database</a>
             </div>
             <form action="/admin/batch-sql" method="POST">
                 <textarea name="sql_query" id="sqlQueryInput" placeholder="วางคำสั่ง SQL ที่นี่ (เช่น UPDATE books SET price = 159 WHERE id = 1; หรือ INSERT INTO books ...)"></textarea>
