@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Batch Upload & Batch Edit | คลังสมอง KLANGSOMONG</title>
+    <title>Admin - Batch Edit & File Upload | คลังสมอง KLANGSOMONG</title>
     <!-- Google Fonts: Prompt & Kanit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,7 @@
 
         * { box-sizing: border-box; }
         body { font-family: 'Prompt', 'Kanit', sans-serif; background-color: var(--bg-light); margin: 0; padding: 25px 15px; color: var(--text-dark); }
-        .batch-container { max-width: 1350px; background: white; padding: 30px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin: auto; border: 1px solid #e2e8f0; }
+        .batch-container { max-width: 1400px; background: white; padding: 30px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin: auto; border: 1px solid #e2e8f0; }
         h2 { color: var(--primary-navy); margin-top: 0; font-size: 21px; border-bottom: 2px solid #e2e8f0; padding-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
         .btn-nav { background: #f1f5f9; color: var(--primary-navy); padding: 7px 14px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid #cbd5e1; }
         .btn-nav:hover { background: #e2e8f0; }
@@ -48,13 +48,17 @@
         .btn-secondary:hover { background-color: #bae6fd; }
 
         /* Full Width Interactive Table */
-        .table-responsive { overflow-x: auto; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 10px; max-height: 550px; overflow-y: auto; }
-        .table-batch { width: 100%; border-collapse: collapse; min-width: 1600px; }
+        .table-responsive { overflow-x: auto; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 10px; max-height: 580px; overflow-y: auto; }
+        .table-batch { width: 100%; border-collapse: collapse; min-width: 1650px; }
         .table-batch th { position: sticky; top: 0; background: var(--primary-navy); color: white; padding: 10px; font-size: 12.5px; font-weight: 700; border: 1px solid #1e293b; z-index: 10; text-align: left; }
         .table-batch td { border: 1px solid #e2e8f0; padding: 6px; font-size: 12px; background: white; vertical-align: top; }
         .table-batch tr:nth-child(even) td { background: #f8fafc; }
         .table-batch input, .table-batch select, .table-batch textarea { width: 100%; padding: 5px 7px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-size: 12px; font-family: inherit; }
         .table-batch textarea { height: 35px; resize: vertical; }
+
+        /* File Upload Picker Button inside cell */
+        .btn-file-upload { display: inline-flex; align-items: center; justify-content: center; gap: 4px; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; border-radius: 6px; padding: 4px 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; text-decoration: none; width: 100%; transition: background 0.15s; }
+        .btn-file-upload:hover { background: #bae6fd; }
 
         .hint-box { background: #f0f9ff; border-left: 4px solid var(--sky-blue); padding: 12px 15px; border-radius: 6px; margin-bottom: 15px; font-size: 13.5px; color: #0369a1; }
     </style>
@@ -86,7 +90,7 @@
         <!-- Tab 1: Interactive Table Input & Edit Mode -->
         <div id="visualTab" class="tab-content active">
             <div class="hint-box">
-                🛠️ <strong>Batch Edit Mode (เฉพาะ Admin):</strong> แก้ไขรายละเอียดสื่อทุกรายการในระบบได้พร้อมกัน สามารถแก้ไข ชื่อ, ผู้จัดทำ, สำนักพิมพ์, หมวดหมู่, ราคา, ราคาปกติ, ความยาว, รูปปก (`/uploads/covers/...`), ไฟล์ PDF เต็ม (`/uploads/books/...`), ไฟล์ตัวอย่าง (`/uploads/samples/...`) และกด <strong>"บันทึก Batch Edit ทั้งหมด"</strong>
+                🛠️ <strong>Batch Edit & Direct File Overwrite Mode (เฉพาะ Admin):</strong> ท่านสามารถกดปุ่ม <code>📁 เลือกไฟล์ใหม่ทับเดิม</code> ในช่อง รูปปก, ไฟล์ PDF ฉบับเต็ม หรือไฟล์ตัวอย่าง เพื่ออัปโหลดไฟล์ใหม่ขึ้นไปทับไฟล์เดิมได้ทันที โดยระบบจะอัปโหลดและอัปเดต URL อัตโนมัติเมื่อกด <strong>"บันทึก Batch Edit ทั้งหมด"</strong>
             </div>
 
             <form action="/admin/batch-update" method="POST" id="visualBatchForm">
@@ -99,21 +103,21 @@
                     <table class="table-batch" id="batchTable">
                         <thead>
                             <tr>
-                                <th style="width: 45px;">ID</th>
+                                <th style="width: 40px;">ID</th>
                                 <th style="width: 140px;">ชื่อสื่อ (Title)</th>
-                                <th style="width: 100px;">ผู้จัดทำ (Author)</th>
-                                <th style="width: 110px;">สำนักพิมพ์ (Publisher)</th>
-                                <th style="width: 130px;">หมวดหมู่ (Category)</th>
-                                <th style="width: 75px;">ราคาขาย</th>
-                                <th style="width: 75px;">ราคาปกติ</th>
-                                <th style="width: 100px;">ความยาว/หน้า</th>
-                                <th style="width: 80px;">ประเภทไฟล์</th>
-                                <th style="width: 85px;">ป้ายกำกับ</th>
-                                <th style="width: 130px;">🖼️ Cover Path</th>
-                                <th style="width: 130px;">📖 Book PDF Path</th>
-                                <th style="width: 130px;">📄 Sample PDF Path</th>
-                                <th style="width: 150px;">รายละเอียด (Description)</th>
-                                <th style="width: 45px;">ลบ</th>
+                                <th style="width: 95px;">ผู้จัดทำ (Author)</th>
+                                <th style="width: 105px;">สำนักพิมพ์</th>
+                                <th style="width: 125px;">หมวดหมู่ (Category)</th>
+                                <th style="width: 70px;">ราคาขาย</th>
+                                <th style="width: 70px;">ราคาปกติ</th>
+                                <th style="width: 90px;">ความยาว/หน้า</th>
+                                <th style="width: 75px;">ประเภทไฟล์</th>
+                                <th style="width: 80px;">ป้ายกำกับ</th>
+                                <th style="width: 145px;">🖼️ รูปปก (Cover File)</th>
+                                <th style="width: 145px;">📖 PDF ฉบับเต็ม (Book PDF)</th>
+                                <th style="width: 145px;">📄 PDF ตัวอย่าง (Sample)</th>
+                                <th style="width: 140px;">รายละเอียด (Description)</th>
+                                <th style="width: 40px;">ลบ</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -142,9 +146,55 @@
                                         <td><input type="text" class="v-pages" value="<%= book.pages_count || '' %>"></td>
                                         <td><input type="text" class="v-file-type" value="<%= book.file_type || 'PDF' %>"></td>
                                         <td><input type="text" class="v-badge" value="<%= book.badge || '' %>"></td>
-                                        <td><input type="text" class="v-cover" value="<%= book.cover_image_url || '' %>" placeholder="/uploads/covers/..."></td>
-                                        <td><input type="text" class="v-book-file" value="<%= book.file_path || '' %>" placeholder="/uploads/books/..."></td>
-                                        <td><input type="text" class="v-sample-file" value="<%= book.sample_file_path || '' %>" placeholder="/uploads/samples/..."></td>
+                                        
+                                        <!-- Cover File Picker Cell -->
+                                        <td>
+                                            <input type="hidden" class="v-cover" value="<%= book.cover_image_url || '' %>">
+                                            <label class="btn-file-upload">
+                                                📁 อัปโหลดรูปทับเดิม
+                                                <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
+                                            </label>
+                                            <div class="status-indicator" style="margin-top:3px;">
+                                                <% if (book.cover_image_url) { %>
+                                                    <a href="<%= book.cover_image_url %>" target="_blank" style="color:#0284c7; font-size:11px; text-decoration:none;">👁️ ดูภาพเดิม</a>
+                                                <% } else { %>
+                                                    <small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small>
+                                                <% } %>
+                                            </div>
+                                        </td>
+
+                                        <!-- Full PDF File Picker Cell -->
+                                        <td>
+                                            <input type="hidden" class="v-book-file" value="<%= book.file_path || '' %>">
+                                            <label class="btn-file-upload">
+                                                📁 อัปโหลด PDF ทับเดิม
+                                                <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'books', 'v-book-file')" style="display:none;">
+                                            </label>
+                                            <div class="status-indicator" style="margin-top:3px;">
+                                                <% if (book.file_path) { %>
+                                                    <a href="<%= book.file_path %>" target="_blank" style="color:#0284c7; font-size:11px; text-decoration:none;">📖 เปิด PDF เดิม</a>
+                                                <% } else { %>
+                                                    <small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small>
+                                                <% } %>
+                                            </div>
+                                        </td>
+
+                                        <!-- Sample PDF File Picker Cell -->
+                                        <td>
+                                            <input type="hidden" class="v-sample-file" value="<%= book.sample_file_path || '' %>">
+                                            <label class="btn-file-upload">
+                                                📁 อัปโหลดตัวอย่างทับเดิม
+                                                <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
+                                            </label>
+                                            <div class="status-indicator" style="margin-top:3px;">
+                                                <% if (book.sample_file_path) { %>
+                                                    <a href="<%= book.sample_file_path %>" target="_blank" style="color:#0284c7; font-size:11px; text-decoration:none;">📄 เปิดตัวอย่างเดิม</a>
+                                                <% } else { %>
+                                                    <small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small>
+                                                <% } %>
+                                            </div>
+                                        </td>
+
                                         <td><textarea class="v-description"><%= book.description || '' %></textarea></td>
                                         <td style="text-align:center;"><button type="button" style="color:red; cursor:pointer; border:none; background:none;" onclick="removeRow(this)">❌</button></td>
                                     </tr>
@@ -154,7 +204,7 @@
                                     <td><input type="text" class="v-id" value="" placeholder="NEW" readonly style="background:#eee; text-align:center;"></td>
                                     <td><input type="text" class="v-title" placeholder="เล่ม 1 : สัตว์แสนรัก" required></td>
                                     <td><input type="text" class="v-author" placeholder="คลังสมอง"></td>
-                                    <td><input type="text" class="v-publisher" placeholder="คลังสมอง KLANGSOMONG"></td>
+                                    <td><input type="text" class="v-publisher" placeholder="คลังสมอง"></td>
                                     <td>
                                         <select class="v-category">
                                             <option value="สมุดระบายสีเด็ก">สมุดระบายสีเด็ก</option>
@@ -171,9 +221,34 @@
                                     <td><input type="text" class="v-pages" placeholder="20 หน้า"></td>
                                     <td><input type="text" class="v-file-type" value="PDF"></td>
                                     <td><input type="text" class="v-badge" placeholder="แนะนำ"></td>
-                                    <td><input type="text" class="v-cover" placeholder="/uploads/covers/..."></td>
-                                    <td><input type="text" class="v-book-file" placeholder="/uploads/books/..."></td>
-                                    <td><input type="text" class="v-sample-file" placeholder="/uploads/samples/..."></td>
+                                    
+                                    <td>
+                                        <input type="hidden" class="v-cover" value="">
+                                        <label class="btn-file-upload">
+                                            📁 อัปโหลดรูปใหม่
+                                            <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
+                                        </label>
+                                        <div class="status-indicator" style="margin-top:3px;"><small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small></div>
+                                    </td>
+
+                                    <td>
+                                        <input type="hidden" class="v-book-file" value="">
+                                        <label class="btn-file-upload">
+                                            📁 อัปโหลด PDF ใหม่
+                                            <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'books', 'v-book-file')" style="display:none;">
+                                        </label>
+                                        <div class="status-indicator" style="margin-top:3px;"><small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small></div>
+                                    </td>
+
+                                    <td>
+                                        <input type="hidden" class="v-sample-file" value="">
+                                        <label class="btn-file-upload">
+                                            📁 อัปโหลดตัวอย่างใหม่
+                                            <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
+                                        </label>
+                                        <div class="status-indicator" style="margin-top:3px;"><small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small></div>
+                                    </td>
+
                                     <td><textarea class="v-description" placeholder="รายละเอียด..."></textarea></td>
                                     <td style="text-align:center;"><button type="button" style="color:red; cursor:pointer; border:none; background:none;" onclick="removeRow(this)">❌</button></td>
                                 </tr>
@@ -219,6 +294,40 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             btn.classList.add('active');
+        }
+
+        // AJAX File Upload function for direct file inputs in table cells
+        async function uploadRowFile(fileInput, subFolder, hiddenInputClass) {
+            if (!fileInput.files || fileInput.files.length === 0) return;
+
+            const file = fileInput.files[0];
+            const td = fileInput.closest('td');
+            const hiddenInput = td.querySelector('.' + hiddenInputClass);
+            const statusEl = td.querySelector('.status-indicator');
+
+            statusEl.innerHTML = '<span style="color:#d97706; font-size:11px; font-weight:bold;">⏳ กำลังอัปโหลด...</span>';
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('subFolder', subFolder);
+
+            try {
+                const response = await fetch('/api/upload-file', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success && result.file_url) {
+                    hiddenInput.value = result.file_url;
+                    statusEl.innerHTML = `<span style="color:#16a34a; font-size:11px; font-weight:bold;">✅ อัปโหลดทับสำเร็จ!</span> <a href="${result.file_url}" target="_blank" style="color:#0284c7; font-size:11px; text-decoration:none;">👁️ เปิดดู</a>`;
+                } else {
+                    statusEl.innerHTML = `<span style="color:#dc2626; font-size:11px; font-weight:bold;">❌ ${result.message || 'ล้มเหลว'}</span>`;
+                }
+            } catch (err) {
+                statusEl.innerHTML = `<span style="color:#dc2626; font-size:11px; font-weight:bold;">❌ อัปโหลดผิดพลาด</span>`;
+                console.error(err);
+            }
         }
 
         function fillJsonDemo() {
@@ -273,9 +382,34 @@ VALUES
                 <td><input type="text" class="v-pages" placeholder="20 หน้า"></td>
                 <td><input type="text" class="v-file-type" value="PDF"></td>
                 <td><input type="text" class="v-badge" placeholder="แนะนำ"></td>
-                <td><input type="text" class="v-cover" placeholder="/uploads/covers/..."></td>
-                <td><input type="text" class="v-book-file" placeholder="/uploads/books/..."></td>
-                <td><input type="text" class="v-sample-file" placeholder="/uploads/samples/..."></td>
+                
+                <td>
+                    <input type="hidden" class="v-cover" value="">
+                    <label class="btn-file-upload">
+                        📁 อัปโหลดรูปใหม่
+                        <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
+                    </label>
+                    <div class="status-indicator" style="margin-top:3px;"><small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small></div>
+                </td>
+
+                <td>
+                    <input type="hidden" class="v-book-file" value="">
+                    <label class="btn-file-upload">
+                        📁 อัปโหลด PDF ใหม่
+                        <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'books', 'v-book-file')" style="display:none;">
+                    </label>
+                    <div class="status-indicator" style="margin-top:3px;"><small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small></div>
+                </td>
+
+                <td>
+                    <input type="hidden" class="v-sample-file" value="">
+                    <label class="btn-file-upload">
+                        📁 อัปโหลดตัวอย่างใหม่
+                        <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
+                    </label>
+                    <div class="status-indicator" style="margin-top:3px;"><small style="color:#94a3b8; font-size:11px;">ไม่มีไฟล์</small></div>
+                </td>
+
                 <td><textarea class="v-description" placeholder="รายละเอียด..."></textarea></td>
                 <td style="text-align:center;"><button type="button" style="color:red; cursor:pointer; border:none; background:none;" onclick="removeRow(this)">❌</button></td>
             `;

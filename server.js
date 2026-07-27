@@ -503,6 +503,83 @@ app.post('/admin/batch-update', requireAdmin, async (req, res) => {
     }
 });
 
+// 5.4 Admin API Route: AJAX File Upload for Batch Edit & Table File Pickers
+app.post('/api/upload-file', requireAdmin, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'ไม่มีไฟล์ถูกส่งมา' });
+        }
+        const subFolder = req.body.subFolder || 'covers';
+        const fileUrl = await resolveFileUrl(req.file, subFolder);
+        res.json({ success: true, file_url: fileUrl, originalname: req.file.originalname });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Upload error: ' + err.message });
+    }
+});
+
+// 5.5 Admin Route: Handle Single Book Edit Submission & File Overwriting
+app.post('/admin/edit-book/:id', requireAdmin, upload.fields([
+    { name: 'cover_image', maxCount: 1 },
+    { name: 'book_file', maxCount: 1 },
+    { name: 'sample_file', maxCount: 1 }
+]), async (req, res) => {
+    try {
+        const bookId = req.params.id;
+        const { 
+            title, description, price, category, 
+            author_name, publisher, file_type, pages_count, original_price, badge 
+        } = req.body;
+
+        const [existing] = await pool.query('SELECT * FROM books WHERE id = ?', [bookId]);
+        if (existing.length === 0) {
+            return res.status(404).send('Book not found');
+        }
+        const currentBook = existing[0];
+
+        const coverImageFile = req.files['cover_image'] 
+            ? await resolveFileUrl(req.files['cover_image'][0], 'covers') 
+            : currentBook.cover_image_url;
+
+        const bookFile = req.files['book_file'] 
+            ? await resolveFileUrl(req.files['book_file'][0], 'books') 
+            : currentBook.file_path;
+
+        const sampleFile = req.files['sample_file'] 
+            ? await resolveFileUrl(req.files['sample_file'][0], 'samples') 
+            : currentBook.sample_file_path;
+
+        const query = `
+            UPDATE books SET 
+                title = ?, description = ?, price = ?, cover_image_url = ?, file_path = ?, 
+                category = ?, author_name = ?, publisher = ?, sample_file_path = ?, 
+                file_type = ?, pages_count = ?, original_price = ?, badge = ?
+            WHERE id = ?
+        `;
+        await pool.query(query, [
+            title,
+            description || '',
+            price || 0,
+            coverImageFile,
+            bookFile,
+            category || 'สมุดระบายสีเด็ก',
+            author_name || '',
+            publisher || '',
+            sampleFile,
+            file_type || 'PDF',
+            pages_count || '',
+            original_price ? parseFloat(original_price) : null,
+            badge || '',
+            bookId
+        ]);
+
+        res.redirect('/admin/manage');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error updating book: ' + err.message);
+    }
+});
+
 // 6. Admin Route: Delete Book
 app.post('/admin/delete-book/:id', requireAdmin, async (req, res) => {
     try {

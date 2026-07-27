@@ -28,7 +28,7 @@
         .btn-header { background: rgba(255,255,255,0.15); color: white; padding: 7px 15px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.3); transition: background 0.2s; }
         .btn-header:hover { background: rgba(255,255,255,0.3); }
 
-        .container { max-width: 1180px; margin: 30px auto; padding: 0 20px; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .page-title { font-size: 21px; font-weight: 700; color: var(--primary-navy); margin: 0; border-left: 5px solid var(--sky-blue); padding-left: 12px; }
         .btn-add { background-color: var(--fresh-green); color: white; text-decoration: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 13.5px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); transition: background 0.2s; }
@@ -45,10 +45,30 @@
         .category-badge { background: #e0f2fe; color: #0369a1; font-size: 11.5px; padding: 3px 8px; border-radius: 12px; display: inline-block; font-weight: 600; }
         .price-text { color: #dc2626; font-weight: 700; }
         
-        .btn-delete { background: #fef2f2; border: 1px solid #fca5a5; color: #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12.5px; font-weight: 700; transition: all 0.2s; }
+        .btn-edit { background: #e0f2fe; border: 1px solid #7dd3fc; color: #0369a1; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12.5px; font-weight: 700; transition: all 0.2s; margin-right: 4px; font-family: inherit; }
+        .btn-edit:hover { background: #bae6fd; }
+
+        .btn-delete { background: #fef2f2; border: 1px solid #fca5a5; color: #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12.5px; font-weight: 700; transition: all 0.2s; font-family: inherit; }
         .btn-delete:hover { background: #ef4444; color: white; }
         .btn-pdf { color: var(--primary-navy); text-decoration: none; font-weight: 600; font-size: 12.5px; }
         .btn-pdf:hover { text-decoration: underline; }
+
+        /* Modal Popup for Single Book Edit & File Overwrite */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 1000; justify-content: center; align-items: center; padding: 15px; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; border-radius: 14px; width: 100%; max-width: 600px; padding: 25px 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 15px; right: 15px; border: none; background: #f1f5f9; font-size: 20px; cursor: pointer; color: #64748b; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 15px; color: var(--primary-navy); border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        
+        .form-group { margin-bottom: 14px; }
+        .form-row { display: flex; gap: 12px; }
+        .form-row .form-group { flex: 1; }
+        label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; color: #334155; }
+        input[type="text"], input[type="number"], select, textarea, input[type="file"] { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; font-family: inherit; }
+        textarea { height: 75px; resize: vertical; }
+        .btn-submit { width: 100%; background: var(--fresh-green); color: white; border: none; padding: 11px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 10px; font-family: inherit; }
+        .btn-submit:hover { background: var(--green-hover); }
+        .section-tag { font-weight: 700; color: var(--primary-navy); margin: 15px 0 10px 0; border-left: 3px solid var(--sky-blue); padding-left: 8px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -83,7 +103,7 @@
                             <th>หมวดหมู่</th>
                             <th style="width: 100px;">ราคา</th>
                             <th style="width: 140px;">ไฟล์ PDF & ตัวอย่าง</th>
-                            <th style="width: 140px; text-align: center;">การจัดการ</th>
+                            <th style="width: 180px; text-align: center;">การจัดการ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -132,8 +152,9 @@
                                     <% } %>
                                 </td>
                                 <td style="text-align: center;">
-                                    <form action="/admin/delete-book/<%= book.id %>" method="POST" onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบรายการนี้?');" style="margin: 0;">
-                                        <button type="submit" class="btn-delete">🗑️ ลบรายการ</button>
+                                    <button type="button" class="btn-edit" onclick="openEditModal(<%= JSON.stringify(book) %>)">✏️ แก้ไข / อัปทับ</button>
+                                    <form action="/admin/delete-book/<%= book.id %>" method="POST" onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบรายการนี้?');" style="display:inline;">
+                                        <button type="submit" class="btn-delete">🗑️</button>
                                     </form>
                                 </td>
                             </tr>
@@ -149,5 +170,117 @@
         </div>
     </div>
 
+    <!-- Edit Book & File Overwrite Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            <div class="modal-title">✏️ แก้ไขสื่อ & อัปโหลดไฟล์ทับเดิม</div>
+
+            <form id="editForm" action="" method="POST" enctype="multipart/form-data">
+                
+                <div class="form-group">
+                    <label>ชื่อสื่อการเรียนรู้ (Title):</label>
+                    <input type="text" name="title" id="editTitle" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>หมวดหมู่ (Category):</label>
+                        <select name="category" id="editCategory" required>
+                            <option value="สมุดระบายสีเด็ก">สมุดระบายสีเด็ก</option>
+                            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                            <option value="ชีทฝึกเขียน">ชีทฝึกเขียน</option>
+                            <option value="แฟลชการ์ด">แฟลชการ์ด 2 ภาษา</option>
+                            <option value="เกมฝึกสมอง">เกมฝึกสมองเด็ก</option>
+                            <option value="นิทานเด็ก AI">นิทานและแบบเรียน</option>
+                            <option value="สื่อครูตกแต่ง">สื่อครูตกแต่งห้องเรียน</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ราคาขาย (THB):</label>
+                        <input type="number" step="0.01" name="price" id="editPrice" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ผู้จัดทำ (Author):</label>
+                        <input type="text" name="author_name" id="editAuthor">
+                    </div>
+                    <div class="form-group">
+                        <label>สำนักพิมพ์ (Publisher):</label>
+                        <input type="text" name="publisher" id="editPublisher">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ความยาว/หน้า:</label>
+                        <input type="text" name="pages_count" id="editPages">
+                    </div>
+                    <div class="form-group">
+                        <label>ป้ายกำกับ (Badge):</label>
+                        <input type="text" name="badge" id="editBadge">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>รายละเอียด (Description):</label>
+                    <textarea name="description" id="editDesc"></textarea>
+                </div>
+
+                <div class="section-tag">📁 อัปโหลดไฟล์ใหม่เข้าไปทับของเดิม (Optional)</div>
+
+                <div class="form-group">
+                    <label>🖼️ รูปภาพปกใหม่ (ทับรูปเดิม):</label>
+                    <input type="file" name="cover_image" accept="image/*">
+                    <small id="currentCoverNotice" style="color:#64748b; font-size:11px;"></small>
+                </div>
+
+                <div class="form-group">
+                    <label>📖 ไฟล์ PDF ฉบับเต็มใหม่ (ทับไฟล์เดิม):</label>
+                    <input type="file" name="book_file" accept=".pdf">
+                    <small id="currentBookNotice" style="color:#64748b; font-size:11px;"></small>
+                </div>
+
+                <div class="form-group">
+                    <label>📄 ไฟล์ตัวอย่างสำหรับ "ทดลองอ่าน" ใหม่ (ทับไฟล์เดิม):</label>
+                    <input type="file" name="sample_file" accept=".pdf">
+                    <small id="currentSampleNotice" style="color:#64748b; font-size:11px;"></small>
+                </div>
+
+                <button type="submit" class="btn-submit">💾 บันทึกการแก้ไข & อัปโหลดทับ</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openEditModal(book) {
+            document.getElementById('editForm').action = '/admin/edit-book/' + book.id;
+            document.getElementById('editTitle').value = book.title || '';
+            document.getElementById('editCategory').value = book.category || 'สมุดระบายสีเด็ก';
+            document.getElementById('editPrice').value = book.price || 0;
+            document.getElementById('editAuthor').value = book.author_name || '';
+            document.getElementById('editPublisher').value = book.publisher || '';
+            document.getElementById('editPages').value = book.pages_count || '';
+            document.getElementById('editBadge').value = book.badge || '';
+            document.getElementById('editDesc').value = book.description || '';
+
+            document.getElementById('currentCoverNotice').textContent = book.cover_image_url ? 'มีไฟล์รูปเดิมอยู่แล้ว (เลือกไฟล์ใหม่ถ้าต้องการทับ)' : 'ยังไม่มีไฟล์เดิม';
+            document.getElementById('currentBookNotice').textContent = book.file_path ? 'มีไฟล์ PDF เดิมอยู่แล้ว (เลือกไฟล์ใหม่ถ้าต้องการทับ)' : 'ยังไม่มีไฟล์เดิม';
+            document.getElementById('currentSampleNotice').textContent = book.sample_file_path ? 'มีไฟล์ตัวอย่างเดิมอยู่แล้ว (เลือกไฟล์ใหม่ถ้าต้องการทับ)' : 'ยังไม่มีไฟล์เดิม';
+
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        window.onclick = function(event) {
+            const editModal = document.getElementById('editModal');
+            if (event.target === editModal) closeEditModal();
+        };
+    </script>
 </body>
 </html>
