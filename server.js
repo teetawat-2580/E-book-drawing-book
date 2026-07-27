@@ -36,9 +36,9 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Pass session user & categories to all views
+// Pass session user & categories to all views (Direct admin access enabled)
 app.use((req, res, next) => {
-    res.locals.currentUser = req.session.user || null;
+    res.locals.currentUser = { username: 'admin', role: 'admin', name: 'Administrator' };
     res.locals.categories = CATEGORIES;
     next();
 });
@@ -211,33 +211,14 @@ const USERS = {
     admin: { password: 'admin123', role: 'admin', name: 'Administrator' }
 };
 
-// Middleware: Admin Protection
+// Middleware: Admin Protection (Direct Access Enabled - No Login Required)
 function requireAdmin(req, res, next) {
-    if (req.session.user && req.session.user.role === 'admin') {
-        return next();
-    }
-    return res.status(403).send(`
-        <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
-            <h2 style="color: #e74c3c;">Access Denied (เฉพาะผู้ดูแลระบบเท่านั้น)</h2>
-            <p>กรุณาเข้าสู่ระบบด้วยสิทธิ์ Adminเพื่อเข้าถึงหน้านี้</p>
-            <a href="/" style="color: #00b140; text-decoration: none; font-weight: bold;">← กลับหน้าแรก</a>
-        </div>
-    `);
+    next();
 }
 
-// 1. Homepage Route: Display books by Category or Search (Admin Access Required)
+// 1. Homepage Route: Display books by Category or Search
 app.get('/', async (req, res) => {
     try {
-        if (!req.session.user || req.session.user.role !== 'admin') {
-            return res.render('index', { 
-                books: [], 
-                selectedCategory: 'all', 
-                searchQuery: '',
-                loginError: req.query.loginError || null,
-                adminGateRequired: true
-            });
-        }
-
         const selectedCategory = req.query.category || 'all';
         const searchQuery = req.query.q || '';
         
@@ -245,8 +226,8 @@ app.get('/', async (req, res) => {
         const params = [];
 
         if (selectedCategory !== 'all') {
-            sql += ' AND category = ?';
-            params.push(selectedCategory);
+            sql += ' AND (category = ? OR category LIKE ?)';
+            params.push(selectedCategory, `%${selectedCategory}%`);
         }
 
         if (searchQuery) {
@@ -257,12 +238,12 @@ app.get('/', async (req, res) => {
         sql += ' ORDER BY id DESC';
 
         const [books] = await pool.query(sql, params);
-        
+
         res.render('index', { 
-            books, 
+            books: books, 
             selectedCategory, 
             searchQuery,
-            loginError: req.query.loginError || null,
+            loginError: null,
             adminGateRequired: false
         });
     } catch (err) {
@@ -270,6 +251,7 @@ app.get('/', async (req, res) => {
         res.status(500).send('Database connection error: ' + err.message);
     }
 });
+
 
 // Auth: Login Route
 app.post('/login', (req, res) => {

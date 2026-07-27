@@ -463,11 +463,6 @@
             if (event.target === sampleModal) closeSampleViewerModal();
         };
 
-        const loginError = JSON.parse('<%- JSON.stringify(Boolean(typeof loginError !== "undefined" && loginError)) %>');
-        const adminGateRequired = JSON.parse('<%- JSON.stringify(Boolean(typeof adminGateRequired !== "undefined" && adminGateRequired)) %>');
-        if (loginError || adminGateRequired) {
-            openLoginModal();
-        }
     </script>
 </body>
 </html>
