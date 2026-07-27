@@ -289,6 +289,12 @@
 
     </div>
 
+    <!-- Import Vercel Blob Client Module -->
+    <script type="module">
+        import { upload } from 'https://esm.sh/@vercel/blob/client';
+        window.vercelBlobUpload = upload;
+    </script>
+
     <script>
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -297,7 +303,7 @@
             btn.classList.add('active');
         }
 
-        // AJAX File Upload function for direct file inputs in table cells
+        // Direct Vercel Blob Client Upload function for table cells (bypasses 4.5MB limit!)
         async function uploadRowFile(fileInput, subFolder, hiddenInputClass) {
             if (!fileInput.files || fileInput.files.length === 0) return;
 
@@ -306,27 +312,43 @@
             const hiddenInput = td.querySelector('.' + hiddenInputClass);
             const statusEl = td.querySelector('.status-indicator');
 
-            statusEl.innerHTML = '<span style="color:#d97706; font-size:11px; font-weight:bold;">⏳ กำลังอัปโหลด...</span>';
-
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('subFolder', subFolder);
+            statusEl.innerHTML = '<span style="color:#d97706; font-size:11px; font-weight:bold;">⏳ กำลังส่งตรงไปยัง Vercel Blob...</span>';
 
             try {
-                const response = await fetch('/api/upload-file', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-
-                if (result.success && result.file_url) {
-                    hiddenInput.value = result.file_url;
-                    statusEl.innerHTML = `<span style="color:#16a34a; font-size:11px; font-weight:bold;">✅ อัปโหลดทับสำเร็จ!</span> <a href="${result.file_url}" target="_blank" style="color:#0284c7; font-size:11px; text-decoration:none;">👁️ เปิดดู</a>`;
-                } else {
-                    statusEl.innerHTML = `<span style="color:#dc2626; font-size:11px; font-weight:bold;">❌ ${result.message || 'ล้มเหลว'}</span>`;
+                let fileUrl = '';
+                if (window.vercelBlobUpload) {
+                    try {
+                        const blob = await window.vercelBlobUpload(subFolder + '/' + Date.now() + '-' + file.name, file, {
+                            access: 'public',
+                            handleUploadUrl: '/api/upload/handle-client-upload'
+                        });
+                        fileUrl = blob.url;
+                    } catch (err) {
+                        console.warn('Direct blob client upload fallback:', err);
+                    }
                 }
+
+                if (!fileUrl) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('subFolder', subFolder);
+
+                    const response = await fetch('/api/upload-file', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (result.success && result.file_url) {
+                        fileUrl = result.file_url;
+                    } else {
+                        throw new Error(result.message || 'Upload failed');
+                    }
+                }
+
+                hiddenInput.value = fileUrl;
+                statusEl.innerHTML = `<span style="color:#16a34a; font-size:11px; font-weight:bold;">✅ อัปโหลดทับสำเร็จ!</span> <a href="${fileUrl}" target="_blank" style="color:#0284c7; font-size:11px; text-decoration:none;">👁️ เปิดดู</a>`;
             } catch (err) {
-                statusEl.innerHTML = `<span style="color:#dc2626; font-size:11px; font-weight:bold;">❌ อัปโหลดผิดพลาด</span>`;
+                statusEl.innerHTML = `<span style="color:#dc2626; font-size:11px; font-weight:bold;">❌ อัปโหลดผิดพลาด: ${err.message}</span>`;
                 console.error(err);
             }
         }

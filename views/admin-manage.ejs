@@ -176,8 +176,11 @@
             <button class="modal-close" onclick="closeEditModal()">&times;</button>
             <div class="modal-title">✏️ แก้ไขสื่อ & อัปโหลดไฟล์ทับเดิม</div>
 
-            <form id="editForm" action="" method="POST" enctype="multipart/form-data">
-                
+            <form id="editForm" action="" method="POST">
+                <input type="hidden" name="cover_image_url" id="edit_cover_url">
+                <input type="hidden" name="file_path" id="edit_book_url">
+                <input type="hidden" name="sample_file_path" id="edit_sample_url">
+
                 <div class="form-group">
                     <label>ชื่อสื่อการเรียนรู้ (Title):</label>
                     <input type="text" name="title" id="editTitle" required>
@@ -230,30 +233,40 @@
                     <textarea name="description" id="editDesc"></textarea>
                 </div>
 
-                <div class="section-tag">📁 อัปโหลดไฟล์ใหม่เข้าไปทับของเดิม (Optional)</div>
+                <div class="section-tag">📁 อัปโหลดไฟล์ใหม่เข้าไปทับของเดิม (Direct Upload - ไม่จำกัด 4.5MB)</div>
 
                 <div class="form-group">
                     <label>🖼️ รูปภาพปกใหม่ (ทับรูปเดิม):</label>
-                    <input type="file" name="cover_image" accept="image/*">
+                    <input type="file" id="edit_cover_file" accept="image/*">
                     <small id="currentCoverNotice" style="color:#64748b; font-size:11px;"></small>
                 </div>
 
                 <div class="form-group">
                     <label>📖 ไฟล์ PDF ฉบับเต็มใหม่ (ทับไฟล์เดิม):</label>
-                    <input type="file" name="book_file" accept=".pdf">
+                    <input type="file" id="edit_book_file" accept=".pdf">
                     <small id="currentBookNotice" style="color:#64748b; font-size:11px;"></small>
                 </div>
 
                 <div class="form-group">
                     <label>📄 ไฟล์ตัวอย่างสำหรับ "ทดลองอ่าน" ใหม่ (ทับไฟล์เดิม):</label>
-                    <input type="file" name="sample_file" accept=".pdf">
+                    <input type="file" id="edit_sample_file" accept=".pdf">
                     <small id="currentSampleNotice" style="color:#64748b; font-size:11px;"></small>
                 </div>
 
-                <button type="submit" class="btn-submit">💾 บันทึกการแก้ไข & อัปโหลดทับ</button>
+                <div id="editStatusBox" style="display:none; background:#e0f2fe; color:#0369a1; padding:10px; border-radius:6px; margin-bottom:10px; font-size:13px; text-align:center; font-weight:bold;">
+                    ⏳ กำลังอัปโหลดไฟล์ตรงไปยัง Vercel Blob...
+                </div>
+
+                <button type="submit" id="editSubmitBtn" class="btn-submit">💾 บันทึกการแก้ไข & อัปโหลดทับ</button>
             </form>
         </div>
     </div>
+
+    <!-- Import Vercel Blob Client Module -->
+    <script type="module">
+        import { upload } from 'https://esm.sh/@vercel/blob/client';
+        window.vercelBlobUpload = upload;
+    </script>
 
     <script>
         function openEditModalFromEl(el) {
@@ -267,7 +280,7 @@
         }
 
         function openEditModal(book) {
-            document.getElementById('editForm').action = '/admin/edit-book/' + book.id;
+            document.getElementById('editForm').action = '/admin/edit-book-direct/' + book.id;
             document.getElementById('editTitle').value = book.title || '';
             document.getElementById('editCategory').value = book.category || 'สมุดระบายสีเด็ก';
             document.getElementById('editPrice').value = book.price || 0;
@@ -276,6 +289,10 @@
             document.getElementById('editPages').value = book.pages_count || '';
             document.getElementById('editBadge').value = book.badge || '';
             document.getElementById('editDesc').value = book.description || '';
+
+            document.getElementById('edit_cover_url').value = '';
+            document.getElementById('edit_book_url').value = '';
+            document.getElementById('edit_sample_url').value = '';
 
             document.getElementById('currentCoverNotice').textContent = book.cover_image_url ? 'มีไฟล์รูปเดิมอยู่แล้ว (เลือกไฟล์ใหม่ถ้าต้องการทับ)' : 'ยังไม่มีไฟล์เดิม';
             document.getElementById('currentBookNotice').textContent = book.file_path ? 'มีไฟล์ PDF เดิมอยู่แล้ว (เลือกไฟล์ใหม่ถ้าต้องการทับ)' : 'ยังไม่มีไฟล์เดิม';
@@ -287,6 +304,74 @@
         function closeEditModal() {
             document.getElementById('editModal').classList.remove('active');
         }
+
+        async function directUploadFileEdit(file, subFolder) {
+            if (!file) return '';
+            if (window.vercelBlobUpload) {
+                try {
+                    const blob = await window.vercelBlobUpload(subFolder + '/' + Date.now() + '-' + file.name, file, {
+                        access: 'public',
+                        handleUploadUrl: '/api/upload/handle-client-upload'
+                    });
+                    return blob.url;
+                } catch (err) {
+                    console.warn('Vercel blob upload error fallback:', err);
+                }
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('subFolder', subFolder);
+
+            const res = await fetch('/api/upload-file', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success && data.file_url) {
+                return data.file_url;
+            } else {
+                throw new Error(data.message || 'File upload failed');
+            }
+        }
+
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('editSubmitBtn');
+            const statusBox = document.getElementById('editStatusBox');
+
+            submitBtn.disabled = true;
+            statusBox.style.display = 'block';
+
+            try {
+                const coverFile = document.getElementById('edit_cover_file').files[0];
+                const bookFile = document.getElementById('edit_book_file').files[0];
+                const sampleFile = document.getElementById('edit_sample_file').files[0];
+
+                if (coverFile) {
+                    statusBox.innerHTML = '⏳ กำลังอัปโหลดรูปภาพปกใหม่...';
+                    document.getElementById('edit_cover_url').value = await directUploadFileEdit(coverFile, 'covers');
+                }
+
+                if (bookFile) {
+                    statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ฉบับเต็มใหม่ (Direct Blob Upload)...';
+                    document.getElementById('edit_book_url').value = await directUploadFileEdit(bookFile, 'books');
+                }
+
+                if (sampleFile) {
+                    statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ตัวอย่างใหม่...';
+                    document.getElementById('edit_sample_url').value = await directUploadFileEdit(sampleFile, 'samples');
+                }
+
+                statusBox.innerHTML = '✅ บันทึกการอัปโหลดเรียบร้อยแล้ว!';
+                this.submit();
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการอัปโหลดไฟล์: ' + err.message);
+                statusBox.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
 
         window.onclick = function(event) {
             const editModal = document.getElementById('editModal');

@@ -314,7 +314,121 @@ app.get('/admin/upload', requireAdmin, (req, res) => {
     res.render('admin-upload');
 });
 
-// 4. Admin Route: Handle Book Upload Submission
+// Client-side Direct Vercel Blob Upload Token Endpoint (Bypasses Vercel 4.5MB Serverless Limit!)
+app.post('/api/upload/handle-client-upload', async (req, res) => {
+    try {
+        const { handleUpload } = require('@vercel/blob/client');
+        const jsonResponse = await handleUpload({
+            body: req.body,
+            request: req,
+            onBeforeGenerateToken: async (pathname, clientPayload) => {
+                if (!req.session.user || req.session.user.role !== 'admin') {
+                    throw new Error('Unauthorized Admin Access Required');
+                }
+                return {
+                    allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
+                    maximumSizeInBytes: 500 * 1024 * 1024 // 500MB max payload limit
+                };
+            },
+            onUploadCompleted: async ({ blob, tokenPayload }) => {
+                console.log('Client direct upload completed:', blob.url);
+            }
+        });
+        return res.json(jsonResponse);
+    } catch (error) {
+        console.error('Blob upload error:', error);
+        return res.status(400).json({ error: error.message });
+    }
+});
+
+// Admin Route: Direct Book Add (with pre-uploaded client URLs)
+app.post('/admin/upload-direct', requireAdmin, async (req, res) => {
+    try {
+        const { 
+            title, description, price, author_id, category, 
+            author_name, publisher, file_type, pages_count, original_price, badge,
+            cover_image_url, file_path, sample_file_path
+        } = req.body;
+
+        const query = `
+            INSERT INTO books (
+                title, author_id, description, price, cover_image_url, file_path, category,
+                author_name, publisher, sample_file_path, file_type, pages_count, original_price, badge
+            ) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        await pool.query(query, [
+            title || 'Untitled', 
+            author_id || 1, 
+            description || '', 
+            price || 0, 
+            cover_image_url || '', 
+            file_path || '', 
+            category || 'สมุดระบายสีเด็ก',
+            author_name || 'คลังสมอง',
+            publisher || 'คลังสมอง KLANGSAMONG',
+            sample_file_path || '',
+            file_type || 'PDF',
+            pages_count || '',
+            original_price ? parseFloat(original_price) : null,
+            badge || ''
+        ]);
+
+        res.redirect('/admin/manage');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error adding book: ' + err.message);
+    }
+});
+
+// Admin Route: Direct Book Edit (with pre-uploaded client URLs)
+app.post('/admin/edit-book-direct/:id', requireAdmin, async (req, res) => {
+    try {
+        const bookId = req.params.id;
+        const { 
+            title, description, price, category, 
+            author_name, publisher, file_type, pages_count, original_price, badge,
+            cover_image_url, file_path, sample_file_path
+        } = req.body;
+
+        const [existing] = await pool.query('SELECT * FROM books WHERE id = ?', [bookId]);
+        if (existing.length === 0) {
+            return res.status(404).send('Book not found');
+        }
+        const currentBook = existing[0];
+
+        const query = `
+            UPDATE books SET 
+                title = ?, description = ?, price = ?, cover_image_url = ?, file_path = ?, 
+                category = ?, author_name = ?, publisher = ?, sample_file_path = ?, 
+                file_type = ?, pages_count = ?, original_price = ?, badge = ?
+            WHERE id = ?
+        `;
+        await pool.query(query, [
+            title,
+            description || '',
+            price || 0,
+            cover_image_url !== undefined && cover_image_url !== '' ? cover_image_url : currentBook.cover_image_url,
+            file_path !== undefined && file_path !== '' ? file_path : currentBook.file_path,
+            category || 'สมุดระบายสีเด็ก',
+            author_name || '',
+            publisher || '',
+            sample_file_path !== undefined && sample_file_path !== '' ? sample_file_path : currentBook.sample_file_path,
+            file_type || 'PDF',
+            pages_count || '',
+            original_price ? parseFloat(original_price) : null,
+            badge || '',
+            bookId
+        ]);
+
+        res.redirect('/admin/manage');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error updating book: ' + err.message);
+    }
+});
+
+// 4. Admin Route: Handle Book Upload Submission (Multipart Fallback)
 app.post('/admin/upload', requireAdmin, upload.fields([
     { name: 'cover_image', maxCount: 1 },
     { name: 'book_file', maxCount: 1 },

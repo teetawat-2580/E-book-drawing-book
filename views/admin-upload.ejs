@@ -30,19 +30,26 @@
         label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13.5px; color: #334155; }
         input[type="text"], input[type="number"], select, textarea, input[type="file"] { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; }
         textarea { height: 90px; resize: vertical; }
-        button { background-color: var(--fresh-green); color: white; border: none; padding: 13px 20px; font-size: 16px; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); }
+        button { background-color: var(--fresh-green); color: white; border: none; padding: 13px 20px; font-size: 16px; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); font-family: inherit; }
         button:hover { background-color: var(--green-hover); }
+        button:disabled { background-color: #94a3b8; cursor: not-allowed; box-shadow: none; }
         .back-link { display: inline-block; margin-top: 18px; color: #64748b; text-decoration: none; font-size: 14px; text-align: center; width: 100%; font-weight: 500; }
         .back-link:hover { color: var(--primary-navy); text-decoration: underline; }
         .section-tag { font-weight: 700; color: var(--primary-navy); margin: 22px 0 12px 0; border-left: 4px solid var(--sky-blue); padding-left: 10px; font-size: 15px; }
+        .upload-status-box { display: none; background: #e0f2fe; border: 1px solid #7dd3fc; color: #0369a1; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 14px; font-weight: 600; text-align: center; }
     </style>
 </head>
 <body>
 
     <div class="form-container">
-        <h2>➕ อัปโหลดสื่อการเรียนรู้ใหม่ (คลังสมอง KLANGSOMONG)</h2>
-        <form action="/admin/upload" method="POST" enctype="multipart/form-data">
+        <h2>➕ อัปโหลดสื่อการเรียนรู้ใหม่ (คลังสมอง KLANGSAMONG)</h2>
+        
+        <form id="uploadForm" action="/admin/upload-direct" method="POST">
             
+            <input type="hidden" name="cover_image_url" id="cover_image_url">
+            <input type="hidden" name="file_path" id="file_path">
+            <input type="hidden" name="sample_file_path" id="sample_file_path">
+
             <div class="section-tag">ข้อมูลสื่อการเรียนรู้</div>
 
             <div class="form-group">
@@ -50,6 +57,7 @@
                 <select name="category" required>
                     <option value="สมุดระบายสีเด็ก">✏️ สมุดระบายสีเด็ก</option>
                     <option value="คณิตศาสตร์">🔢 ชีทคณิตศาสตร์</option>
+                    <option value="พื้นฐานการบวกเลข">➕ พื้นฐานการบวกเลข</option>
                     <option value="ชีทฝึกเขียน">✍️ ชีทฝึกเขียนภาษา</option>
                     <option value="แฟลชการ์ด">🎴 แฟลชการ์ด 2 ภาษา</option>
                     <option value="เกมฝึกสมอง">🧩 เกมฝึกสมองเด็ก</option>
@@ -108,28 +116,110 @@
                 <input type="text" name="badge" placeholder="เช่น เล่มยอดฮิต, แนะนำ">
             </div>
 
-            <div class="section-tag">อัปโหลดไฟล์</div>
+            <div class="section-tag">อัปโหลดไฟล์ (Direct Client Upload - ไม่จำกัดขนาด 4.5MB)</div>
 
             <div class="form-group">
                 <label>🖼️ รูปภาพปกสื่อ (Cover Image):</label>
-                <input type="file" name="cover_image" accept="image/*" required>
+                <input type="file" id="cover_file_input" accept="image/*" required>
             </div>
 
             <div class="form-group">
                 <label>📖 ไฟล์ PDF ฉบับเต็ม (Full PDF File):</label>
-                <input type="file" name="book_file" accept=".pdf" required>
+                <input type="file" id="book_file_input" accept=".pdf" required>
             </div>
 
             <div class="form-group" style="background: #f0fdf4; padding: 14px; border-radius: 8px; border: 1px dashed var(--fresh-green);">
                 <label style="color: #15803d;">📄 ไฟล์ตัวอย่างสำหรับ "ทดลองอ่าน" (Sample Preview PDF):</label>
-                <input type="file" name="sample_file" accept=".pdf">
-                <small style="color: #64748b; display: block; margin-top: 4px;">* ไฟล์ PDF ตัวอย่างฉบับสั้นสำหรับปุ่ม "ทดลองอ่าน" หน้าซับเพจ</small>
+                <input type="file" id="sample_file_input" accept=".pdf">
+                <small style="color: #64748b; display: block; margin-top: 4px;">* ไฟล์ PDF ตัวอย่างฉบับสั้นสำหรับปุ่ม "ทดลองอ่าน"</small>
             </div>
 
-            <button type="submit">🚀 อัปโหลดสื่อขึ้นระบบ คลังสมอง</button>
+            <div class="upload-status-box" id="uploadStatus">
+                ⏳ กำลังส่งไฟล์ตรงไปยัง Vercel Storage...
+            </div>
+
+            <button type="submit" id="submitBtn">🚀 อัปโหลดสื่อขึ้นระบบ คลังสมอง</button>
         </form>
         <a href="/admin/manage" class="back-link">← กลับไปหน้าระบบจัดการสื่อ</a>
     </div>
 
+    <!-- Import Vercel Blob Client Module -->
+    <script type="module">
+        import { upload } from 'https://esm.sh/@vercel/blob/client';
+        window.vercelBlobUpload = upload;
+    </script>
+
+    <script>
+        async function directUploadFile(file, subFolder) {
+            if (!file) return '';
+            
+            // Try Client-side Vercel Blob Direct Upload (Bypasses 4.5MB Serverless Payload Limit!)
+            if (window.vercelBlobUpload) {
+                try {
+                    const blob = await window.vercelBlobUpload(subFolder + '/' + Date.now() + '-' + file.name, file, {
+                        access: 'public',
+                        handleUploadUrl: '/api/upload/handle-client-upload'
+                    });
+                    return blob.url;
+                } catch (err) {
+                    console.warn('Vercel blob direct client upload failed, using fallback:', err);
+                }
+            }
+
+            // Fallback via server AJAX if blob token unavailable
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('subFolder', subFolder);
+
+            const res = await fetch('/api/upload-file', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success && data.file_url) {
+                return data.file_url;
+            } else {
+                throw new Error(data.message || 'File upload failed');
+            }
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const statusBox = document.getElementById('uploadStatus');
+
+            submitBtn.disabled = true;
+            statusBox.style.display = 'block';
+
+            try {
+                const coverFile = document.getElementById('cover_file_input').files[0];
+                const bookFile = document.getElementById('book_file_input').files[0];
+                const sampleFile = document.getElementById('sample_file_input').files[0];
+
+                if (coverFile) {
+                    statusBox.innerHTML = '⏳ กำลังอัปโหลดรูปภาพปก...';
+                    document.getElementById('cover_image_url').value = await directUploadFile(coverFile, 'covers');
+                }
+
+                if (bookFile) {
+                    statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ฉบับเต็ม (Direct Blob Upload)...';
+                    document.getElementById('file_path').value = await directUploadFile(bookFile, 'books');
+                }
+
+                if (sampleFile) {
+                    statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ตัวอย่าง...';
+                    document.getElementById('sample_file_path').value = await directUploadFile(sampleFile, 'samples');
+                }
+
+                statusBox.innerHTML = '✅ อัปโหลดไฟล์เรียบร้อยแล้ว กำลังบันทึกข้อมูล...';
+                this.submit();
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการอัปโหลดไฟล์: ' + err.message);
+                statusBox.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
