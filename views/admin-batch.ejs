@@ -83,7 +83,6 @@
 
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('visualTab', this)">✏️ Interactive Table Input & Batch Edit Mode</button>
-            <button class="tab-btn" onclick="switchTab('jsonTab', this)">📄 JSON Batch Import</button>
             <button class="tab-btn" onclick="switchTab('sqlTab', this)">⚡ SQL Code Batch Execution</button>
         </div>
 
@@ -225,26 +224,17 @@
             </form>
         </div>
 
-        <!-- Tab 2: JSON Batch Input -->
-        <div id="jsonTab" class="tab-content">
-            <div class="hint-box">
-                💡 <strong>นำเข้า JSON Batch:</strong> วาง JSON Array เพื่อเพิ่มสื่อหลายเล่มพร้อมกัน
-            </div>
-            <button type="button" class="btn-secondary" onclick="fillJsonDemo()">✨ เติมข้อมูลตัวอย่าง (Load Demo JSON)</button>
-            <form action="/admin/batch-json" method="POST">
-                <textarea name="json_data" id="jsonDataInput" placeholder='[&#10;  {&#10;    "title": "เล่ม 1 : สัตว์แสนรัก (สมุดระบายสี)",&#10;    "author_name": "คลังสมอง",&#10;    "publisher": "คลังสมอง KLANGSOMONG",&#10;    "category": "สมุดระบายสีเด็ก",&#10;    "price": 159,&#10;    "original_price": 199,&#10;    "pages_count": "20 หน้า",&#10;    "file_type": "PDF",&#10;    "cover_image_url": "/uploads/covers/cover.jpg",&#10;    "file_path": "/uploads/books/full.pdf",&#10;    "sample_file_path": "/uploads/samples/preview.pdf"&#10;  }&#10;]'></textarea>
-                <button type="submit" class="btn-primary">🚀 นำเข้าข้อมูล Batch (Batch Insert)</button>
-            </form>
-        </div>
-
-        <!-- Tab 3: SQL Batch Execution -->
+        <!-- Tab 2: SQL Batch Execution -->
         <div id="sqlTab" class="tab-content">
             <div class="hint-box">
-                💡 <strong>รัน SQL Code โดยตรง:</strong> วางคำสั่ง <code>INSERT INTO books ...</code> หรือ <code>UPDATE books ...</code>
+                💡 <strong>รัน SQL Code โดยตรง:</strong> ท่านสามารถวางคำสั่ง <code>INSERT INTO books ...</code> หรือ <code>UPDATE books ...</code> หรือใช้ปุ่ม <strong>Export โค้ด SQL หนังสือทั้งหมด</strong> เพื่อนำไปปรับแก้แล้วรันอัปเดตแบบ Batch ได้ตามต้องการ
             </div>
-            <button type="button" class="btn-secondary" onclick="fillSqlDemo()">✨ เติมตัวอย่างคำสั่ง SQL (Load Demo SQL)</button>
+            <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+                <button type="button" class="btn-secondary" onclick="fillSqlDemo()">✨ เติมตัวอย่างคำสั่ง SQL (Load Demo SQL จากโครงสร้าง DB)</button>
+                <button type="button" class="btn-secondary" onclick="exportFullBooksSql()" style="background: #0284c7; border-color: #0284c7; color: white; font-weight: bold;">📥 Export โค้ด SQL หนังสือทั้งหมดใน Database</button>
+            </div>
             <form action="/admin/batch-sql" method="POST">
-                <textarea name="sql_query" id="sqlQueryInput" placeholder="INSERT INTO books (title, author_name, publisher, category, price, original_price, pages_count, description) VALUES ..."></textarea>
+                <textarea name="sql_query" id="sqlQueryInput" placeholder="วางคำสั่ง SQL ที่นี่ (เช่น UPDATE books SET price = 159 WHERE id = 1; หรือ INSERT INTO books ...)"></textarea>
                 <button type="submit" class="btn-primary" onclick="return confirm('ยืนยันการรันคำสั่ง SQL เข้าสู่ฐานข้อมูล?');">⚡ ประมวลผลคำสั่ง SQL (Execute SQL Batch)</button>
             </form>
         </div>
@@ -341,33 +331,59 @@
                 console.error(err);
             }
         }
-
-        function fillJsonDemo() {
-            const demo = [
-                {
-                    "title": "เล่ม 1 : สัตว์แสนรัก (สมุดระบายสี)",
-                    "author_name": "คลังสมอง",
-                    "publisher": "คลังสมอง KLANGSOMONG",
-                    "category": "สมุดระบายสีเด็ก",
-                    "price": 159,
-                    "original_price": 199,
-                    "pages_count": "20 หน้า",
-                    "file_type": "PDF",
-                    "badge": "ยอดนิยม",
-                    "cover_image_url": "/uploads/covers/animal.jpg",
-                    "file_path": "/uploads/books/animal-full.pdf",
-                    "sample_file_path": "/uploads/samples/animal-preview.pdf",
-                    "description": "สมุดระบายสีสำหรับเด็กเสริมสร้างจินตนาการ..."
-                }
-            ];
-            document.getElementById('jsonDataInput').value = JSON.stringify(demo, null, 2);
-        }
+        const DB_BOOKS = JSON.parse(decodeURIComponent('<%= encodeURIComponent(JSON.stringify(books || [])) %>'));
 
         function fillSqlDemo() {
-            const sql = `INSERT INTO books (title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, cover_image_url, file_path, sample_file_path) 
+            if (!DB_BOOKS || DB_BOOKS.length === 0) {
+                const fallbackSql = `-- คำสั่งตัวอย่างกรณีไม่มีข้อมูลใน DB:
+INSERT INTO books (title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, file_path, description)
 VALUES 
-('เล่ม 1 : สัตว์แสนรัก', 'คลังสมอง', 'คลังสมอง KLANGSOMONG', 'สมุดระบายสีเด็ก', 159.00, 199.00, '20 หน้า', 'PDF', 'ยอดนิยม', '/uploads/covers/cover1.jpg', '/uploads/books/book1.pdf', '/uploads/samples/sample1.pdf');`;
-            document.getElementById('sqlQueryInput').value = sql;
+('ตัวอย่างสื่อการเรียนรู้ 1', 'คลังสมอง', 'คลังสมอง KLANGSOMONG', 'พื้นฐานการบวกเลข', 159.00, 199.00, '20 หน้า', 'PDF', 'แนะนำ', 'https://drive.google.com/file/d/demo1/view', 'รายละเอียดสื่อ...');`;
+                document.getElementById('sqlQueryInput').value = fallbackSql;
+                return;
+            }
+
+            const sampleBooks = DB_BOOKS.slice(0, 3);
+            const esc = (val) => (val === null || val === undefined || val === '') ? 'NULL' : `'${String(val).replace(/'/g, "''")}'`;
+            const num = (val) => (val === null || val === undefined || val === '' || isNaN(val)) ? 'NULL' : val;
+
+            let sqlLines = [`-- ✨ คำสั่ง SQL ตัวอย่าง อ้างอิงตามโครงสร้างและข้อมูลจริงในฐานข้อมูลปัจจุบัน (${DB_BOOKS.length} เล่ม):`];
+
+            sampleBooks.forEach((b, idx) => {
+                sqlLines.push(`-- 1. ตัวอย่างคำสั่ง UPDATE รายการ ID: ${b.id}`);
+                sqlLines.push(`UPDATE books SET title = ${esc(b.title)}, price = ${num(b.price)}, category = ${esc(b.category)} WHERE id = ${b.id};`);
+            });
+
+            sqlLines.push(`\n-- 2. ตัวอย่างคำสั่ง INSERT เล่มใหม่:`);
+            sqlLines.push(`INSERT INTO books (title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, file_path, description) VALUES ('สื่อการเรียนรู้ใหม่ (ตัวอย่าง)', 'คลังสมอง', 'คลังสมอง KLANGSOMONG', 'พื้นฐานการบวกเลข', 159.00, 199.00, '25 หน้า', 'PDF', 'มาใหม่', 'https://drive.google.com/file/d/sample/view', 'รายละเอียด...');`);
+
+            document.getElementById('sqlQueryInput').value = sqlLines.join('\n');
+        }
+
+        function exportFullBooksSql() {
+            if (!DB_BOOKS || DB_BOOKS.length === 0) {
+                alert('⚠️ ไม่พบข้อมูลหนังสือใน Database ที่จะ Export');
+                return;
+            }
+
+            const esc = (val) => (val === null || val === undefined || val === '') ? 'NULL' : `'${String(val).replace(/'/g, "''")}'`;
+            const num = (val) => (val === null || val === undefined || val === '' || isNaN(val)) ? 'NULL' : val;
+
+            let sqlLines = [
+                `-- 📥 โค้ด SQL ส่งออกหนังสือทั้งหมดในฐานข้อมูล (จำนวนทั้งหมด ${DB_BOOKS.length} รายการ)`,
+                `-- สร้างขึ้นเมื่อ: ${new Date().toLocaleString('th-TH')}`,
+                `-- ท่านสามารถปรับแต่งข้อมูลในคำสั่งด้านล่าง แล้วรัน Batch Execution ได้ทันที\n`
+            ];
+
+            DB_BOOKS.forEach(b => {
+                const query = `INSERT INTO books (id, title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, cover_image_url, file_path, sample_file_path, description) ` +
+                              `VALUES (${b.id}, ${esc(b.title)}, ${esc(b.author_name)}, ${esc(b.publisher)}, ${esc(b.category)}, ${num(b.price)}, ${num(b.original_price)}, ${esc(b.pages_count)}, ${esc(b.file_type)}, ${esc(b.badge)}, ${esc(b.cover_image_url)}, ${esc(b.file_path)}, ${esc(b.sample_file_path)}, ${esc(b.description)}) ` +
+                              `ON DUPLICATE KEY UPDATE title = VALUES(title), author_name = VALUES(author_name), publisher = VALUES(publisher), category = VALUES(category), price = VALUES(price), original_price = VALUES(original_price), pages_count = VALUES(pages_count), file_type = VALUES(file_type), badge = VALUES(badge), cover_image_url = VALUES(cover_image_url), file_path = VALUES(file_path), sample_file_path = VALUES(sample_file_path), description = VALUES(description);`;
+                sqlLines.push(query);
+            });
+
+            document.getElementById('sqlQueryInput').value = sqlLines.join('\n\n');
+            alert(`✅ สร้างโค้ด SQL จากหนังสือทั้งหมด (${DB_BOOKS.length} รายการ) ลงในช่องข้อความเรียบร้อยแล้ว!`);
         }
 
         function addTableRow() {
