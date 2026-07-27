@@ -422,15 +422,21 @@ app.post('/admin/upload-direct', requireAdmin, async (req, res) => {
             badge || ''
         ]);
 
+        if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json')) {
+            return res.json({ success: true, redirect: '/admin/manage' });
+        }
         res.redirect('/admin/manage');
     } catch (err) {
         console.error(err);
+        if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json')) {
+            return res.status(500).json({ success: false, message: err.message });
+        }
         res.status(500).send('Error adding book: ' + err.message);
     }
 });
 
 // Admin Route: Direct Book Edit (with pre-uploaded client URLs)
-app.post('/admin/edit-book-direct/:id', requireAdmin, async (req, res) => {
+app.post(['/admin/edit-book-direct/:id', '/admin/edit-book/:id'], requireAdmin, async (req, res) => {
     try {
         const bookId = req.params.id;
         const { 
@@ -441,6 +447,9 @@ app.post('/admin/edit-book-direct/:id', requireAdmin, async (req, res) => {
 
         const [existing] = await pool.query('SELECT * FROM books WHERE id = ?', [bookId]);
         if (existing.length === 0) {
+            if (req.xhr || req.headers.accept?.includes('json')) {
+                return res.status(404).json({ success: false, message: 'Book not found' });
+            }
             return res.status(404).send('Book not found');
         }
         const currentBook = existing[0];
@@ -453,25 +462,31 @@ app.post('/admin/edit-book-direct/:id', requireAdmin, async (req, res) => {
             WHERE id = ?
         `;
         await pool.query(query, [
-            title,
-            description || '',
-            price || 0,
+            title || currentBook.title,
+            description !== undefined ? description : currentBook.description,
+            price !== undefined ? price : currentBook.price,
             cover_image_url !== undefined && cover_image_url !== '' ? cover_image_url : currentBook.cover_image_url,
             file_path !== undefined && file_path !== '' ? file_path : currentBook.file_path,
-            category || 'สมุดระบายสีเด็ก',
-            author_name || '',
-            publisher || '',
+            category || currentBook.category,
+            author_name !== undefined ? author_name : currentBook.author_name,
+            publisher !== undefined ? publisher : currentBook.publisher,
             sample_file_path !== undefined && sample_file_path !== '' ? sample_file_path : currentBook.sample_file_path,
-            file_type || 'PDF',
-            pages_count || '',
-            original_price ? parseFloat(original_price) : null,
-            badge || '',
+            file_type || currentBook.file_type,
+            pages_count !== undefined ? pages_count : currentBook.pages_count,
+            original_price ? parseFloat(original_price) : currentBook.original_price,
+            badge !== undefined ? badge : currentBook.badge,
             bookId
         ]);
 
+        if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json')) {
+            return res.json({ success: true, redirect: '/admin/manage' });
+        }
         res.redirect('/admin/manage');
     } catch (err) {
         console.error(err);
+        if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json')) {
+            return res.status(500).json({ success: false, message: err.message });
+        }
         res.status(500).send('Error updating book: ' + err.message);
     }
 });

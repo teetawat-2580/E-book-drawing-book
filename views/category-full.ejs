@@ -184,7 +184,7 @@
     </div>
 
     <script>
-        const allFileUrls = <%- JSON.stringify(books.map(b => ({ url: b.file_path || b.sample_file_path || b.cover_image_url, title: b.title }))) %>;
+        const allFileUrls = JSON.parse(decodeURIComponent('<%= encodeURIComponent(JSON.stringify(books.map(b => ({ url: b.file_path || b.sample_file_path || b.cover_image_url, title: b.title })))) %>'));
 
         function downloadAllFiles() {
             if (!allFileUrls || allFileUrls.length === 0) {

@@ -403,7 +403,7 @@
                 }
 
                 if (bookFile) {
-                    statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ฉบับเต็มใหม่ (Chunked Upload 2MB)...';
+                    statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ฉบับเต็มใหม่...';
                     document.getElementById('edit_book_url').value = await directUploadFileEdit(bookFile, 'books', (pct) => {
                         statusBox.innerHTML = '⏳ กำลังอัปโหลดไฟล์ PDF ฉบับเต็มใหม่ (' + pct + '%)...';
                     });
@@ -416,10 +416,37 @@
                     });
                 }
 
-                statusBox.innerHTML = '✅ บันทึกการอัปโหลดเรียบร้อยแล้ว!';
-                this.submit();
+                statusBox.innerHTML = '✅ อัปโหลดไฟล์เรียบร้อยแล้ว กำลังบันทึกข้อมูล...';
+
+                // Send lightweight JSON payload (1KB) - 100% immune to 413 Payload Too Large!
+                const payload = {
+                    category: this.elements['category'].value,
+                    title: this.elements['title'].value,
+                    author_name: this.elements['author_name'].value,
+                    publisher: this.elements['publisher'].value,
+                    description: this.elements['description'].value,
+                    price: this.elements['price'].value,
+                    pages_count: this.elements['pages_count'].value,
+                    badge: this.elements['badge'].value,
+                    cover_image_url: document.getElementById('edit_cover_url').value,
+                    file_path: document.getElementById('edit_book_url').value,
+                    sample_file_path: document.getElementById('edit_sample_url').value
+                };
+
+                const res = await fetch(this.action, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    window.location.reload();
+                } else {
+                    const errText = await res.text();
+                    throw new Error('บันทึกการแก้ไขไม่สำเร็จ (HTTP ' + res.status + ')');
+                }
             } catch (err) {
-                alert('เกิดข้อผิดพลาดในการอัปโหลดไฟล์: ' + err.message);
+                alert('เกิดข้อผิดพลาด: ' + err.message);
                 statusBox.style.display = 'none';
                 submitBtn.disabled = false;
             }
