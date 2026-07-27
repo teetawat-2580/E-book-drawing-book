@@ -371,8 +371,9 @@ VALUES
 
             let sqlLines = [
                 `-- 📥 โค้ด SQL ส่งออกหนังสือทั้งหมดในฐานข้อมูล (จำนวนทั้งหมด ${DB_BOOKS.length} รายการ)`,
-                `-- สร้างขึ้นเมื่อ: ${new Date().toLocaleString('th-TH')}`,
-                `-- ท่านสามารถปรับแต่งข้อมูลในคำสั่งด้านล่าง แล้วรัน Batch Execution ได้ทันที\n`
+                `-- แหล่งที่มา: KLANGSAMONG (klangsamong.vercel.app)`,
+                `-- วันที่ส่งออก: ${new Date().toLocaleString('th-TH')}`,
+                `-- ท่านสามารถนำไฟล์นี้ไปปรับแต่งข้อความ แล้วรันอัปเดตแบบ Batch ได้ทันที\n`
             ];
 
             DB_BOOKS.forEach(b => {
@@ -382,8 +383,23 @@ VALUES
                 sqlLines.push(query);
             });
 
-            document.getElementById('sqlQueryInput').value = sqlLines.join('\n\n');
-            alert(`✅ สร้างโค้ด SQL จากหนังสือทั้งหมด (${DB_BOOKS.length} รายการ) ลงในช่องข้อความเรียบร้อยแล้ว!`);
+            const fullSql = sqlLines.join('\n\n');
+
+            // Populate textarea for editing
+            document.getElementById('sqlQueryInput').value = fullSql;
+
+            // Trigger direct file download (.sql file)
+            const blob = new Blob([fullSql], { type: 'text/plain;charset=utf-8;' });
+            const link = document.createElement('a');
+            const today = new Date().toISOString().slice(0, 10);
+            const fileName = `klangsamong_books_export_${today}.sql`;
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            alert(`✅ ดาวน์โหลดไฟล์ ${fileName} (${DB_BOOKS.length} รายการ) เรียบร้อยแล้ว!`);
         }
 
         function addTableRow() {
