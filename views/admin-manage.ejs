@@ -309,13 +309,16 @@
             if (!file) return '';
             if (window.vercelBlobUpload) {
                 try {
-                    const blob = await window.vercelBlobUpload(subFolder + '/' + Date.now() + '-' + file.name, file, {
+                    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                    const blob = await window.vercelBlobUpload(subFolder + '/' + Date.now() + '-' + cleanFileName, file, {
                         access: 'public',
                         handleUploadUrl: '/api/upload/handle-client-upload'
                     });
-                    return blob.url;
+                    if (blob && blob.url) {
+                        return blob.url;
+                    }
                 } catch (err) {
-                    console.warn('Vercel blob upload error fallback:', err);
+                    console.warn('Vercel blob upload skipped/failed, fallback to server upload:', err);
                 }
             }
 
@@ -327,11 +330,22 @@
                 method: 'POST',
                 body: formData
             });
-            const data = await res.json();
-            if (data.success && data.file_url) {
+
+            const resText = await res.text();
+            let data;
+            try {
+                data = JSON.parse(resText);
+            } catch (e) {
+                if (res.status === 413 || resText.includes('Payload Too Large') || resText.includes('Request Entity')) {
+                    throw new Error('ไฟล์ "' + file.name + '" มีขนาดใหญ่เกินข้อจำกัด 4.5MB ของ Vercel (กรุณาตั้งค่า BLOB_READ_WRITE_TOKEN ใน Vercel เพื่อเปิดใช้อัปโหลดขนาดใหญ่ไม่จำกัด)');
+                }
+                throw new Error('ข้อผิดพลาดจากเซิร์ฟเวอร์ (HTTP ' + res.status + ')');
+            }
+
+            if (data && data.success && data.file_url) {
                 return data.file_url;
             } else {
-                throw new Error(data.message || 'File upload failed');
+                throw new Error(data ? data.message : 'File upload failed');
             }
         }
 
