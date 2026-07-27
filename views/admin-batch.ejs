@@ -397,9 +397,9 @@ VALUES
             ];
 
             DB_BOOKS.forEach(b => {
-                const query = `INSERT INTO books (id, title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, file_path, description) ` +
-                              `VALUES (${b.id}, ${esc(b.title)}, ${esc(b.author_name)}, ${esc(b.publisher)}, ${esc(b.category)}, ${num(b.price)}, ${num(b.original_price)}, ${esc(b.pages_count)}, ${esc(b.file_type)}, ${esc(b.badge)}, ${esc(b.file_path)}, ${esc(b.description)}) ` +
-                              `ON DUPLICATE KEY UPDATE title = VALUES(title), author_name = VALUES(author_name), publisher = VALUES(publisher), category = VALUES(category), price = VALUES(price), original_price = VALUES(original_price), pages_count = VALUES(pages_count), file_type = VALUES(file_type), badge = VALUES(badge), file_path = VALUES(file_path), description = VALUES(description);`;
+                const query = `INSERT INTO books (id, title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, cover_image_url, file_path, sample_file_path, description) ` +
+                              `VALUES (${b.id}, ${esc(b.title)}, ${esc(b.author_name)}, ${esc(b.publisher)}, ${esc(b.category)}, ${num(b.price)}, ${num(b.original_price)}, ${esc(b.pages_count)}, ${esc(b.file_type)}, ${esc(b.badge)}, ${esc(b.cover_image_url)}, ${esc(b.file_path)}, ${esc(b.sample_file_path)}, ${esc(b.description)}) ` +
+                              `ON DUPLICATE KEY UPDATE title = VALUES(title), author_name = VALUES(author_name), publisher = VALUES(publisher), category = VALUES(category), price = VALUES(price), original_price = VALUES(original_price), pages_count = VALUES(pages_count), file_type = VALUES(file_type), badge = VALUES(badge), cover_image_url = VALUES(cover_image_url), file_path = VALUES(file_path), sample_file_path = VALUES(sample_file_path), description = VALUES(description);`;
                 sqlLines.push(query);
             });
 
