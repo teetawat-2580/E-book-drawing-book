@@ -16,16 +16,16 @@ app.use(session({
     cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
-// Educational Categories definition for คลังสมอง KLANGSOMONG
+// Educational Categories definition for คลังสมอง KLANGSAMONG
 const CATEGORIES = [
-    { id: 'all', name: 'ทั้งหมด', icon: '🌐' },
-    { id: 'สมุดระบายสีเด็ก', name: 'สมุดระบายสีเด็ก', icon: '✏️' },
-    { id: 'คณิตศาสตร์', name: 'ชีทคณิตศาสตร์', icon: '🔢' },
-    { id: 'ชีทฝึกเขียน', name: 'ชีทฝึกเขียนภาษา', icon: '✍️' },
-    { id: 'แฟลชการ์ด', name: 'แฟลชการ์ด 2 ภาษา', icon: '🎴' },
-    { id: 'เกมฝึกสมอง', name: 'เกมฝึกสมองเด็ก', icon: '🧩' },
-    { id: 'นิทานเด็ก AI', name: 'นิทานและแบบเรียน', icon: '📚' },
-    { id: 'สื่อครูตกแต่ง', name: 'สื่อครูตกแต่งห้องเรียน', icon: '🏫' }
+    { id: 'all', name: 'ทั้งหมด', icon: '🌐', slug: 'ทั้งหมด' },
+    { id: 'สมุดระบายสีเด็ก', name: 'สมุดระบายสีเด็ก', icon: '✏️', slug: 'สมุดระบายสีเด็ก' },
+    { id: 'คณิตศาสตร์', name: 'ชีทคณิตศาสตร์', icon: '🔢', slug: 'ชีทคณิตศาสตร์' },
+    { id: 'ชีทฝึกเขียน', name: 'ชีทฝึกเขียนภาษา', icon: '✍️', slug: 'ชีทฝึกเขียนภาษา' },
+    { id: 'แฟลชการ์ด', name: 'แฟลชการ์ด 2 ภาษา', icon: '🎴', slug: 'แฟลชการ์ด-2-ภาษา' },
+    { id: 'เกมฝึกสมอง', name: 'เกมฝึกสมองเด็ก', icon: '🧩', slug: 'เกมฝึกสมองเด็ก' },
+    { id: 'นิทานเด็ก AI', name: 'นิทานและแบบเรียน', icon: '📚', slug: 'นิทานและแบบเรียน' },
+    { id: 'สื่อครูตกแต่ง', name: 'สื่อครูตกแต่งห้องเรียน', icon: '🏫', slug: 'สื่อครูตกแต่งห้องเรียน' }
 ];
 
 // Set EJS as templating engine and set explicit views directory for Vercel Serverless
@@ -608,6 +608,86 @@ app.post('/admin/delete-book/:id', requireAdmin, async (req, res) => {
         console.error(err);
         res.status(500).send('Error deleting book: ' + err.message);
     }
+});
+
+// Helper to find category from URL slug or category name
+function findCategoryBySlug(param) {
+    if (!param) return null;
+    let decoded = '';
+    try {
+        decoded = decodeURIComponent(param).trim();
+    } catch (e) {
+        decoded = param.trim();
+    }
+    const cleanSlug = decoded.replace(/-/g, ' ').trim();
+
+    return CATEGORIES.find(c => {
+        const catIdClean = c.id.replace(/-/g, ' ').trim();
+        const catNameClean = c.name.replace(/-/g, ' ').trim();
+        const catSlugClean = (c.slug || '').replace(/-/g, ' ').trim();
+
+        return decoded === c.id ||
+               decoded === c.name ||
+               decoded === c.slug ||
+               cleanSlug.toLowerCase() === catIdClean.toLowerCase() ||
+               cleanSlug.toLowerCase() === catNameClean.toLowerCase() ||
+               cleanSlug.toLowerCase() === catSlugClean.toLowerCase() ||
+               cleanSlug.includes(catIdClean) ||
+               cleanSlug.includes(catNameClean);
+    });
+}
+
+// Category page handler function
+async function handleCategoryPage(req, res, slugParam) {
+    try {
+        const matchedCat = findCategoryBySlug(slugParam);
+        const selectedCategory = matchedCat ? matchedCat.id : 'all';
+        const searchQuery = req.query.q ? req.query.q.trim() : '';
+
+        let query = 'SELECT * FROM books WHERE 1=1';
+        let params = [];
+
+        if (selectedCategory !== 'all') {
+            query += ' AND (category = ? OR category LIKE ?)';
+            params.push(selectedCategory, `%${selectedCategory}%`);
+        }
+
+        if (searchQuery) {
+            query += ' AND (title LIKE ? OR description LIKE ? OR author_name LIKE ? OR publisher LIKE ?)';
+            const searchParam = `%${searchQuery}%`;
+            params.push(searchParam, searchParam, searchParam, searchParam);
+        }
+
+        query += ' ORDER BY id DESC';
+
+        const [books] = await pool.query(query, params);
+
+        res.render('index', {
+            books,
+            selectedCategory,
+            searchQuery,
+            loginError: req.query.loginError ? true : false,
+            activeCategoryObj: matchedCat || null
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Database error: ' + err.message);
+    }
+}
+
+// Route for category URL prefix
+app.get('/category/:categorySlug', async (req, res) => {
+    handleCategoryPage(req, res, req.params.categorySlug);
+});
+
+// Dynamic route for direct category links like /แฟลชการ์ด-2-ภาษา, /สมุดระบายสีเด็ก, /ชีทคณิตศาสตร์
+app.get('/:slug', async (req, res, next) => {
+    const slug = req.params.slug;
+    const matched = findCategoryBySlug(slug);
+    if (matched) {
+        return handleCategoryPage(req, res, slug);
+    }
+    next();
 });
 
 const PORT = process.env.PORT || 3000;

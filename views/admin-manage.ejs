@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - ระบบจัดการสื่อการเรียนรู้ | คลังสมอง KLANGSOMONG</title>
+    <title>Admin - ระบบจัดการสื่อการเรียนรู้ | คลังสมอง KLANGSAMONG</title>
     <!-- Google Fonts: Prompt & Kanit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -76,7 +76,7 @@
     <header>
         <div class="header-title">
             <span>⚙️</span>
-            <span>ระบบจัดการสื่อการเรียนรู้ (คลังสมอง KLANGSOMONG)</span>
+            <span>ระบบจัดการสื่อการเรียนรู้ (คลังสมอง KLANGSAMONG)</span>
         </div>
         <div class="header-actions">
             <a href="/" class="btn-header">← กลับไปยังหน้าแรก</a>
@@ -151,8 +151,8 @@
                                         <span style="color: #cbd5e1; font-size: 12px;">❌ ไม่มีตัวอย่าง</span>
                                     <% } %>
                                 </td>
-                                <td style="text-align: center;">
-                                    <button type="button" class="btn-edit" onclick="openEditModal(<%= JSON.stringify(book) %>)">✏️ แก้ไข / อัปทับ</button>
+                                <td style="text-align: center;" data-book="<%- JSON.stringify(book).replace(/"/g, '&quot;') %>">
+                                    <button type="button" class="btn-edit" onclick="openEditModalFromEl(this)">✏️ แก้ไข / อัปทับ</button>
                                     <form action="/admin/delete-book/<%= book.id %>" method="POST" onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบรายการนี้?');" style="display:inline;">
                                         <button type="submit" class="btn-delete">🗑️</button>
                                     </form>
@@ -255,6 +255,16 @@
     </div>
 
     <script>
+        function openEditModalFromEl(el) {
+            const td = el.closest('td');
+            if (td && td.dataset.book) {
+                try {
+                    const book = JSON.parse(td.dataset.book);
+                    openEditModal(book);
+                } catch(e) { console.error(e); }
+            }
+        }
+
         function openEditModal(book) {
             document.getElementById('editForm').action = '/admin/edit-book/' + book.id;
             document.getElementById('editTitle').value = book.title || '';

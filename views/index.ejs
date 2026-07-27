@@ -153,10 +153,10 @@
     <!-- Header Navigation Bar -->
     <header>
         <a href="/" class="logo-container">
-            <img src="/images/logo.png" alt="คลังสมอง KLANGSOMONG" class="brand-logo-img" onerror="this.style.display='none';">
+            <img src="/images/logo.png" alt="คลังสมอง KLANGSAMONG" class="brand-logo-img" onerror="this.style.display='none';">
             <div class="brand-text-group">
                 <h1 class="brand-title">คลังสมอง</h1>
-                <span class="brand-tagline">KLANGSOMONG — เรียนวันนี้ เก่งได้ทุกวัน —</span>
+                <span class="brand-tagline">KLANGSAMONG — เรียนวันนี้ เก่งได้ทุกวัน —</span>
             </div>
         </a>
 
@@ -225,13 +225,13 @@
         <% if (books.length > 0) { %>
             <div class="book-grid">
                 <% books.forEach(book => { %>
-                    <div class="book-card">
-                        <div class="book-cover-link" onclick="openPreviewModal(<%= JSON.stringify(book) %>)">
+                    <div class="book-card" data-book="<%- JSON.stringify(book).replace(/"/g, '&quot;') %>">
+                        <div class="book-cover-link" onclick="openPreviewModalFromEl(this)">
                             <img src="<%= book.cover_image_url || 'https://via.placeholder.com/200x250?text=No+Cover' %>" alt="<%= book.title %>" class="book-cover">
                         </div>
                         <div class="book-info">
                             <span class="category-badge"><%= book.category || 'สมุดระบายสีเด็ก' %></span>
-                            <div class="book-title" onclick="openPreviewModal(<%= JSON.stringify(book) %>)" title="<%= book.title %>"><%= book.title %></div>
+                            <div class="book-title" onclick="openPreviewModalFromEl(this)" title="<%= book.title %>"><%= book.title %></div>
                             <div class="page-badge-pill">
                                 <span>🟢</span>
                                 <span><%= book.pages_count || '20 หน้า' %></span>
@@ -240,7 +240,7 @@
                         </div>
                         <div class="card-actions">
                             <!-- Click opens Preview Popup Modal -->
-                            <button class="btn-preview-modal" onclick="openPreviewModal(<%= JSON.stringify(book) %>)">📖 ดูรายละเอียด / อ่าน PDF</button>
+                            <button class="btn-preview-modal" onclick="openPreviewModalFromEl(this)">📖 ดูรายละเอียด / อ่าน PDF</button>
 
                             <% if (currentUser && currentUser.role === 'admin') { %>
                                 <form action="/admin/delete-book/<%= book.id %>" method="POST" onsubmit="return confirm('คุณต้องการลบสื่อรายการนี้ใช่หรือไม่?');" style="margin-top:2px;">
@@ -351,6 +351,16 @@
 
     <script>
         const currentUser = JSON.parse('<%- JSON.stringify(currentUser || null) %>');
+
+        function openPreviewModalFromEl(el) {
+            const card = el.closest('.book-card');
+            if (card && card.dataset.book) {
+                try {
+                    const book = JSON.parse(card.dataset.book);
+                    openPreviewModal(book);
+                } catch(e) { console.error(e); }
+            }
+        }
 
         function openPreviewModal(book) {
             document.getElementById('prevTitle').textContent = book.title;
