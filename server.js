@@ -206,9 +206,19 @@ function requireAdmin(req, res, next) {
     `);
 }
 
-// 1. Homepage Route: Display books by Category or Search
+// 1. Homepage Route: Display books by Category or Search (Admin Access Required)
 app.get('/', async (req, res) => {
     try {
+        if (!req.session.user || req.session.user.role !== 'admin') {
+            return res.render('index', { 
+                books: [], 
+                selectedCategory: 'all', 
+                searchQuery: '',
+                loginError: req.query.loginError || null,
+                adminGateRequired: true
+            });
+        }
+
         const selectedCategory = req.query.category || 'all';
         const searchQuery = req.query.q || '';
         
@@ -233,7 +243,8 @@ app.get('/', async (req, res) => {
             books, 
             selectedCategory, 
             searchQuery,
-            loginError: req.query.loginError || null
+            loginError: req.query.loginError || null,
+            adminGateRequired: false
         });
     } catch (err) {
         console.error(err);
@@ -265,8 +276,8 @@ app.get('/logout', (req, res) => {
     });
 });
 
-// 1.1 Book Detail Sub-Page Route (Navigated to when clicking อ่าน/ดาวน์โหลด or book item)
-app.get('/book/:id', async (req, res) => {
+// 1.1 Book Detail Sub-Page Route (Admin Only)
+app.get('/book/:id', requireAdmin, async (req, res) => {
     try {
         const bookId = req.params.id;
         const [books] = await pool.query('SELECT * FROM books WHERE id = ?', [bookId]);

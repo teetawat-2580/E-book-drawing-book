@@ -240,7 +240,7 @@
                         </div>
                         <div class="card-actions">
                             <!-- Click opens Preview Popup Modal -->
-                            <button class="btn-preview-modal" onclick="openPreviewModalFromEl(this)">📖 ดูรายละเอียด / อ่าน PDF</button>
+                            <button class="btn-preview-modal" onclick="openPreviewModalFromEl(this)">📖 ดูรายละเอียด / ตัวอย่าง</button>
 
                             <% if (currentUser && currentUser.role === 'admin') { %>
                                 <form action="/admin/delete-book/<%= book.id %>" method="POST" onsubmit="return confirm('คุณต้องการลบสื่อรายการนี้ใช่หรือไม่?');" style="margin-top:2px;">
@@ -253,9 +253,18 @@
             </div>
         <% } else { %>
             <div class="no-books">
-                <p>📭 ยังไม่มีรายการสื่อการเรียนรู้ในระบบ</p>
-                <% if (currentUser && currentUser.role === 'admin') { %>
-                    <a href="/admin/upload" style="color: var(--fresh-green); font-weight: bold; text-decoration: none;">+ เพิ่มรายการใหม่</a>
+                <% if (typeof adminGateRequired !== "undefined" && adminGateRequired && (!currentUser || currentUser.role !== 'admin')) { %>
+                    <div style="padding: 20px 10px;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
+                        <h3 style="color: var(--primary-navy); margin: 0 0 8px 0; font-size: 20px;">หน้านี้สำหรับผู้ดูแลระบบเท่านั้น (Admin Access Only)</h3>
+                        <p style="color: #64748b; font-size: 13.5px; margin-bottom: 20px;">หน้ารวมหลักสูตรจำกัดสิทธิ์การเข้าถึงเฉพาะบัญชี Admin กรุณาเข้าสู่ระบบ</p>
+                        <button class="btn-submit" style="max-width: 220px; margin: 0 auto; display: block;" onclick="openLoginModal()">🔑 เข้าสู่ระบบ Admin</button>
+                    </div>
+                <% } else { %>
+                    <p>📭 ยังไม่มีรายการสื่อการเรียนรู้ในระบบ</p>
+                    <% if (currentUser && currentUser.role === 'admin') { %>
+                        <a href="/admin/upload" style="color: var(--fresh-green); font-weight: bold; text-decoration: none;">+ เพิ่มรายการใหม่</a>
+                    <% } %>
                 <% } %>
             </div>
         <% } %>
@@ -286,7 +295,7 @@
                     </div>
 
                     <div class="preview-meta-row">ผู้จัดทำ: <strong id="prevAuthor">คลังสมอง</strong></div>
-                    <div class="preview-meta-row">สำนักพิมพ์: <strong id="prevPublisher">คลังสมอง KLANGSOMONG</strong></div>
+                    <div class="preview-meta-row">สำนักพิมพ์: <strong id="prevPublisher">คลังสมอง KLANGSAMONG</strong></div>
                     <div class="preview-meta-row">ความยาว: <strong id="prevPages">20 หน้า</strong></div>
                     <div class="preview-meta-row">ประเภทไฟล์: <strong id="prevType">PDF</strong></div>
 
@@ -300,10 +309,6 @@
                         <button id="prevDownloadBtn" class="btn-modal-download">
                             📥 ดาวน์โหลด PDF ฉบับเต็ม
                         </button>
-
-                        <a href="#" id="prevSubpageLink" class="btn-modal-fullpage">
-                            🔗 ดูรายละเอียดเพิ่มเติม (หน้าซับเพจเต็ม)
-                        </a>
                     </div>
                 </div>
             </div>
@@ -376,12 +381,10 @@
             }
 
             document.getElementById('prevAuthor').textContent = book.author_name || 'คลังสมอง';
-            document.getElementById('prevPublisher').textContent = book.publisher || 'คลังสมอง KLANGSOMONG';
+            document.getElementById('prevPublisher').textContent = book.publisher || 'คลังสมอง KLANGSAMONG';
             document.getElementById('prevPages').textContent = book.pages_count || '20 หน้า';
             document.getElementById('prevType').textContent = book.file_type || 'PDF';
             document.getElementById('prevDesc').textContent = book.description || 'ไม่มีรายละเอียดเพิ่มเติมสำหรับสื่อรายการนี้';
-            
-            document.getElementById('prevSubpageLink').href = '/book/' + book.id;
 
             // Sample PDF Preview Button
             const sampleBtn = document.getElementById('prevSampleBtn');
@@ -439,7 +442,8 @@
         };
 
         const loginError = JSON.parse('<%- JSON.stringify(Boolean(typeof loginError !== "undefined" && loginError)) %>');
-        if (loginError) {
+        const adminGateRequired = JSON.parse('<%- JSON.stringify(Boolean(typeof adminGateRequired !== "undefined" && adminGateRequired)) %>');
+        if (loginError || adminGateRequired) {
             openLoginModal();
         }
     </script>
