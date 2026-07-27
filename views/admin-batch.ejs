@@ -243,11 +243,8 @@
 
     </div>
 
-    <!-- Import Vercel Blob Client Module -->
-    <script type="module">
-        import { upload } from 'https://esm.sh/@vercel/blob/client';
-        window.vercelBlobUpload = upload;
-    </script>
+    <!-- Import Firebase Storage Direct Uploader -->
+    <script type="module" src="/js/firebase-uploader.js"></script>
 
     <script>
         function switchTab(tabId, btn) {
@@ -257,7 +254,7 @@
             btn.classList.add('active');
         }
 
-        // Direct Vercel Blob / 2MB Chunked Upload function for table cells (bypasses 4.5MB limit!)
+        // Direct Firebase Storage / Fallback Upload function for table cells
         async function uploadRowFile(fileInput, subFolder, hiddenInputClass) {
             if (!fileInput.files || fileInput.files.length === 0) return;
 
@@ -270,7 +267,23 @@
 
             try {
                 let fileUrl = '';
-                if (window.vercelBlobUpload) {
+
+                // 1. Direct Firebase Storage Upload (Physical file uploaded directly to Firebase Storage CDN)
+                if (window.firebaseStorageUpload) {
+                    try {
+                        fileUrl = await window.firebaseStorageUpload(file, subFolder, (pct) => {
+                            statusEl.innerHTML = `<span style="color:#d97706; font-size:11px; font-weight:bold;">⏳ ${pct}%</span>`;
+                        });
+                    } catch (err) {
+                        console.error('Firebase Storage direct upload error in batch cell:', err);
+                        statusEl.innerHTML = '<span style="color:#dc2626; font-size:11px; font-weight:bold;">❌ อัปโหลดล้มเหลว</span>';
+                        alert('⚠️ ไม่สามารถอัปโหลดไปยัง Firebase Storage ได้!\n\nสาเหตุ: ' + err.message + '\n\n💡 วิธีแก้ไข:\n1. เข้า Firebase Console (https://console.firebase.google.com)\n2. ไปที่เมนู Build -> Storage -> คลิก Get Started\n3. ที่แท็บ Rules ให้ตั้งค่าเป็น:\n   allow read, write: if true;\n4. กด Publish');
+                        return;
+                    }
+                }
+
+                // 2. Try Vercel Blob Client Upload if configured
+                if (!fileUrl && window.vercelBlobUpload) {
                     try {
                         const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
                         const blob = await window.vercelBlobUpload(subFolder + '/' + Date.now() + '-' + cleanFileName, file, {
@@ -368,7 +381,12 @@ VALUES
                 return;
             }
 
-            const esc = (val) => (val === null || val === undefined || val === '') ? 'NULL' : `'${String(val).replace(/'/g, "''")}'`;
+            const esc = (val) => {
+                if (val === null || val === undefined || val === '') return 'NULL';
+                const str = String(val);
+                if (str.startsWith('data:')) return 'NULL';
+                return `'${str.replace(/'/g, "''")}'`;
+            };
             const num = (val) => (val === null || val === undefined || val === '' || isNaN(val)) ? 'NULL' : val;
 
             let sqlLines = [
@@ -379,9 +397,9 @@ VALUES
             ];
 
             DB_BOOKS.forEach(b => {
-                const query = `INSERT INTO books (id, title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, cover_image_url, file_path, sample_file_path, description) ` +
-                              `VALUES (${b.id}, ${esc(b.title)}, ${esc(b.author_name)}, ${esc(b.publisher)}, ${esc(b.category)}, ${num(b.price)}, ${num(b.original_price)}, ${esc(b.pages_count)}, ${esc(b.file_type)}, ${esc(b.badge)}, ${esc(b.cover_image_url)}, ${esc(b.file_path)}, ${esc(b.sample_file_path)}, ${esc(b.description)}) ` +
-                              `ON DUPLICATE KEY UPDATE title = VALUES(title), author_name = VALUES(author_name), publisher = VALUES(publisher), category = VALUES(category), price = VALUES(price), original_price = VALUES(original_price), pages_count = VALUES(pages_count), file_type = VALUES(file_type), badge = VALUES(badge), cover_image_url = VALUES(cover_image_url), file_path = VALUES(file_path), sample_file_path = VALUES(sample_file_path), description = VALUES(description);`;
+                const query = `INSERT INTO books (id, title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, file_path, description) ` +
+                              `VALUES (${b.id}, ${esc(b.title)}, ${esc(b.author_name)}, ${esc(b.publisher)}, ${esc(b.category)}, ${num(b.price)}, ${num(b.original_price)}, ${esc(b.pages_count)}, ${esc(b.file_type)}, ${esc(b.badge)}, ${esc(b.file_path)}, ${esc(b.description)}) ` +
+                              `ON DUPLICATE KEY UPDATE title = VALUES(title), author_name = VALUES(author_name), publisher = VALUES(publisher), category = VALUES(category), price = VALUES(price), original_price = VALUES(original_price), pages_count = VALUES(pages_count), file_type = VALUES(file_type), badge = VALUES(badge), file_path = VALUES(file_path), description = VALUES(description);`;
                 sqlLines.push(query);
             });
 

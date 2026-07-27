@@ -58,11 +58,47 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
-// Helper function to resolve file URL (Vercel Blob / Safe Local Disk / Base64 Data URI)
+// Firebase Storage REST API Upload Helper for Server & Serverless (Vercel)
+async function uploadToFirebaseStorage(reqFile, subFolder) {
+    if (!reqFile || !reqFile.buffer) return '';
+    const BUCKET_NAME = "klangsamong-e1d13.firebasestorage.app";
+    const cleanName = (reqFile.originalname || 'file').replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const objectPath = `${subFolder}/${Date.now()}_${cleanName}`;
+    const encodedPath = encodeURIComponent(objectPath);
+
+    const firebaseUrl = `https://firebasestorage.googleapis.com/v0/b/${BUCKET_NAME}/o?uploadType=media&name=${encodedPath}`;
+
+    const response = await fetch(firebaseUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': reqFile.mimetype || 'application/octet-stream'
+        },
+        body: reqFile.buffer
+    });
+
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Firebase Storage Server Upload Failed (${response.status}): ${errText}`);
+    }
+
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${BUCKET_NAME}/o/${encodedPath}?alt=media`;
+    console.log(`Successfully uploaded ${reqFile.originalname} to Firebase Storage: ${publicUrl}`);
+    return publicUrl;
+}
+
+// Helper function to resolve file URL (Firebase Storage / Vercel Blob / Local Disk)
 async function resolveFileUrl(reqFile, subFolder) {
     if (!reqFile || !reqFile.buffer) return '';
     
-    // 1. If Vercel Blob Token is set, upload file directly to Vercel Blob Storage
+    // 1. Primary: Upload directly to Firebase Storage Bucket (klangsamong-e1d13.firebasestorage.app)
+    try {
+        const firebaseUrl = await uploadToFirebaseStorage(reqFile, subFolder);
+        if (firebaseUrl) return firebaseUrl;
+    } catch (err) {
+        console.error("Firebase Storage server upload notice:", err.message);
+    }
+
+    // 2. If Vercel Blob Token is set, upload file directly to Vercel Blob Storage
     if (process.env.BLOB_READ_WRITE_TOKEN && vercelBlob) {
         try {
             const cleanName = reqFile.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -72,11 +108,11 @@ async function resolveFileUrl(reqFile, subFolder) {
             console.log(`Uploaded ${reqFile.originalname} to Vercel Blob: ${blob.url}`);
             return blob.url;
         } catch (err) {
-            console.error("Vercel Blob upload failed, falling back:", err.message);
+            console.error("Vercel Blob upload failed:", err.message);
         }
     }
 
-    // 2. If running locally, attempt to save buffer to local disk safely wrapped in try...catch
+    // 3. If running locally, attempt to save buffer to local disk safely wrapped in try...catch
     const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NOW_REGION);
     if (!isVercel) {
         try {
@@ -89,12 +125,11 @@ async function resolveFileUrl(reqFile, subFolder) {
             fs.writeFileSync(targetPath, reqFile.buffer);
             return `/uploads/${subFolder}/${filename}`;
         } catch (err) {
-            console.log("Local disk save notice, falling back to Data URI:", err.message);
+            console.error("Local disk save notice:", err.message);
         }
     }
 
-    // 3. Fallback to Data URI (100% safe for read-only serverless environments)
-    return `data:${reqFile.mimetype};base64,${reqFile.buffer.toString('base64')}`;
+    throw new Error('ไม่สามารถอัปโหลดไฟล์ไปยัง Firebase Storage ได้ กรุณาตรวจสอบการตั้งค่า Firebase');
 }
 
 // MySQL Database Connection Pool - Supporting process.env.DATABASE_URL (Aiven MySQL) & Local MySQL
@@ -750,7 +785,12 @@ app.get('/admin/export-sql', async (req, res) => {
     try {
         const [books] = await pool.query('SELECT * FROM books ORDER BY id ASC');
 
-        const esc = (val) => (val === null || val === undefined || val === '') ? 'NULL' : `'${String(val).replace(/'/g, "''")}'`;
+        const esc = (val) => {
+            if (val === null || val === undefined || val === '') return 'NULL';
+            const str = String(val);
+            if (str.startsWith('data:')) return 'NULL';
+            return `'${str.replace(/'/g, "''")}'`;
+        };
         const num = (val) => (val === null || val === undefined || val === '' || isNaN(val)) ? 'NULL' : val;
 
         const now = new Date();
@@ -765,9 +805,9 @@ app.get('/admin/export-sql', async (req, res) => {
         ];
 
         books.forEach(b => {
-            const query = `INSERT INTO books (id, title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, cover_image_url, file_path, sample_file_path, description) ` +
-                          `VALUES (${b.id}, ${esc(b.title)}, ${esc(b.author_name)}, ${esc(b.publisher)}, ${esc(b.category)}, ${num(b.price)}, ${num(b.original_price)}, ${esc(b.pages_count)}, ${esc(b.file_type)}, ${esc(b.badge)}, ${esc(b.cover_image_url)}, ${esc(b.file_path)}, ${esc(b.sample_file_path)}, ${esc(b.description)}) ` +
-                          `ON DUPLICATE KEY UPDATE title = VALUES(title), author_name = VALUES(author_name), publisher = VALUES(publisher), category = VALUES(category), price = VALUES(price), original_price = VALUES(original_price), pages_count = VALUES(pages_count), file_type = VALUES(file_type), badge = VALUES(badge), cover_image_url = VALUES(cover_image_url), file_path = VALUES(file_path), sample_file_path = VALUES(sample_file_path), description = VALUES(description);`;
+            const query = `INSERT INTO books (id, title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, file_path, description) ` +
+                          `VALUES (${b.id}, ${esc(b.title)}, ${esc(b.author_name)}, ${esc(b.publisher)}, ${esc(b.category)}, ${num(b.price)}, ${num(b.original_price)}, ${esc(b.pages_count)}, ${esc(b.file_type)}, ${esc(b.badge)}, ${esc(b.file_path)}, ${esc(b.description)}) ` +
+                          `ON DUPLICATE KEY UPDATE title = VALUES(title), author_name = VALUES(author_name), publisher = VALUES(publisher), category = VALUES(category), price = VALUES(price), original_price = VALUES(original_price), pages_count = VALUES(pages_count), file_type = VALUES(file_type), badge = VALUES(badge), file_path = VALUES(file_path), description = VALUES(description);`;
             sqlLines.push(query);
         });
 

@@ -46,10 +46,6 @@
         
         <form id="uploadForm" action="/admin/upload-direct" method="POST">
             
-            <input type="hidden" name="cover_image_url" id="cover_image_url">
-            <input type="hidden" name="file_path" id="file_path">
-            <input type="hidden" name="sample_file_path" id="sample_file_path">
-
             <div class="section-tag">ข้อมูลสื่อการเรียนรู้</div>
 
             <div class="form-group">
@@ -147,17 +143,28 @@
         <a href="/admin/manage" class="back-link">← กลับไปหน้าระบบจัดการสื่อ</a>
     </div>
 
-    <!-- Import Vercel Blob Client Module -->
-    <script type="module">
-        import { upload } from 'https://esm.sh/@vercel/blob/client';
-        window.vercelBlobUpload = upload;
-    </script>
+    <!-- Import Firebase Storage Direct Uploader -->
+    <script type="module" src="/js/firebase-uploader.js"></script>
 
     <script>
         async function directUploadFile(file, subFolder, statusCallback) {
             if (!file) return '';
             
-            // 1. Try Client-side Vercel Blob Direct Upload (if BLOB_READ_WRITE_TOKEN is configured)
+            // 1. Direct Firebase Storage Upload (Primary method to upload physical files to Firebase CDN)
+            if (window.firebaseStorageUpload) {
+                try {
+                    const firebaseUrl = await window.firebaseStorageUpload(file, subFolder, statusCallback);
+                    if (firebaseUrl) {
+                        return firebaseUrl;
+                    }
+                } catch (err) {
+                    console.error('Firebase Storage direct upload error:', err);
+                    alert('⚠️ ไม่สามารถอัปโหลดไปยัง Firebase Storage ได้!\n\nสาเหตุ: ' + err.message + '\n\n💡 วิธีแก้ไข:\n1. เข้า Firebase Console (https://console.firebase.google.com)\n2. ไปที่เมนู Build -> Storage -> คลิก Get Started\n3. ที่แท็บ Rules ให้ตั้งค่าเป็น:\n   allow read, write: if true;\n4. กด Publish');
+                    throw err;
+                }
+            }
+
+            // 2. Try Client-side Vercel Blob Direct Upload
             if (window.vercelBlobUpload) {
                 try {
                     const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');

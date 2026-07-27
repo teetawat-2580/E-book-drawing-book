@@ -320,11 +320,8 @@
         </div>
     </div>
 
-    <!-- Import Vercel Blob Client Module -->
-    <script type="module">
-        import { upload } from 'https://esm.sh/@vercel/blob/client';
-        window.vercelBlobUpload = upload;
-    </script>
+    <!-- Import Firebase Storage Direct Uploader -->
+    <script type="module" src="/js/firebase-uploader.js"></script>
 
     <script>
         function openEditModalFromEl(el) {
@@ -366,7 +363,21 @@
         async function directUploadFileEdit(file, subFolder, statusCallback) {
             if (!file) return '';
             
-            // 1. Try Vercel Blob Direct Upload if configured
+            // 1. Direct Firebase Storage Upload (Primary method to upload physical files to Firebase CDN)
+            if (window.firebaseStorageUpload) {
+                try {
+                    const firebaseUrl = await window.firebaseStorageUpload(file, subFolder, statusCallback);
+                    if (firebaseUrl) {
+                        return firebaseUrl;
+                    }
+                } catch (err) {
+                    console.error('Firebase Storage upload error in edit:', err);
+                    alert('⚠️ ไม่สามารถอัปโหลดไปยัง Firebase Storage ได้!\n\nสาเหตุ: ' + err.message + '\n\n💡 วิธีแก้ไข:\n1. เข้า Firebase Console (https://console.firebase.google.com)\n2. ไปที่เมนู Build -> Storage -> คลิก Get Started\n3. ที่แท็บ Rules ให้ตั้งค่าเป็น:\n   allow read, write: if true;\n4. กด Publish');
+                    throw err;
+                }
+            }
+
+            // 2. Try Vercel Blob Direct Upload if configured
             if (window.vercelBlobUpload) {
                 try {
                     const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
