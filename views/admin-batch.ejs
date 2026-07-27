@@ -128,20 +128,17 @@
                                     <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllRows(this)" title="เลือกทั้งหมด / ยกเลิกทั้งหมด" style="cursor: pointer; width: 16px; height: 16px;">
                                 </th>
                                 <th style="width: 40px;">ID</th>
-                                <th style="width: 140px;">ชื่อสื่อ (Title)</th>
-                                <th style="width: 95px;">ผู้จัดทำ (Author)</th>
-                                <th style="width: 105px;">สำนักพิมพ์</th>
-                                <th style="width: 125px;">หมวดหมู่ (Category)</th>
-                                <th style="width: 70px;">ราคาขาย</th>
-                                <th style="width: 70px;">ราคาปกติ</th>
-                                <th style="width: 90px;">ความยาว/หน้า</th>
-                                <th style="width: 75px;">ประเภทไฟล์</th>
-                                <th style="width: 80px;">ป้ายกำกับ</th>
-                                <th style="width: 155px;">🖼️ ลิงก์/ไฟล์รูปปก</th>
-                                <th style="width: 165px;">📖 ลิงก์ PDF ฉบับเต็ม (Link Only)</th>
-                                <th style="width: 155px;">📄 ลิงก์/ไฟล์ PDF ตัวอย่าง</th>
-                                <th style="width: 140px;">รายละเอียด (Description)</th>
-                                <th style="width: 40px;">ลบ</th>
+                                <th style="width: 160px;">ชื่อสื่อ (Title)</th>
+                                <th style="width: 100px;">ผู้จัดทำ (Author)</th>
+                                <th style="width: 110px;">สำนักพิมพ์</th>
+                                <th style="width: 130px;">หมวดหมู่ (Category)</th>
+                                <th style="width: 75px;">ราคาขาย</th>
+                                <th style="width: 75px;">ราคาปกติ</th>
+                                <th style="width: 95px;">ความยาว/หน้า</th>
+                                <th style="width: 80px;">ประเภทไฟล์</th>
+                                <th style="width: 85px;">ป้ายกำกับ</th>
+                                <th style="width: 220px;">📖 ลิงก์ PDF ฉบับเต็ม (Drive Link Only)</th>
+                                <th style="width: 200px;">รายละเอียด (Description)</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -175,15 +172,6 @@
                                         <td><input type="text" class="v-file-type" value="<%= book.file_type || 'PDF' %>"></td>
                                         <td><input type="text" class="v-badge" value="<%= book.badge || '' %>"></td>
                                         
-                                        <!-- Cover Image (Input Link + Direct Upload Button) -->
-                                        <td>
-                                            <input type="text" class="v-cover" value="<%= book.cover_image_url || '' %>" placeholder="ลิงก์รูปปก..." style="font-size:11px; margin-bottom:3px;">
-                                            <label class="btn-file-upload">
-                                                📁 อัปโหลดรูปทับ
-                                                <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
-                                            </label>
-                                        </td>
-
                                         <!-- Full PDF File (Input Link Only - Direct Link to Google Drive etc.) -->
                                         <td>
                                             <input type="text" class="v-book-file" value="<%= book.file_path || '' %>" placeholder="วางลิงก์ Google Drive..." style="font-size:11px;">
@@ -192,17 +180,7 @@
                                             <% } %>
                                         </td>
 
-                                        <!-- Sample PDF (Input Link + Direct Upload Button) -->
-                                        <td>
-                                            <input type="text" class="v-sample-file" value="<%= book.sample_file_path || '' %>" placeholder="ลิงก์ตัวอย่าง..." style="font-size:11px; margin-bottom:3px;">
-                                            <label class="btn-file-upload">
-                                                📁 อัปโหลดตัวอย่างทับ
-                                                <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
-                                            </label>
-                                        </td>
-
                                         <td><textarea class="v-description"><%= book.description || '' %></textarea></td>
-                                        <td style="text-align:center;"><button type="button" style="color:red; cursor:pointer; border:none; background:none;" onclick="removeRow(this)">❌</button></td>
                                     </tr>
                                 <% }) %>
                             <% } else { %>
@@ -232,27 +210,10 @@
                                     <td><input type="text" class="v-badge" placeholder="แนะนำ"></td>
                                     
                                     <td>
-                                        <input type="text" class="v-cover" value="" placeholder="ลิงก์รูปปก..." style="font-size:11px; margin-bottom:3px;">
-                                        <label class="btn-file-upload">
-                                            📁 อัปโหลดรูปใหม่
-                                            <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
-                                        </label>
-                                    </td>
-
-                                    <td>
                                         <input type="text" class="v-book-file" value="" placeholder="วางลิงก์ Google Drive..." style="font-size:11px;">
                                     </td>
 
-                                    <td>
-                                        <input type="text" class="v-sample-file" value="" placeholder="ลิงก์ตัวอย่าง..." style="font-size:11px; margin-bottom:3px;">
-                                        <label class="btn-file-upload">
-                                            📁 อัปโหลดตัวอย่างใหม่
-                                            <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
-                                        </label>
-                                    </td>
-
                                     <td><textarea class="v-description" placeholder="รายละเอียด..."></textarea></td>
-                                    <td style="text-align:center;"><button type="button" style="color:red; cursor:pointer; border:none; background:none;" onclick="removeRow(this)">❌</button></td>
                                 </tr>
                             <% } %>
                         </tbody>
@@ -554,27 +515,10 @@ VALUES
                 <td><input type="text" class="v-badge" placeholder="แนะนำ"></td>
                 
                 <td>
-                    <input type="text" class="v-cover" value="" placeholder="ลิงก์รูปปก..." style="font-size:11px; margin-bottom:3px;">
-                    <label class="btn-file-upload">
-                        📁 อัปโหลดรูปใหม่
-                        <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
-                    </label>
-                </td>
-
-                <td>
                     <input type="text" class="v-book-file" value="" placeholder="วางลิงก์ Google Drive..." style="font-size:11px;">
                 </td>
 
-                <td>
-                    <input type="text" class="v-sample-file" value="" placeholder="ลิงก์ตัวอย่าง..." style="font-size:11px; margin-bottom:3px;">
-                    <label class="btn-file-upload">
-                        📁 อัปโหลดตัวอย่างใหม่
-                        <input type="file" accept=".pdf" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
-                    </label>
-                </td>
-
                 <td><textarea class="v-description" placeholder="รายละเอียด..."></textarea></td>
-                <td style="text-align:center;"><button type="button" style="color:red; cursor:pointer; border:none; background:none;" onclick="removeRow(this)">❌</button></td>
             `;
             tbody.insertBefore(tr, tbody.firstChild);
             updateSelectedCount();
@@ -632,9 +576,7 @@ VALUES
                             pages_count: pages,
                             file_type: fileType,
                             badge: badge,
-                            cover_image_url: cover,
                             file_path: bookFile,
-                            sample_file_path: sampleFile,
                             description: description
                         });
                     }
@@ -647,7 +589,7 @@ VALUES
                     return false;
                 }
 
-                // Chunk batch submit into groups of 5 books per request (Guarantees < 200KB payload per request!)
+                // Chunk batch submit into groups of 5 books per request
                 const BATCH_SIZE = 5;
                 for (let i = 0; i < data.length; i += BATCH_SIZE) {
                     const chunk = data.slice(i, i + BATCH_SIZE);
@@ -666,13 +608,75 @@ VALUES
                     }
                 }
 
-                window.location.href = '/admin/batch?success=' + encodeURIComponent('บันทึกข้อมูลที่เลือกทั้งหมด ' + data.length + ' รายการเรียบร้อยแล้ว');
+                // Generate SQL Code string for the updated/inserted records
+                const generatedSql = generateSqlQueries(data);
+                showSqlModal(generatedSql, data.length);
+
             } catch (err) {
                 alert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
                 submitBtn.disabled = false;
                 updateSelectedCount();
             }
             return false;
+        }
+
+        function generateSqlQueries(data) {
+            const esc = (val) => (val === null || val === undefined || val === '') ? 'NULL' : `'${String(val).replace(/'/g, "''")}'`;
+            const num = (val) => (val === null || val === undefined || val === '' || isNaN(val)) ? 'NULL' : val;
+
+            return data.map(b => {
+                if (b.id) {
+                    return `UPDATE books SET title = ${esc(b.title)}, author_name = ${esc(b.author_name)}, publisher = ${esc(b.publisher)}, category = ${esc(b.category)}, price = ${num(b.price)}, original_price = ${num(b.original_price)}, pages_count = ${esc(b.pages_count)}, file_type = ${esc(b.file_type)}, badge = ${esc(b.badge)}, file_path = ${esc(b.file_path)}, description = ${esc(b.description)} WHERE id = ${b.id};`;
+                } else {
+                    return `INSERT INTO books (title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, file_path, description) VALUES (${esc(b.title)}, ${esc(b.author_name)}, ${esc(b.publisher)}, ${esc(b.category)}, ${num(b.price)}, ${num(b.original_price)}, ${esc(b.pages_count)}, ${esc(b.file_type)}, ${esc(b.badge)}, ${esc(b.file_path)}, ${esc(b.description)});`;
+                }
+            }).join('\n\n');
+        }
+
+        function showSqlModal(sql, count) {
+            let modal = document.getElementById('sqlOutputModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'sqlOutputModal';
+                modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.7); z-index:9999; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(4px);';
+                modal.innerHTML = `
+                    <div style="background:white; border-radius:14px; padding:24px 28px; max-width:850px; width:92%; max-height:88vh; overflow-y:auto; box-shadow:0 20px 40px rgba(0,0,0,0.3); border:1.5px solid #e2e8f0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <h3 style="margin:0; color:#1e3a8a; font-size:18px; display:flex; align-items:center; gap:8px;">
+                                <span>⚡</span> โค้ด SQL ที่เกิดขึ้นจากการบันทึก (<span id="sqlCountLabel">0</span> รายการ)
+                            </h3>
+                            <button type="button" onclick="closeSqlModalAndReload()" style="border:none; background:none; font-size:20px; cursor:pointer; color:#64748b;">✕</button>
+                        </div>
+                        <p style="font-size:13px; color:#475569; margin-bottom:12px; line-height:1.5;">
+                            ✅ บันทึกลงฐานข้อมูลเรียบร้อยแล้ว! สามารถก๊อปปี้โค้ด SQL ด้านล่างนี้ไปเก็บสำรอง หรือเอาไปรันต่อในช่อง <strong>⚡ SQL Code Batch Execution</strong> ได้ทันที:
+                        </p>
+                        <textarea id="sqlResultTextarea" style="width:100%; height:280px; font-family:Consolas, Monaco, monospace; font-size:12.5px; padding:12px; border-radius:8px; border:1.5px solid #cbd5e1; background:#f8fafc; color:#0f172a; line-height:1.4; resize:vertical;" readonly></textarea>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+                            <button type="button" onclick="copyGeneratedSql()" style="background:#22c55e; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13.5px; display:flex; align-items:center; gap:6px;">
+                                📋 คัดลอกโค้ด SQL (Copy SQL)
+                            </button>
+                            <button type="button" onclick="closeSqlModalAndReload()" style="background:#0284c7; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13.5px;">
+                                ตกลง / รีโหลดหน้าเว็บ
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            document.getElementById('sqlCountLabel').textContent = count;
+            document.getElementById('sqlResultTextarea').value = sql;
+            modal.style.display = 'flex';
+        }
+
+        function copyGeneratedSql() {
+            const textarea = document.getElementById('sqlResultTextarea');
+            textarea.select();
+            document.execCommand('copy');
+            alert('📋 คัดลอกโค้ด SQL ทั้งหมดลง Clipboard เรียบร้อยแล้ว!');
+        }
+
+        function closeSqlModalAndReload() {
+            window.location.href = '/admin/batch?success=' + encodeURIComponent('บันทึกข้อมูลเรียบร้อยแล้ว');
         }
     </script>
 </body>

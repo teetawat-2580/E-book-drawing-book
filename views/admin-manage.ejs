@@ -124,6 +124,27 @@
             </div>
         </div>
 
+        <!-- Filter Bar for /admin/manage -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px 18px; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-weight: 700; font-size: 14px; color: var(--primary-navy);">🔍 กรองสื่อตามหมวดหมู่:</label>
+                <select id="manageCategoryFilter" onchange="filterManageTable()" style="padding: 7px 14px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-weight: 700; color: var(--primary-navy); cursor: pointer; font-size: 13.5px; font-family: inherit;">
+                    <option value="all">แสดงทุกหมวดหมู่ (All)</option>
+                    <option value="สมุดระบายสีเด็ก">สมุดระบายสีเด็ก</option>
+                    <option value="คณิตศาสตร์">คณิตศาสตร์ (ชีทคณิต)</option>
+                    <option value="พื้นฐานการบวกเลข">พื้นฐานการบวกเลข</option>
+                    <option value="ชีทฝึกเขียน">ชีทฝึกเขียนภาษา</option>
+                    <option value="แฟลชการ์ด">แฟลชการ์ด 2 ภาษา</option>
+                    <option value="เกมฝึกสมอง">เกมฝึกสมองเด็ก</option>
+                    <option value="นิทานเด็ก AI">นิทานและแบบเรียน</option>
+                    <option value="สื่อครูตกแต่ง">สื่อครูตกแต่งห้องเรียน</option>
+                </select>
+            </div>
+            <div style="font-size: 13.5px; color: #64748b; font-weight: 600;">
+                แสดงในตาราง <strong id="manageVisibleCount" style="color:var(--primary-navy);"><%= books.length %></strong> / <%= books.length %> รายการ
+            </div>
+        </div>
+
         <div class="book-table-container">
             <% if (books.length > 0) { %>
                 <table>
@@ -514,6 +535,34 @@
                 statusBox.style.color = '#dc2626';
                 statusBox.textContent = '❌ ' + err.message;
             }
+        }
+
+        function filterManageTable() {
+            const selectedCat = document.getElementById('manageCategoryFilter').value;
+            const rows = document.querySelectorAll('.book-table-container tbody tr');
+            let visibleCount = 0;
+
+            rows.forEach(tr => {
+                const catCell = tr.children[2];
+                if (!catCell) return;
+                const rowCat = catCell.textContent.trim();
+
+                const isMatch = selectedCat === 'all' || 
+                                rowCat.includes(selectedCat) || 
+                                (selectedCat === 'คณิตศาสตร์' && (rowCat.includes('คณิตศาสตร์') || rowCat.includes('ชีทคณิต'))) || 
+                                (selectedCat === 'แฟลชการ์ด' && (rowCat.includes('แฟลชการ์ด') || rowCat.includes('2 ภาษา'))) ||
+                                (selectedCat === 'เกมฝึกสมอง' && (rowCat.includes('เกมฝึกสมอง'))) ||
+                                (selectedCat === 'สื่อครูตกแต่ง' && (rowCat.includes('สื่อครู') || rowCat.includes('ตกแต่ง')));
+
+                if (isMatch) {
+                    tr.style.display = '';
+                    visibleCount++;
+                } else {
+                    tr.style.display = 'none';
+                }
+            });
+
+            document.getElementById('manageVisibleCount').textContent = visibleCount;
         }
 
         window.onclick = function(event) {
