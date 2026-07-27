@@ -3,54 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Batch Edit & Batch Input</title>
+    <title>Admin - Batch Upload & Batch Edit | คลังสมอง KLANGSOMONG</title>
+    <!-- Google Fonts: Prompt & Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
+        :root {
+            --primary-navy: #1E3A8A;
+            --sky-blue: #38BDF8;
+            --fresh-green: #22C55E;
+            --green-hover: #16a34a;
+            --sun-yellow: #FACC15;
+            --bg-light: #F3F4F6;
+            --text-dark: #1E293B;
+        }
+
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; color: #333; }
-        .batch-container { max-width: 1300px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin: auto; }
-        h2 { color: #00b140; margin-top: 0; font-size: 22px; border-bottom: 2px solid #e6f7ec; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-nav { background: #f0f2f5; color: #444; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold; }
-        .btn-nav:hover { background: #e4e6eb; }
+        body { font-family: 'Prompt', 'Kanit', sans-serif; background-color: var(--bg-light); margin: 0; padding: 25px 15px; color: var(--text-dark); }
+        .batch-container { max-width: 1350px; background: white; padding: 30px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin: auto; border: 1px solid #e2e8f0; }
+        h2 { color: var(--primary-navy); margin-top: 0; font-size: 21px; border-bottom: 2px solid #e2e8f0; padding-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-nav { background: #f1f5f9; color: var(--primary-navy); padding: 7px 14px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid #cbd5e1; }
+        .btn-nav:hover { background: #e2e8f0; }
         
-        .alert { padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: 500; }
-        .alert-success { background: #e6f7ec; border: 1px solid #b7edc9; color: #2e7d32; }
-        .alert-error { background: #fff2f0; border: 1px solid #ffccc7; color: #d90429; }
+        .alert { padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: 600; }
+        .alert-success { background: #dcfce7; border: 1px solid #86efac; color: #15803d; }
+        .alert-error { background: #fef2f2; border: 1px solid #fca5a5; color: #ef4444; }
 
         /* Tabs */
-        .tabs { display: flex; border-bottom: 2px solid #edf0f2; margin-bottom: 20px; gap: 5px; }
-        .tab-btn { padding: 12px 20px; border: none; background: none; font-size: 15px; font-weight: bold; color: #777; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
-        .tab-btn.active { color: #00b140; border-bottom-color: #00b140; }
+        .tabs { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; gap: 5px; }
+        .tab-btn { padding: 12px 20px; border: none; background: none; font-size: 14.5px; font-weight: 700; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; font-family: inherit; }
+        .tab-btn.active { color: var(--primary-navy); border-bottom-color: var(--sky-blue); }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        textarea { width: 100%; height: 260px; font-family: monospace; font-size: 13.5px; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; background: #fafafa; }
+        textarea { width: 100%; height: 260px; font-family: monospace; font-size: 13.5px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; background: #f8fafc; }
         
-        .btn-primary { background-color: #00b140; color: white; border: none; padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 15px; transition: background 0.2s; }
-        .btn-primary:hover { background-color: #009635; }
+        .btn-primary { background-color: var(--fresh-green); color: white; border: none; padding: 12px 25px; font-size: 15px; font-weight: 700; border-radius: 8px; cursor: pointer; margin-top: 15px; transition: background 0.2s; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); font-family: inherit; }
+        .btn-primary:hover { background-color: var(--green-hover); }
 
-        .btn-secondary { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-bottom: 12px; }
+        .btn-secondary { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 8px 15px; font-size: 13px; font-weight: 700; border-radius: 6px; cursor: pointer; margin-bottom: 12px; font-family: inherit; }
         .btn-secondary:hover { background-color: #bae6fd; }
 
-        /* Full Width Interactive Table with Scroll */
-        .table-responsive { overflow-x: auto; max-width: 100%; border: 1px solid #e1e8ed; border-radius: 8px; margin-top: 10px; max-height: 550px; overflow-y: auto; }
+        /* Full Width Interactive Table */
+        .table-responsive { overflow-x: auto; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 10px; max-height: 550px; overflow-y: auto; }
         .table-batch { width: 100%; border-collapse: collapse; min-width: 1600px; }
-        .table-batch th { position: sticky; top: 0; background: #00b140; color: white; padding: 10px; font-size: 12.5px; font-weight: bold; border: 1px solid #009635; z-index: 10; text-align: left; }
-        .table-batch td { border: 1px solid #e1e8ed; padding: 6px; font-size: 12px; background: white; vertical-align: top; }
-        .table-batch tr:nth-child(even) td { background: #fafafa; }
-        .table-batch input, .table-batch select, .table-batch textarea { width: 100%; padding: 5px 7px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 12px; font-family: inherit; }
+        .table-batch th { position: sticky; top: 0; background: var(--primary-navy); color: white; padding: 10px; font-size: 12.5px; font-weight: 700; border: 1px solid #1e293b; z-index: 10; text-align: left; }
+        .table-batch td { border: 1px solid #e2e8f0; padding: 6px; font-size: 12px; background: white; vertical-align: top; }
+        .table-batch tr:nth-child(even) td { background: #f8fafc; }
+        .table-batch input, .table-batch select, .table-batch textarea { width: 100%; padding: 5px 7px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-size: 12px; font-family: inherit; }
         .table-batch textarea { height: 35px; resize: vertical; }
 
-        .hint-box { background: #f8fafc; border-left: 4px solid #0284c7; padding: 12px; border-radius: 4px; margin-bottom: 15px; font-size: 13px; color: #334155; }
+        .hint-box { background: #f0f9ff; border-left: 4px solid var(--sky-blue); padding: 12px 15px; border-radius: 6px; margin-bottom: 15px; font-size: 13.5px; color: #0369a1; }
     </style>
 </head>
 <body>
 
     <div class="batch-container">
         <h2>
-            <span>⚡ ระบบ Batch Upload & Batch Edit (Admin Only)</span>
+            <span>⚡ ระบบ Batch Upload & Batch Edit (คลังสมอง KLANGSOMONG)</span>
             <div>
-                <a href="/admin/manage" class="btn-nav">← จัดการหนังสือ</a>
+                <a href="/admin/manage" class="btn-nav">← จัดการสื่อ</a>
                 <a href="/admin/upload" class="btn-nav">➕ อัปโหลดรายเล่ม</a>
             </div>
         </h2>
@@ -68,16 +83,16 @@
             <button class="tab-btn" onclick="switchTab('sqlTab', this)">⚡ SQL Code Batch Execution</button>
         </div>
 
-        <!-- Tab 1: Interactive Table Input & Edit Mode (Whole Details) -->
+        <!-- Tab 1: Interactive Table Input & Edit Mode -->
         <div id="visualTab" class="tab-content active">
             <div class="hint-box">
-                🛠️ <strong>Batch Edit Mode (เฉพาะ Admin):</strong> แก้ไขรายละเอียดหนังสือทุกเล่มในระบบได้พร้อมกัน สามารถแก้ไข ชื่อ, ผู้แต่ง, สำนักพิมพ์, หมวดหมู่, ราคา, ราคาปกติ, ความยาว, รูปปก (`/uploads/covers/...`), ไฟล์ PDF เต็ม (`/uploads/books/...`), ไฟล์ตัวอย่าง (`/uploads/samples/...`) และกด <strong>"บันทึก Batch Edit ทั้งหมด"</strong>
+                🛠️ <strong>Batch Edit Mode (เฉพาะ Admin):</strong> แก้ไขรายละเอียดสื่อทุกรายการในระบบได้พร้อมกัน สามารถแก้ไข ชื่อ, ผู้จัดทำ, สำนักพิมพ์, หมวดหมู่, ราคา, ราคาปกติ, ความยาว, รูปปก (`/uploads/covers/...`), ไฟล์ PDF เต็ม (`/uploads/books/...`), ไฟล์ตัวอย่าง (`/uploads/samples/...`) และกด <strong>"บันทึก Batch Edit ทั้งหมด"</strong>
             </div>
 
             <form action="/admin/batch-update" method="POST" id="visualBatchForm">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <button type="button" class="btn-secondary" onclick="addTableRow()">➕ เพิ่มหนังสือเล่มใหม่ (Add New Row)</button>
-                    <span style="font-size:13px; color:#666;">มีทั้งหมด <strong><%= books ? books.length : 0 %></strong> รายการในตาราง</span>
+                    <button type="button" class="btn-secondary" onclick="addTableRow()">➕ เพิ่มสื่อเล่มใหม่ (Add New Row)</button>
+                    <span style="font-size:13px; color:#64748b;">มีทั้งหมด <strong><%= books ? books.length : 0 %></strong> รายการในตาราง</span>
                 </div>
 
                 <div class="table-responsive">
@@ -85,10 +100,10 @@
                         <thead>
                             <tr>
                                 <th style="width: 45px;">ID</th>
-                                <th style="width: 140px;">ชื่อหนังสือ (Title)</th>
-                                <th style="width: 100px;">ผู้แต่ง (Author)</th>
+                                <th style="width: 140px;">ชื่อสื่อ (Title)</th>
+                                <th style="width: 100px;">ผู้จัดทำ (Author)</th>
                                 <th style="width: 110px;">สำนักพิมพ์ (Publisher)</th>
-                                <th style="width: 120px;">หมวดหมู่ (Category)</th>
+                                <th style="width: 130px;">หมวดหมู่ (Category)</th>
                                 <th style="width: 75px;">ราคาขาย</th>
                                 <th style="width: 75px;">ราคาปกติ</th>
                                 <th style="width: 100px;">ความยาว/หน้า</th>
@@ -109,26 +124,23 @@
                                             <input type="text" class="v-id" value="<%= book.id %>" readonly style="background:#eee; text-align:center; font-weight:bold;">
                                         </td>
                                         <td><input type="text" class="v-title" value="<%= book.title %>" required></td>
-                                        <td><input type="text" class="v-author" value="<%= book.author_name || '' %>"></td>
-                                        <td><input type="text" class="v-publisher" value="<%= book.publisher || '' %>"></td>
+                                        <td><input type="text" class="v-author" value="<%= book.author_name || 'คลังสมอง' %>"></td>
+                                        <td><input type="text" class="v-publisher" value="<%= book.publisher || 'คลังสมอง' %>"></td>
                                         <td>
                                             <select class="v-category">
-                                                <option value="สมุดระบายสี" <%= book.category === 'สมุดระบายสี' ? 'selected' : '' %>>สมุดระบายสี</option>
-                                                <option value="รับทำรูปโปรไฟล์" <%= book.category === 'รับทำรูปโปรไฟล์' ? 'selected' : '' %>>รับทำรูปโปรไฟล์</option>
+                                                <option value="สมุดระบายสีเด็ก" <%= book.category === 'สมุดระบายสีเด็ก' || book.category === 'สมุดระบายสี' ? 'selected' : '' %>>สมุดระบายสีเด็ก</option>
+                                                <option value="คณิตศาสตร์" <%= book.category === 'คณิตศาสตร์' || book.category === 'ชีทคณิตอนุบาล ป.1' ? 'selected' : '' %>>คณิตศาสตร์</option>
                                                 <option value="ชีทฝึกเขียน" <%= book.category === 'ชีทฝึกเขียน' ? 'selected' : '' %>>ชีทฝึกเขียน</option>
-                                                <option value="ฉากไลฟ์สด" <%= book.category === 'ฉากไลฟ์สด' ? 'selected' : '' %>>ฉากไลฟ์สด</option>
-                                                <option value="แฟลชการ์ด 2 ภาษา" <%= book.category === 'แฟลชการ์ด 2 ภาษา' ? 'selected' : '' %>>แฟลชการ์ด 2 ภาษา</option>
-                                                <option value="เกมฝึกสมองเด็ก" <%= book.category === 'เกมฝึกสมองเด็ก' ? 'selected' : '' %>>เกมฝึกสมองเด็ก</option>
-                                                <option value="รูปชุดข้าราชการ" <%= book.category === 'รูปชุดข้าราชการ' ? 'selected' : '' %>>รูปชุดข้าราชการ</option>
-                                                <option value="สื่อครูตกแต่งห้องเรียน" <%= book.category === 'สื่อครูตกแต่งห้องเรียน' ? 'selected' : '' %>>สื่อครูตกแต่งห้องเรียน</option>
-                                                <option value="ชีทคณิตอนุบาล ป.1" <%= book.category === 'ชีทคณิตอนุบาล ป.1' ? 'selected' : '' %>>ชีทคณิตอนุบาล ป.1</option>
-                                                <option value="นิทานเด็ก AI" <%= book.category === 'นิทานเด็ก AI' ? 'selected' : '' %>>นิทานเด็ก AI</option>
+                                                <option value="แฟลชการ์ด" <%= book.category === 'แฟลชการ์ด' || book.category === 'แฟลชการ์ด 2 ภาษา' ? 'selected' : '' %>>แฟลชการ์ด 2 ภาษา</option>
+                                                <option value="เกมฝึกสมอง" <%= book.category === 'เกมฝึกสมอง' || book.category === 'เกมฝึกสมองเด็ก' ? 'selected' : '' %>>เกมฝึกสมองเด็ก</option>
+                                                <option value="นิทานเด็ก AI" <%= book.category === 'นิทานเด็ก AI' ? 'selected' : '' %>>นิทานและแบบเรียน</option>
+                                                <option value="สื่อครูตกแต่ง" <%= book.category === 'สื่อครูตกแต่ง' || book.category === 'สื่อครูตกแต่งห้องเรียน' ? 'selected' : '' %>>สื่อครูตกแต่งห้องเรียน</option>
                                             </select>
                                         </td>
                                         <td><input type="number" step="0.01" class="v-price" value="<%= book.price %>" required></td>
                                         <td><input type="number" step="0.01" class="v-original-price" value="<%= book.original_price || '' %>"></td>
                                         <td><input type="text" class="v-pages" value="<%= book.pages_count || '' %>"></td>
-                                        <td><input type="text" class="v-file-type" value="<%= book.file_type || 'pdf' %>"></td>
+                                        <td><input type="text" class="v-file-type" value="<%= book.file_type || 'PDF' %>"></td>
                                         <td><input type="text" class="v-badge" value="<%= book.badge || '' %>"></td>
                                         <td><input type="text" class="v-cover" value="<%= book.cover_image_url || '' %>" placeholder="/uploads/covers/..."></td>
                                         <td><input type="text" class="v-book-file" value="<%= book.file_path || '' %>" placeholder="/uploads/books/..."></td>
@@ -140,28 +152,25 @@
                             <% } else { %>
                                 <tr>
                                     <td><input type="text" class="v-id" value="" placeholder="NEW" readonly style="background:#eee; text-align:center;"></td>
-                                    <td><input type="text" class="v-title" placeholder="สุดทาง... หัวใจ" required></td>
-                                    <td><input type="text" class="v-author" placeholder="Bacteria"></td>
-                                    <td><input type="text" class="v-publisher" placeholder="Nabu Publishing"></td>
+                                    <td><input type="text" class="v-title" placeholder="เล่ม 1 : สัตว์แสนรัก" required></td>
+                                    <td><input type="text" class="v-author" placeholder="คลังสมอง"></td>
+                                    <td><input type="text" class="v-publisher" placeholder="คลังสมอง KLANGSOMONG"></td>
                                     <td>
                                         <select class="v-category">
-                                            <option value="สมุดระบายสี">สมุดระบายสี</option>
-                                            <option value="รับทำรูปโปรไฟล์">รับทำรูปโปรไฟล์</option>
+                                            <option value="สมุดระบายสีเด็ก">สมุดระบายสีเด็ก</option>
+                                            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
                                             <option value="ชีทฝึกเขียน">ชีทฝึกเขียน</option>
-                                            <option value="ฉากไลฟ์สด">ฉากไลฟ์สด</option>
-                                            <option value="แฟลชการ์ด 2 ภาษา">แฟลชการ์ด 2 ภาษา</option>
-                                            <option value="เกมฝึกสมองเด็ก">เกมฝึกสมองเด็ก</option>
-                                            <option value="รูปชุดข้าราชการ">รูปชุดข้าราชการ</option>
-                                            <option value="สื่อครูตกแต่งห้องเรียน">สื่อครูตกแต่งห้องเรียน</option>
-                                            <option value="ชีทคณิตอนุบาล ป.1">ชีทคณิตอนุบาล ป.1</option>
-                                            <option value="นิทานเด็ก AI">นิทานเด็ก AI</option>
+                                            <option value="แฟลชการ์ด">แฟลชการ์ด 2 ภาษา</option>
+                                            <option value="เกมฝึกสมอง">เกมฝึกสมองเด็ก</option>
+                                            <option value="นิทานเด็ก AI">นิทานและแบบเรียน</option>
+                                            <option value="สื่อครูตกแต่ง">สื่อครูตกแต่งห้องเรียน</option>
                                         </select>
                                     </td>
-                                    <td><input type="number" step="0.01" class="v-price" placeholder="279" required></td>
-                                    <td><input type="number" step="0.01" class="v-original-price" placeholder="299"></td>
-                                    <td><input type="text" class="v-pages" placeholder="273 หน้า"></td>
-                                    <td><input type="text" class="v-file-type" value="pdf, epub"></td>
-                                    <td><input type="text" class="v-badge" placeholder="Movie"></td>
+                                    <td><input type="number" step="0.01" class="v-price" placeholder="159" required></td>
+                                    <td><input type="number" step="0.01" class="v-original-price" placeholder="199"></td>
+                                    <td><input type="text" class="v-pages" placeholder="20 หน้า"></td>
+                                    <td><input type="text" class="v-file-type" value="PDF"></td>
+                                    <td><input type="text" class="v-badge" placeholder="แนะนำ"></td>
                                     <td><input type="text" class="v-cover" placeholder="/uploads/covers/..."></td>
                                     <td><input type="text" class="v-book-file" placeholder="/uploads/books/..."></td>
                                     <td><input type="text" class="v-sample-file" placeholder="/uploads/samples/..."></td>
@@ -181,11 +190,11 @@
         <!-- Tab 2: JSON Batch Input -->
         <div id="jsonTab" class="tab-content">
             <div class="hint-box">
-                💡 <strong>นำเข้า JSON Batch:</strong> วาง JSON Array เพื่อเพิ่มหนังสือหลายเล่ม
+                💡 <strong>นำเข้า JSON Batch:</strong> วาง JSON Array เพื่อเพิ่มสื่อหลายเล่มพร้อมกัน
             </div>
             <button type="button" class="btn-secondary" onclick="fillJsonDemo()">✨ เติมข้อมูลตัวอย่าง (Load Demo JSON)</button>
             <form action="/admin/batch-json" method="POST">
-                <textarea name="json_data" id="jsonDataInput" placeholder='[&#10;  {&#10;    "title": "สุดทาง... หัวใจ",&#10;    "author_name": "Bacteria",&#10;    "publisher": "Nabu Publishing",&#10;    "category": "สมุดระบายสี",&#10;    "price": 279,&#10;    "original_price": 299,&#10;    "pages_count": "273 หน้า (~ 92,664 คำ)",&#10;    "file_type": "pdf, epub",&#10;    "cover_image_url": "/uploads/covers/cover.jpg",&#10;    "file_path": "/uploads/books/full.pdf",&#10;    "sample_file_path": "/uploads/samples/preview.pdf"&#10;  }&#10;]'></textarea>
+                <textarea name="json_data" id="jsonDataInput" placeholder='[&#10;  {&#10;    "title": "เล่ม 1 : สัตว์แสนรัก (สมุดระบายสี)",&#10;    "author_name": "คลังสมอง",&#10;    "publisher": "คลังสมอง KLANGSOMONG",&#10;    "category": "สมุดระบายสีเด็ก",&#10;    "price": 159,&#10;    "original_price": 199,&#10;    "pages_count": "20 หน้า",&#10;    "file_type": "PDF",&#10;    "cover_image_url": "/uploads/covers/cover.jpg",&#10;    "file_path": "/uploads/books/full.pdf",&#10;    "sample_file_path": "/uploads/samples/preview.pdf"&#10;  }&#10;]'></textarea>
                 <button type="submit" class="btn-primary">🚀 นำเข้าข้อมูล Batch (Batch Insert)</button>
             </form>
         </div>
@@ -215,19 +224,19 @@
         function fillJsonDemo() {
             const demo = [
                 {
-                    "title": "สุดทาง... หัวใจ",
-                    "author_name": "Bacteria",
-                    "publisher": "Nabu Publishing",
-                    "category": "สมุดระบายสี",
-                    "price": 279,
-                    "original_price": 299,
-                    "pages_count": "273 หน้า (~ 92,664 คำ)",
-                    "file_type": "pdf, epub",
-                    "badge": "Movie",
-                    "cover_image_url": "/uploads/covers/sud-tang.jpg",
-                    "file_path": "/uploads/books/sud-tang-full.pdf",
-                    "sample_file_path": "/uploads/samples/sud-tang-preview.pdf",
-                    "description": "เนื้อเรื่องย่อ..."
+                    "title": "เล่ม 1 : สัตว์แสนรัก (สมุดระบายสี)",
+                    "author_name": "คลังสมอง",
+                    "publisher": "คลังสมอง KLANGSOMONG",
+                    "category": "สมุดระบายสีเด็ก",
+                    "price": 159,
+                    "original_price": 199,
+                    "pages_count": "20 หน้า",
+                    "file_type": "PDF",
+                    "badge": "ยอดนิยม",
+                    "cover_image_url": "/uploads/covers/animal.jpg",
+                    "file_path": "/uploads/books/animal-full.pdf",
+                    "sample_file_path": "/uploads/samples/animal-preview.pdf",
+                    "description": "สมุดระบายสีสำหรับเด็กเสริมสร้างจินตนาการ..."
                 }
             ];
             document.getElementById('jsonDataInput').value = JSON.stringify(demo, null, 2);
@@ -236,7 +245,7 @@
         function fillSqlDemo() {
             const sql = `INSERT INTO books (title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, cover_image_url, file_path, sample_file_path) 
 VALUES 
-('สุดทาง... หัวใจ', 'Bacteria', 'Nabu Publishing', 'สมุดระบายสี', 279.00, 299.00, '273 หน้า', 'pdf, epub', 'Movie', '/uploads/covers/cover1.jpg', '/uploads/books/book1.pdf', '/uploads/samples/sample1.pdf');`;
+('เล่ม 1 : สัตว์แสนรัก', 'คลังสมอง', 'คลังสมอง KLANGSOMONG', 'สมุดระบายสีเด็ก', 159.00, 199.00, '20 หน้า', 'PDF', 'ยอดนิยม', '/uploads/covers/cover1.jpg', '/uploads/books/book1.pdf', '/uploads/samples/sample1.pdf');`;
             document.getElementById('sqlQueryInput').value = sql;
         }
 
@@ -245,28 +254,25 @@ VALUES
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><input type="text" class="v-id" value="" placeholder="NEW" readonly style="background:#eee; text-align:center;"></td>
-                <td><input type="text" class="v-title" placeholder="ชื่อหนังสือ" required></td>
-                <td><input type="text" class="v-author" placeholder="ผู้แต่ง"></td>
-                <td><input type="text" class="v-publisher" placeholder="สำนักพิมพ์"></td>
+                <td><input type="text" class="v-title" placeholder="ชื่อสื่อ" required></td>
+                <td><input type="text" class="v-author" placeholder="คลังสมอง"></td>
+                <td><input type="text" class="v-publisher" placeholder="คลังสมอง"></td>
                 <td>
                     <select class="v-category">
-                        <option value="สมุดระบายสี">สมุดระบายสี</option>
-                        <option value="รับทำรูปโปรไฟล์">รับทำรูปโปรไฟล์</option>
+                        <option value="สมุดระบายสีเด็ก">สมุดระบายสีเด็ก</option>
+                        <option value="คณิตศาสตร์">คณิตศาสตร์</option>
                         <option value="ชีทฝึกเขียน">ชีทฝึกเขียน</option>
-                        <option value="ฉากไลฟ์สด">ฉากไลฟ์สด</option>
-                        <option value="แฟลชการ์ด 2 ภาษา">แฟลชการ์ด 2 ภาษา</option>
-                        <option value="เกมฝึกสมองเด็ก">เกมฝึกสมองเด็ก</option>
-                        <option value="รูปชุดข้าราชการ">รูปชุดข้าราชการ</option>
-                        <option value="สื่อครูตกแต่งห้องเรียน">สื่อครูตกแต่งห้องเรียน</option>
-                        <option value="ชีทคณิตอนุบาล ป.1">ชีทคณิตอนุบาล ป.1</option>
-                        <option value="นิทานเด็ก AI">นิทานเด็ก AI</option>
+                        <option value="แฟลชการ์ด">แฟลชการ์ด 2 ภาษา</option>
+                        <option value="เกมฝึกสมอง">เกมฝึกสมองเด็ก</option>
+                        <option value="นิทานเด็ก AI">นิทานและแบบเรียน</option>
+                        <option value="สื่อครูตกแต่ง">สื่อครูตกแต่งห้องเรียน</option>
                     </select>
                 </td>
-                <td><input type="number" step="0.01" class="v-price" placeholder="99" required></td>
-                <td><input type="number" step="0.01" class="v-original-price" placeholder="120"></td>
-                <td><input type="text" class="v-pages" placeholder="50 หน้า"></td>
-                <td><input type="text" class="v-file-type" value="pdf"></td>
-                <td><input type="text" class="v-badge" placeholder="Best Seller"></td>
+                <td><input type="number" step="0.01" class="v-price" placeholder="159" required></td>
+                <td><input type="number" step="0.01" class="v-original-price" placeholder="199"></td>
+                <td><input type="text" class="v-pages" placeholder="20 หน้า"></td>
+                <td><input type="text" class="v-file-type" value="PDF"></td>
+                <td><input type="text" class="v-badge" placeholder="แนะนำ"></td>
                 <td><input type="text" class="v-cover" placeholder="/uploads/covers/..."></td>
                 <td><input type="text" class="v-book-file" placeholder="/uploads/books/..."></td>
                 <td><input type="text" class="v-sample-file" placeholder="/uploads/samples/..."></td>

@@ -16,19 +16,16 @@ app.use(session({
     cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
-// Categories definition matching screenshot
+// Educational Categories definition for คลังสมอง KLANGSOMONG
 const CATEGORIES = [
     { id: 'all', name: 'ทั้งหมด', icon: '🌐' },
-    { id: 'สมุดระบายสี', name: 'สมุดระบายสี', icon: '✏️' },
-    { id: 'รับทำรูปโปรไฟล์', name: 'รับทำรูปโปรไฟล์', icon: '📷' },
-    { id: 'ชีทฝึกเขียน', name: 'ชีทฝึกเขียน', icon: '✏️' },
-    { id: 'ฉากไลฟ์สด', name: 'ฉากไลฟ์สด', icon: '🎬' },
-    { id: 'แฟลชการ์ด 2 ภาษา', name: 'แฟลชการ์ด 2 ภาษา', icon: '🎴' },
-    { id: 'เกมฝึกสมองเด็ก', name: 'เกมฝึกสมองเด็ก', icon: '🧩' },
-    { id: 'รูปชุดข้าราชการ', name: 'รูปชุดข้าราชการ', icon: '🏛️' },
-    { id: 'สื่อครูตกแต่งห้องเรียน', name: 'สื่อครูตกแต่งห้องเรียน', icon: '🏫' },
-    { id: 'ชีทคณิตอนุบาล ป.1', name: 'ชีทคณิตอนุบาล ป.1', icon: '🔢' },
-    { id: 'นิทานเด็ก AI', name: 'นิทานเด็ก AI', icon: '📚' }
+    { id: 'สมุดระบายสีเด็ก', name: 'สมุดระบายสีเด็ก', icon: '✏️' },
+    { id: 'คณิตศาสตร์', name: 'ชีทคณิตศาสตร์', icon: '🔢' },
+    { id: 'ชีทฝึกเขียน', name: 'ชีทฝึกเขียนภาษา', icon: '✍️' },
+    { id: 'แฟลชการ์ด', name: 'แฟลชการ์ด 2 ภาษา', icon: '🎴' },
+    { id: 'เกมฝึกสมอง', name: 'เกมฝึกสมองเด็ก', icon: '🧩' },
+    { id: 'นิทานเด็ก AI', name: 'นิทานและแบบเรียน', icon: '📚' },
+    { id: 'สื่อครูตกแต่ง', name: 'สื่อครูตกแต่งห้องเรียน', icon: '🏫' }
 ];
 
 // Set EJS as templating engine and set explicit views directory for Vercel Serverless

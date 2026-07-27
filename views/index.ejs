@@ -3,100 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Book Store - MEB Marketplace Clone</title>
+    <title>คลังสมอง KLANGSOMONG - สื่อการเรียนรู้สำหรับเด็ก</title>
+    <!-- Google Fonts: Prompt & Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
+        :root {
+            --primary-navy: #1E3A8A;
+            --sky-blue: #38BDF8;
+            --fresh-green: #22C55E;
+            --green-hover: #16a34a;
+            --sun-yellow: #FACC15;
+            --playful-orange: #FB923C;
+            --creative-purple: #8B5CF6;
+            --bg-light: #F3F4F6;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+        }
+
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f6f8fa; color: #333; }
+        body { font-family: 'Prompt', 'Kanit', sans-serif; margin: 0; background-color: var(--bg-light); color: var(--text-dark); }
         
-        /* Header */
-        header { background-color: #00b140; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 100; }
-        .logo-area { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; }
-        .logo-area h1 { margin: 0; font-size: 24px; font-weight: 800; }
-        .search-form { flex-grow: 1; max-width: 500px; margin: 0 20px; display: flex; }
-        .search-bar { width: 100%; padding: 10px 15px; border-radius: 20px 0 0 20px; border: none; font-size: 14px; outline: none; }
-        .search-btn { background: #008731; border: none; color: white; padding: 0 18px; border-radius: 0 20px 20px 0; cursor: pointer; font-size: 14px; }
-        .search-btn:hover { background: #006e28; }
+        /* Top Navigation Header - Deep Navy #1E3A8A */
+        header { background-color: var(--primary-navy); color: white; padding: 14px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2); position: sticky; top: 0; z-index: 100; }
+        .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; color: white; }
+        .brand-logo-img { height: 48px; border-radius: 8px; background: white; padding: 2px; }
+        .brand-text-group { display: flex; flex-direction: column; }
+        .brand-title { font-size: 22px; font-weight: 700; color: white; letter-spacing: -0.5px; line-height: 1.1; margin: 0; }
+        .brand-tagline { font-size: 11px; color: var(--sky-blue); font-weight: 500; margin-top: 2px; }
         
-        .user-nav { display: flex; align-items: center; gap: 12px; }
-        .btn-header { background: rgba(255,255,255,0.2); color: white; padding: 8px 14px; border-radius: 20px; text-decoration: none; font-size: 13.5px; border: 1px solid rgba(255,255,255,0.4); transition: all 0.2s; cursor: pointer; }
-        .btn-header:hover { background: rgba(255,255,255,0.35); transform: translateY(-1px); }
-        .btn-admin { background: #ff9800; color: #fff; border: none; font-weight: bold; }
-        .btn-admin:hover { background: #e68a00; }
+        .header-center { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-grow: 1; max-width: 520px; margin: 0 20px; }
+        .category-pill-badge { background: rgba(56, 189, 248, 0.15); border: 1px solid var(--sky-blue); color: var(--sky-blue); padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .header-subtext { font-size: 11.5px; color: #cbd5e1; }
+
+        .search-form { width: 100%; display: flex; }
+        .search-bar { width: 100%; padding: 9px 16px; border-radius: 20px 0 0 20px; border: none; font-size: 13.5px; outline: none; font-family: inherit; }
+        .search-btn { background: var(--fresh-green); border: none; color: white; padding: 0 18px; border-radius: 0 20px 20px 0; cursor: pointer; font-size: 13.5px; font-weight: 600; font-family: inherit; transition: background 0.2s; }
+        .search-btn:hover { background: var(--green-hover); }
         
-        /* Main Layout */
-        .container { max-width: 1240px; margin: 25px auto; padding: 0 15px; display: flex; gap: 25px; }
+        .user-nav { display: flex; align-items: center; gap: 10px; }
+        .btn-header { background: rgba(255,255,255,0.15); color: white; padding: 7px 15px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.3); transition: all 0.2s; cursor: pointer; }
+        .btn-header:hover { background: rgba(255,255,255,0.3); transform: translateY(-1px); }
+        .btn-admin { background: var(--sun-yellow); color: var(--primary-navy); border: none; font-weight: 700; }
+        .btn-admin:hover { background: #eab308; }
+
+        /* Main Container */
+        .container { max-width: 1280px; margin: 25px auto; padding: 0 20px; display: flex; gap: 25px; }
         
-        /* Sidebar Menu - Matching Screenshot */
-        .sidebar { width: 280px; flex-shrink: 0; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); padding: 0; overflow: hidden; height: fit-content; }
-        .sidebar-header { background: #fafbfc; padding: 15px 20px; font-weight: bold; color: #555; font-size: 15px; border-bottom: 1px solid #edf0f2; }
+        /* Sidebar Menu */
+        .sidebar { width: 270px; flex-shrink: 0; background: white; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; height: fit-content; border: 1px solid #e2e8f0; }
+        .sidebar-header { background: #f8fafc; padding: 14px 18px; font-weight: 700; color: var(--primary-navy); font-size: 14.5px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; }
         .category-list { list-style: none; padding: 0; margin: 0; }
-        .category-item { border-bottom: 1px solid #f0f2f5; }
+        .category-item { border-bottom: 1px solid #f1f5f9; }
         .category-item:last-child { border-bottom: none; }
-        .category-link { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; color: #444; text-decoration: none; font-size: 14.5px; transition: background 0.15s, color 0.15s; }
-        .category-link:hover { background-color: #f4fbf6; color: #00b140; }
-        .category-link.active { background-color: #e6f7ec; color: #00b140; font-weight: bold; border-left: 4px solid #00b140; }
+        .category-link { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; color: #334155; text-decoration: none; font-size: 14px; font-weight: 500; transition: background 0.15s, color 0.15s; }
+        .category-link:hover { background-color: #f0fdf4; color: var(--fresh-green); }
+        .category-link.active { background-color: #dcfce7; color: #15803d; font-weight: 700; border-left: 4px solid var(--fresh-green); }
         .cat-left { display: flex; align-items: center; gap: 10px; }
-        .arrow { color: #aaa; font-size: 13px; }
-        
+        .arrow { color: #94a3b8; font-size: 13px; }
+
         /* Content Area */
         .content-area { flex-grow: 1; }
+
+        /* Tiered Pricing Promotion Banner (Matching Attached Image 2) */
+        .promo-banner-wrapper { margin-bottom: 25px; }
+        .pricing-cards-container { display: flex; gap: 15px; justify-content: center; margin-bottom: 12px; }
+        .pricing-card { background: white; border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 25px; text-align: center; min-width: 180px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); position: relative; }
+        .pricing-card.special { border: 2px solid var(--sun-yellow); background: #fefce8; }
+        .pricing-badge-tag { position: absolute; top: -10px; right: 15px; background: var(--sun-yellow); color: #713f12; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; }
+        .pricing-title { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 3px; }
+        .pricing-price { font-size: 22px; font-weight: 800; color: var(--primary-navy); }
+        .pricing-price small { font-size: 13px; font-weight: 500; color: #64748b; }
+        
+        .promo-alert-bar { background: #fef08a; border: 1px solid #fde047; color: #854d0e; padding: 8px 15px; border-radius: 20px; font-size: 12.5px; text-align: center; font-weight: 600; }
+
+        /* Section Header */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .section-title { font-size: 20px; font-weight: bold; color: #222; border-left: 5px solid #00b140; padding-left: 12px; margin: 0; }
-        .book-count { color: #777; font-size: 14px; }
+        .section-title { font-size: 19px; font-weight: 700; color: var(--primary-navy); border-left: 5px solid var(--sky-blue); padding-left: 12px; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .book-count { color: var(--text-muted); font-size: 13.5px; font-weight: 500; }
         
-        /* Book Grid */
-        .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-        .book-card { background: white; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.06); padding: 12px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
-        .book-card:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
-        .book-cover { width: 100%; height: 250px; object-fit: cover; border-radius: 6px; background: #eee; }
-        .book-info { margin-top: 10px; }
-        .category-badge { display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-bottom: 5px; }
-        .book-title { font-size: 14px; font-weight: 600; color: #222; margin: 4px 0; display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; height: 36px; }
-        .book-price { color: #e74c3c; font-weight: 700; font-size: 16px; margin-top: 5px; }
+        /* 5-Column Responsive Book Grid (Matching Image 2) */
+        .book-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+        @media (max-width: 1100px) { .book-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 850px) { .book-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 600px) { .book-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .book-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 3px 8px rgba(0,0,0,0.04); padding: 10px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
+        .book-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(30, 58, 138, 0.1); border-color: var(--sky-blue); }
+        .book-cover { width: 100%; height: 210px; object-fit: cover; border-radius: 8px; background: #f1f5f9; }
+        .book-info { margin-top: 8px; }
+        .category-badge { display: inline-block; background: #e0f2fe; color: #0369a1; font-size: 10.5px; padding: 2px 7px; border-radius: 10px; font-weight: 600; margin-bottom: 4px; }
+        .book-title { font-size: 13px; font-weight: 600; color: #1e293b; margin: 3px 0; display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; height: 34px; }
         
-        .card-actions { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
-        .btn-download { display: block; width: 100%; text-align: center; padding: 8px 0; background: #00b140; color: white; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600; transition: background 0.2s; }
-        .btn-download:hover { background: #009635; }
-        .btn-delete-card { background: #fff1f0; border: 1px solid #ffa39e; color: #f5222d; padding: 6px 0; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s; }
-        .btn-delete-card:hover { background: #ff4d4f; color: white; }
+        .page-badge-pill { display: inline-flex; align-items: center; gap: 4px; background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 12px; margin-top: 4px; }
+        .book-price { color: #dc2626; font-weight: 800; font-size: 15px; margin-top: 4px; }
+        
+        .card-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .btn-download { display: block; width: 100%; text-align: center; padding: 7px 0; background: var(--fresh-green); color: white; text-decoration: none; border-radius: 8px; font-size: 12.5px; font-weight: 700; transition: background 0.2s; }
+        .btn-download:hover { background: var(--green-hover); }
+        .btn-delete-card { background: #fef2f2; border: 1px solid #fca5a5; color: #ef4444; padding: 5px 0; border-radius: 6px; font-size: 11.5px; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .btn-delete-card:hover { background: #ef4444; color: white; }
+
+        /* Bottom Admin Chat Container (Matching Image 2) */
+        .bottom-chat-cta { background: white; border-radius: 16px; border: 1px solid #cbd5e1; padding: 25px 30px; text-align: center; margin-top: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .bottom-chat-title { font-size: 18px; font-weight: 700; color: var(--primary-navy); }
+        .btn-chat-admin { background: var(--fresh-green); color: white; text-decoration: none; padding: 12px 35px; border-radius: 25px; font-size: 15px; font-weight: 700; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-chat-admin:hover { background: var(--green-hover); transform: translateY(-2px); }
+
+        /* Footer */
+        footer { background: var(--primary-navy); color: #94a3b8; text-align: center; padding: 20px; font-size: 13px; margin-top: 50px; }
+        footer strong { color: white; }
 
         /* Login Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-overlay.active { display: flex; }
-        .modal-box { background: white; border-radius: 12px; width: 90%; max-width: 400px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
+        .modal-box { background: white; border-radius: 14px; width: 90%; max-width: 400px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
         .modal-close { position: absolute; top: 15px; right: 15px; border: none; background: none; font-size: 20px; cursor: pointer; color: #888; }
-        .modal-title { font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #00b140; text-align: center; }
+        .modal-title { font-size: 20px; font-weight: bold; margin-bottom: 20px; color: var(--primary-navy); text-align: center; }
         .form-field { margin-bottom: 15px; }
         .form-field label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555; }
         .form-field input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-        .btn-submit { width: 100%; background: #00b140; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; }
-        .btn-submit:hover { background: #009635; }
-        .quick-credentials { background: #f8f9fa; border: 1px dashed #ccc; border-radius: 8px; padding: 12px; margin-top: 15px; font-size: 12px; }
+        .btn-submit { width: 100%; background: var(--fresh-green); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .btn-submit:hover { background: var(--green-hover); }
+        .quick-credentials { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px; margin-top: 15px; font-size: 12px; }
         .quick-credentials button { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; border-radius: 4px; padding: 4px 8px; margin-top: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
-        .quick-credentials button:hover { background: #bae6fd; }
 
-        .no-books { background: white; padding: 40px; text-align: center; border-radius: 10px; color: #777; font-size: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .no-books { background: white; padding: 40px; text-align: center; border-radius: 12px; color: #777; font-size: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- Header Navigation Bar -->
     <header>
-        <a href="/" class="logo-area">
-            <h1>meb (Clone)</h1>
+        <a href="/" class="logo-container">
+            <img src="/images/logo.png" alt="คลังสมอง KLANGSOMONG" class="brand-logo-img" onerror="this.style.display='none';">
+            <div class="brand-text-group">
+                <h1 class="brand-title">คลังสมอง</h1>
+                <span class="brand-tagline">KLANGSOMONG — เรียนวันนี้ เก่งได้ทุกวัน —</span>
+            </div>
         </a>
 
-        <form action="/" method="GET" class="search-form">
-            <% if (selectedCategory !== 'all') { %>
-                <input type="hidden" name="category" value="<%= selectedCategory %>">
-            <% } %>
-            <input type="text" name="q" class="search-bar" placeholder="ค้นหาหนังสือ, นิยาย, สื่อเรียนรู้..." value="<%= searchQuery %>">
-            <button type="submit" class="search-btn">🔍 ค้นหา</button>
-        </form>
+        <div class="header-center">
+            <% 
+                const activeCatObj = categories.find(c => c.id === selectedCategory);
+                const categoryTitle = activeCatObj ? activeCatObj.name : 'สื่อการเรียนรู้ทั้งหมด';
+            %>
+            <div class="category-pill-badge">
+                <span>✏️</span>
+                <span><%= categoryTitle %></span>
+            </div>
+            
+            <form action="/" method="GET" class="search-form">
+                <% if (selectedCategory !== 'all') { %>
+                    <input type="hidden" name="category" value="<%= selectedCategory %>">
+                <% } %>
+                <input type="text" name="q" class="search-bar" placeholder="ค้นหาสื่อการเรียนรู้, สมุดระบายสี, ใบงาน..." value="<%= searchQuery %>">
+                <button type="submit" class="search-btn">🔍 ค้นหา</button>
+            </form>
+        </div>
 
         <div class="user-nav">
             <% if (currentUser) { %>
-                <span style="font-size: 13.5px;">
+                <span style="font-size: 13px;">
                     <% if (currentUser.role === 'admin') { %>
                         👑 <strong><%= currentUser.username %></strong> <small>(Admin)</small>
                     <% } else { %>
@@ -105,13 +175,12 @@
                 </span>
 
                 <% if (currentUser.role === 'admin') { %>
-                    <!-- Button visible only to logged-in Admin to go to Book Management Page -->
-                    <a href="/admin/manage" class="btn-header btn-admin">⚙️ จัดการหนังสือ (Book Management)</a>
+                    <a href="/admin/manage" class="btn-header btn-admin">⚙️ จัดการสื่อ</a>
                 <% } %>
 
                 <a href="/logout" class="btn-header">ออกจากระบบ</a>
             <% } else { %>
-                <button class="btn-header" onclick="openLoginModal()">🔑 เข้าสู่ระบบ (Login)</button>
+                <button class="btn-header" onclick="openLoginModal()">🔑 เข้าสู่ระบบ</button>
             <% } %>
         </div>
     </header>
@@ -119,10 +188,10 @@
     <!-- Main Container -->
     <div class="container">
         
-        <!-- Side Category Menu (Matching user screenshot) -->
+        <!-- Sidebar Category Menu -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                รายการ (กดดูรายวัน)
+                <span>📚 หมวดหมู่สื่อการเรียนรู้</span>
             </div>
             <ul class="category-list">
                 <% categories.forEach(cat => { %>
@@ -140,43 +209,64 @@
             </ul>
         </aside>
 
-        <!-- Main Book Section -->
+        <!-- Main Content Area -->
         <main class="content-area">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <% 
-                        const activeCatObj = categories.find(c => c.id === selectedCategory);
-                        const categoryTitle = activeCatObj ? activeCatObj.name : 'ทั้งหมด';
-                    %>
-                    หมวดหมู่: <%= categoryTitle %>
-                    <% if (searchQuery) { %>
-                        (ผลการค้นหา "<%= searchQuery %>")
-                    <% } %>
-                </h2>
-                <span class="book-count">พบ <%= books.length %> เล่ม</span>
+
+            <!-- Tiered Volume Pricing Promotion Banner (Matching Attached Image 2) -->
+            <div class="promo-banner-wrapper">
+                <div class="pricing-cards-container">
+                    <div class="pricing-card">
+                        <div class="pricing-title">ซื้อ 1 - 29 เล่ม</div>
+                        <div class="pricing-price">159 <small>บาท/เล่ม</small></div>
+                    </div>
+                    <div class="pricing-card special">
+                        <div class="pricing-badge-tag">พิเศษ</div>
+                        <div class="pricing-title">ซื้อ 30 - 50 เล่ม</div>
+                        <div class="pricing-price">199 <small>บาท/ชุด</small></div>
+                    </div>
+                </div>
+                <div class="promo-alert-bar">
+                    ⚠️ สั่งซื้อขั้นต่ำ 10 เล่มขึ้นไป / คละแบบได้ 20 หน้าขึ้นไป หรือดาวน์โหลดไฟล์ PDF เข้าเรียนได้ทันที
+                </div>
             </div>
 
+            <!-- Section Header -->
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>🧠</span>
+                    <span><%= categoryTitle %></span>
+                    <% if (searchQuery) { %>
+                        <span style="font-size: 14px; color: var(--text-muted); font-weight: normal;">(ค้นหา "<%= searchQuery %>")</span>
+                    <% } %>
+                </h2>
+                <span class="book-count">พบ <%= books.length %> รายการ</span>
+            </div>
+
+            <!-- 5-Column Book & Worksheet Grid (Matching Attached Image 2) -->
             <% if (books.length > 0) { %>
                 <div class="book-grid">
                     <% books.forEach(book => { %>
                         <div class="book-card">
                             <a href="/book/<%= book.id %>" style="text-decoration: none; color: inherit;">
-                                <img src="<%= book.cover_image_url || 'https://via.placeholder.com/200x250?text=No+Cover' %>" alt="Cover" class="book-cover">
+                                <img src="<%= book.cover_image_url || 'https://via.placeholder.com/200x250?text=No+Cover' %>" alt="<%= book.title %>" class="book-cover">
                             </a>
                             <div class="book-info">
-                                <span class="category-badge"><%= book.category || 'สมุดระบายสี' %></span>
+                                <span class="category-badge"><%= book.category || 'สมุดระบายสีเด็ก' %></span>
                                 <a href="/book/<%= book.id %>" style="text-decoration: none; color: inherit;">
                                     <div class="book-title" title="<%= book.title %>"><%= book.title %></div>
                                 </a>
-                                <div class="book-price">฿<%= parseFloat(book.price).toFixed(2) %></div>
+                                <div class="page-badge-pill">
+                                    <span>🟢</span>
+                                    <span><%= book.pages_count || '20 หน้า' %></span>
+                                </div>
+                                <div class="book-price">฿<%= parseFloat(book.price).toFixed(0) %></div>
                             </div>
                             <div class="card-actions">
                                 <a href="/book/<%= book.id %>" class="btn-download">📖 ดูรายละเอียด / อ่าน PDF</a>
 
-                                <!-- Admin Direct Delete Button -->
                                 <% if (currentUser && currentUser.role === 'admin') { %>
-                                    <form action="/admin/delete-book/<%= book.id %>" method="POST" onsubmit="return confirm('คุณต้องการลบหนังสือ &quot;<%= book.title %>&quot; ใช่หรือไม่?');" style="margin-top:4px;">
-                                        <button type="submit" class="btn-delete-card">🗑️ ลบหนังสือ</button>
+                                    <form action="/admin/delete-book/<%= book.id %>" method="POST" onsubmit="return confirm('คุณต้องการลบสื่อรายการนี้ใช่หรือไม่?');" style="margin-top:2px;">
+                                        <button type="submit" class="btn-delete-card">🗑️ ลบ</button>
                                     </form>
                                 <% } %>
                             </div>
@@ -185,12 +275,22 @@
                 </div>
             <% } else { %>
                 <div class="no-books">
-                    <p>📭 ยังไม่มีหนังสือในหมวดหมู่นี้</p>
+                    <p>📭 ยังไม่มีรายการสื่อการเรียนรู้ในหมวดหมู่นี้</p>
                     <% if (currentUser && currentUser.role === 'admin') { %>
-                        <a href="/admin/upload" style="color: #00b140; font-weight: bold; text-decoration: none;">+ เพิ่มหนังสือใหม่เข้าหมวดหมู่นี้</a>
+                        <a href="/admin/upload" style="color: var(--fresh-green); font-weight: bold; text-decoration: none;">+ เพิ่มรายการใหม่</a>
                     <% } %>
                 </div>
             <% } %>
+
+            <!-- Bottom Chat CTA Banner (Matching Attached Image 2) -->
+            <div class="bottom-chat-cta">
+                <div class="bottom-chat-title">ถูกใจแบบไหน ทักแชทแอดมินได้เลยค่ะ 🧡</div>
+                <a href="#" onclick="alert('ยินดีต้อนรับสู่ คลังสมอง KLANGSOMONG! ติดต่อแอดมินทาง LINE / Facebook'); return false;" class="btn-chat-admin">
+                    <span>🟢</span>
+                    <span>ทักแชทเลย</span>
+                </a>
+            </div>
+
         </main>
     </div>
 
@@ -227,6 +327,11 @@
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer>
+        <p><strong>© คลังสมอง KLANGSOMONG</strong> — สื่อการเรียนรู้ที่เข้าใจง่าย สนุก และใช้ได้จริง "เรียนรู้ เข้าใจ ใช้ได้จริง"</p>
+    </footer>
 
     <script>
         function openLoginModal() {
