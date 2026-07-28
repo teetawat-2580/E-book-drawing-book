@@ -9,6 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Vercel Web Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    
     <style>
         :root {
             --primary-navy: #1E3A8A;
@@ -112,7 +118,7 @@
                 <span>สินค้าของคุณพร้อมแล้ว</span>
             </div>
             <h1 class="hero-title"><%= categoryObj ? categoryObj.name : 'สื่อการเรียนรู้' %></h1>
-            <div class="hero-subtitle">โปร 2 - ครบ <%= books.length %> เล่ม</div>
+            <div class="hero-subtitle">โปร 2 - ��รบ <%= books.length %> เล่ม</div>
             <div class="hero-count">ได้รับทั้งหมด <%= books.length %> ไฟล์</div>
         </div>
 
