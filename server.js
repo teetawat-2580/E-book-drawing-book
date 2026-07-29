@@ -280,7 +280,8 @@ app.get('/', async (req, res) => {
             selectedCategory, 
             searchQuery,
             loginError: null,
-            adminGateRequired: false
+            adminGateRequired: false,
+            isHomepage: !searchQuery && selectedCategory === 'all'
         });
     } catch (err) {
         console.error(err);
@@ -1063,7 +1064,8 @@ async function handleCategoryPage(req, res, slugParam) {
             selectedCategory,
             searchQuery,
             loginError: req.query.loginError ? true : false,
-            activeCategoryObj: matchedCat || null
+            activeCategoryObj: matchedCat || null,
+            isHomepage: false
         });
     } catch (err) {
         console.error(err);

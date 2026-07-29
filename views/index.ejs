@@ -50,6 +50,11 @@
         /* Main Container - Full Width Layout */
         .container { max-width: 1280px; margin: 25px auto; padding: 0 20px; }
         
+        /* Homepage Large Logo Display */
+        .homepage-logo-wrapper { display: flex; justify-content: center; align-items: center; padding: 30px 15px 50px 15px; }
+        .homepage-logo-img { max-width: 650px; width: 100%; height: auto; border-radius: 24px; box-shadow: 0 12px 35px rgba(30, 58, 138, 0.12); border: 1px solid #e2e8f0; background: white; transition: transform 0.3s ease; }
+        .homepage-logo-img:hover { transform: scale(1.01); }
+        
         /* Tiered Pricing Promotion Banner */
         .promo-banner-wrapper { margin-bottom: 25px; }
         .pricing-cards-container { display: flex; gap: 15px; justify-content: center; margin-bottom: 12px; }
@@ -172,73 +177,80 @@
     <!-- Main Container (Full Width) -->
     <div class="container">
         
-        <!-- Tiered Volume Pricing Promotion Banner -->
-        <div class="promo-banner-wrapper">
-            <div class="pricing-cards-container">
-                <div class="pricing-card">
-                    <div class="pricing-title">ซื้อ 1 - 29 เล่ม</div>
-                    <div class="pricing-price">159 <small>บาท/เล่ม</small></div>
-                </div>
-                <div class="pricing-card special">
-                    <div class="pricing-badge-tag">พิเศษ</div>
-                    <div class="pricing-title">ซื้อ 30 - 50 เล่ม</div>
-                    <div class="pricing-price">199 <small>บาท/ชุด</small></div>
-                </div>
-            </div>
-            <div class="promo-alert-bar">
-                ⚠️ สั่งซื้อขั้นต่ำ 10 เล่มขึ้นไป / คละแบบได้ 20 หน้าขึ้นไป หรือดาวน์โหลดไฟล์ PDF เข้าเรียนได้ทันที
-            </div>
-        </div>
-
-        <!-- Section Header -->
-        <div class="section-header">
-            <h2 class="section-title">
-                <span>🧠</span>
-                <span>สื่อการเรียนรู้ทั้งหมด</span>
-                <% if (searchQuery) { %>
-                    <span style="font-size: 14px; color: var(--text-muted); font-weight: normal;">(ค้นหา "<%= searchQuery %>")</span>
-                <% } %>
-            </h2>
-            <span class="book-count">พบ <%= books.length %> รายการ</span>
-        </div>
-
-        <!-- 5-Column Book & Worksheet Grid -->
-        <% if (books.length > 0) { %>
-            <div class="book-grid">
-                <% books.forEach(book => { %>
-                    <div class="book-card" data-book="<%- JSON.stringify(book).replace(/"/g, '&quot;') %>">
-                        <div class="book-cover-link" onclick="openPreviewModalFromEl(this)">
-                            <img src="<%= book.cover_image_url || 'https://via.placeholder.com/200x250?text=No+Cover' %>" alt="<%= book.title %>" class="book-cover">
-                        </div>
-                        <div class="book-info">
-                            <span class="category-badge"><%= book.category || 'สมุดระบายสีเด็ก' %></span>
-                            <div class="book-title" onclick="openPreviewModalFromEl(this)" title="<%= book.title %>"><%= book.title %></div>
-                            <div class="page-badge-pill">
-                                <span>🟢</span>
-                                <span><%= book.pages_count || '20 หน้า' %></span>
-                            </div>
-                            <div class="book-price">฿<%= parseFloat(book.price).toFixed(0) %></div>
-                        </div>
-                        <div class="card-actions">
-                            <!-- Click opens Preview Popup Modal -->
-                            <button class="btn-preview-modal" onclick="openPreviewModalFromEl(this)">📖 ดูรายละเอียด / ตัวอย่าง</button>
-                        </div>
-                    </div>
-                <% }) %>
+        <% if (typeof isHomepage !== 'undefined' && isHomepage) { %>
+            <!-- Homepage Large Logo Display Page -->
+            <div class="homepage-logo-wrapper">
+                <img src="/images/logo.png" alt="คลังสมอง KLANGSAMONG" class="homepage-logo-img">
             </div>
         <% } else { %>
-            <div class="no-books">
-                <% if (typeof adminGateRequired !== "undefined" && adminGateRequired && (!currentUser || currentUser.role !== 'admin')) { %>
-                    <div style="padding: 20px 10px;">
-                        <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
-                        <h3 style="color: var(--primary-navy); margin: 0 0 8px 0; font-size: 20px;">หน้านี้สำหรับผู้ดูแลระบบเท่านั้น (Admin Access Only)</h3>
-                        <p style="color: #64748b; font-size: 13.5px; margin-bottom: 20px;">หน้ารวมหลักสูตรจำกัดสิทธิ์การเข้าถึงเฉพาะบัญชี Admin กรุณาเข้าสู่ระบบ</p>
-                        <button class="btn-submit" style="max-width: 220px; margin: 0 auto; display: block;" onclick="openLoginModal()">🔑 เข้าสู่ระบบ Admin</button>
+            <!-- Tiered Volume Pricing Promotion Banner -->
+            <div class="promo-banner-wrapper">
+                <div class="pricing-cards-container">
+                    <div class="pricing-card">
+                        <div class="pricing-title">ซื้อ 1 - 29 เล่ม</div>
+                        <div class="pricing-price">159 <small>บาท/เล่ม</small></div>
                     </div>
-                <% } else { %>
-                    <p>📭 ยังไม่มีรายการสื่อการเรียนรู้ในหมวดหมู่นี้ (อยู่ระหว่างจัดเตรียมข้อมูล)</p>
-                <% } %>
+                    <div class="pricing-card special">
+                        <div class="pricing-badge-tag">พิเศษ</div>
+                        <div class="pricing-title">ซื้อ 30 - 50 เล่ม</div>
+                        <div class="pricing-price">199 <small>บาท/ชุด</small></div>
+                    </div>
+                </div>
+                <div class="promo-alert-bar">
+                    ⚠️ สั่งซื้อขั้นต่ำ 10 เล่มขึ้นไป / คละแบบได้ 20 หน้าขึ้นไป หรือดาวน์โหลดไฟล์ PDF เข้าเรียนได้ทันที
+                </div>
             </div>
+
+            <!-- Section Header -->
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span><%= (typeof activeCategoryObj !== 'undefined' && activeCategoryObj && activeCategoryObj.icon) ? activeCategoryObj.icon : '🧠' %></span>
+                    <span><%= (typeof activeCategoryObj !== 'undefined' && activeCategoryObj && activeCategoryObj.name) ? activeCategoryObj.name : (selectedCategory !== 'all' ? selectedCategory : 'สื่อการเรียนรู้ทั้งหมด') %></span>
+                    <% if (searchQuery) { %>
+                        <span style="font-size: 14px; color: var(--text-muted); font-weight: normal;">(ค้นหา "<%= searchQuery %>")</span>
+                    <% } %>
+                </h2>
+                <span class="book-count">พบ <%= books.length %> รายการ</span>
+            </div>
+
+            <!-- 5-Column Book & Worksheet Grid -->
+            <% if (books.length > 0) { %>
+                <div class="book-grid">
+                    <% books.forEach(book => { %>
+                        <div class="book-card" data-book="<%- JSON.stringify(book).replace(/"/g, '&quot;') %>">
+                            <div class="book-cover-link" onclick="openPreviewModalFromEl(this)">
+                                <img src="<%= book.cover_image_url || 'https://via.placeholder.com/200x250?text=No+Cover' %>" alt="<%= book.title %>" class="book-cover">
+                            </div>
+                            <div class="book-info">
+                                <span class="category-badge"><%= book.category || 'สมุดระบายสีเด็ก' %></span>
+                                <div class="book-title" onclick="openPreviewModalFromEl(this)" title="<%= book.title %>"><%= book.title %></div>
+                                <div class="page-badge-pill">
+                                    <span>🟢</span>
+                                    <span><%= book.pages_count || '20 หน้า' %></span>
+                                </div>
+                                <div class="book-price">฿<%= parseFloat(book.price).toFixed(0) %></div>
+                            </div>
+                            <div class="card-actions">
+                                <!-- Click opens Preview Popup Modal -->
+                                <button class="btn-preview-modal" onclick="openPreviewModalFromEl(this)">📖 ดูรายละเอียด / ตัวอย่าง</button>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } else { %>
+                <div class="no-books">
+                    <% if (typeof adminGateRequired !== "undefined" && adminGateRequired && (!currentUser || currentUser.role !== 'admin')) { %>
+                        <div style="padding: 20px 10px;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
+                            <h3 style="color: var(--primary-navy); margin: 0 0 8px 0; font-size: 20px;">หน้านี้สำหรับผู้ดูแลระบบเท่านั้น (Admin Access Only)</h3>
+                            <p style="color: #64748b; font-size: 13.5px; margin-bottom: 20px;">หน้ารวมหลักสูตรจำกัดสิทธิ์การเข้าถึงเฉพาะบัญชี Admin กรุณาเข้าสู่ระบบ</p>
+                            <button class="btn-submit" style="max-width: 220px; margin: 0 auto; display: block;" onclick="openLoginModal()">🔑 เข้าสู่ระบบ Admin</button>
+                        </div>
+                    <% } else { %>
+                        <p>📭 ยังไม่มีรายการสื่อการเรียนรู้ในหมวดหมู่นี้ (อยู่ระหว่างจัดเตรียมข้อมูล)</p>
+                    <% } %>
+                </div>
+            <% } %>
         <% } %>
 
     </div>
