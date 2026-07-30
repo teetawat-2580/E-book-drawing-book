@@ -78,6 +78,12 @@
         .btn-download-item { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: var(--dark-navy); color: white; text-decoration: none; padding: 9px 0; border-radius: 8px; font-size: 13.5px; font-weight: 700; border: none; cursor: pointer; transition: background 0.2s, transform 0.15s; font-family: inherit; box-sizing: border-box; }
         .btn-download-item:hover { background: #1e293b; transform: translateY(-1px); }
 
+        /* Locked Card Styling Rules for -20 Mode */
+        .full-card.card-is-locked { opacity: 0.75; background: #f8fafc; border: 1.5px dashed #cbd5e1; position: relative; }
+        .full-card-img.img-is-locked { filter: grayscale(35%); }
+        .full-card-title.title-is-locked { color: #64748b; }
+        .btn-download-item.btn-is-locked { background: #e2e8f0; color: #64748b; border: 1px solid #cbd5e1; cursor: pointer; }
+
         /* Footer */
         footer { text-align: center; padding: 25px 20px; font-size: 12.5px; color: #94a3b8; border-top: 1px solid #f1f5f9; margin-top: 35px; }
         footer strong { color: var(--primary-navy); }
@@ -188,7 +194,7 @@
                 <div class="full-grid">
                     <% books.forEach((book, index) => { %>
                         <% const isLocked = (typeof isLimit20 !== 'undefined' && isLimit20 && index >= 20); %>
-                        <div class="full-card" style="<%= isLocked ? 'opacity: 0.75; background: #f8fafc; border: 1.5px dashed #cbd5e1; position: relative;' : '' %>">
+                        <div class="full-card <%= isLocked ? 'card-is-locked' : '' %>">
                             <% if (isLocked) { %>
                                 <div style="position: absolute; top: 8px; right: 8px; background: #f1f5f9; color: #64748b; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 1px solid #cbd5e1; z-index: 5;">
                                     🔒 เฉพาะชุดเต็ม (-full)
@@ -199,8 +205,8 @@
                                 </div>
                             <% } %>
 
-                            <img src="<%= book.cover_image_url || 'https://via.placeholder.com/300x400?text=No+Cover' %>" alt="<%= book.title %>" class="full-card-img" style="<%= isLocked ? 'filter: grayscale(35%);' : '' %>">
-                            <div class="full-card-title" title="<%= book.title %>" style="<%= isLocked ? 'color: #64748b;' : '' %>">
+                            <img src="<%= book.cover_image_url || 'https://via.placeholder.com/300x400?text=No+Cover' %>" alt="<%= book.title %>" class="full-card-img <%= isLocked ? 'img-is-locked' : '' %>">
+                            <div class="full-card-title <%= isLocked ? 'title-is-locked' : '' %>" title="<%= book.title %>">
                                 เล่มที่ <%= index + 1 %>: <%= book.title %>
                             </div>
                             
@@ -209,7 +215,7 @@
                                 const isGDrive = downloadUrl && (downloadUrl.includes('drive.google.com') || downloadUrl.includes('google.com'));
                             %>
                             <% if (isLocked) { %>
-                                <button type="button" class="btn-download-item" onclick="alert('เล่มที่ <%= index + 1 %> อยู่ในแพ็กเกจชุดเต็ม (-full) หากต้องการดาวน์โหลดครบทุกเล่ม กรุณาอัปเกรดเป็นแพ็กเกจชุดเต็ม');" style="background:#e2e8f0; color:#64748b; border:1px solid #cbd5e1; cursor:pointer;">
+                                <button type="button" class="btn-download-item btn-is-locked" onclick="alert('เล่มที่ <%= index + 1 %> อยู่ในแพ็กเกจชุดเต็ม (-full) หากต้องการดาวน์โหลดครบทุกเล่ม กรุณาอัปเกรดเป็นแพ็กเกจชุดเต็ม');">
                                     <span>🔒</span>
                                     <span>ปลดล็อคเมื่อซื้อชุดเต็ม 50 เล่ม</span>
                                 </button>

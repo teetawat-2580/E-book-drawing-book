@@ -265,6 +265,49 @@
             font-weight: 600;
         }
 
+        /* Translucent Disabled Download All Button on Category Pages */
+        .btn-download-all-locked-translucent {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            background: #9aa7b8;
+            opacity: 0.75;
+            color: #ffffff;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border: 1px dashed #7f8d9f;
+            cursor: not-allowed;
+            text-align: center;
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            margin-top: 15px;
+        }
+        .btn-download-all-locked-translucent:hover {
+            opacity: 0.85;
+        }
+        .locked-btn-title {
+            font-size: 15.5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #ffffff;
+        }
+        .locked-btn-sub {
+            font-size: 12px;
+            font-weight: 700;
+            color: #fef08a;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
         /* Section Header */
         .section-header {
             display: flex;
@@ -818,6 +861,18 @@
                     <div class="promo-alert-bar">
                         ⚠️ กดรับเล่มแรกได้เลย ฟรี!
                     </div>
+
+                    <!-- Translucent Locked Download All Button on Category Pages -->
+                    <button type="button" class="btn-download-all-locked-translucent" onclick="alert('🔒 ปุ่มดาวน์โหลดไฟล์ทั้งหมดทีเดียว <%= books.length %> เล่มพร้อมกัน สงวนสิทธิ์เฉพาะลูกค้าโปร <%= books.length %> เล่ม (ชุดเต็ม -full) เท่านั้นครับ');">
+                        <div class="locked-btn-title">
+                            <span>📥</span>
+                            <span>ดาวน์โหลดไฟล์ทั้งหมดทีเดียว <%= books.length %> เล่มพร้อมกัน (คลิกเพื่อดาวน์โหลด)</span>
+                        </div>
+                        <div class="locked-btn-sub">
+                            <span>🔒</span>
+                            <span>เฉพาะ โปร <%= books.length %> เล่มเท่านั้น</span>
+                        </div>
+                    </button>
                 </div>
 
                 <!-- Section Header -->
