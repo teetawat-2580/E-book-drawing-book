@@ -131,7 +131,7 @@
                     <div class="notice-row">
                         <span class="notice-icon">📌</span>
                         <div>
-                            <strong>สิทธิ์แพ็กเกจ 20 เล่ม:</strong> คุณสามารถดาวน์โหลดไฟล์ 20 เล่มแรกในรายการได้ฟรี! (เล่มที่ 21 เป็นต้นไปจะถูกล็อคไว้เฉพาะแพ็กเกจชุดเต็ม -full)
+                            <strong>สิทธิ์แพ็กเกจ 20 เล่ม:</strong> คุณสามารถดาวน์โหลดไฟล์ 20 เล่มแรกในรายการได้ฟรี! (เล่มที่ 21 เป็นต้นไปจะถูกล็อคไว้เฉพาะแพ็กเกจชุดเต็ม)
                         </div>
                     </div>
                 <% } else { %>
@@ -215,7 +215,7 @@
                                 const isGDrive = downloadUrl && (downloadUrl.includes('drive.google.com') || downloadUrl.includes('google.com'));
                             %>
                             <% if (isLocked) { %>
-                                <button type="button" class="btn-download-item btn-is-locked" onclick="alert('เล่มที่ <%= index + 1 %> อยู่ในแพ็กเกจชุดเต็ม (-full) หากต้องการดาวน์โหลดครบทุกเล่ม กรุณาอัปเกรดเป็นแพ็กเกจชุดเต็ม');">
+                                <button type="button" class="btn-download-item btn-is-locked" onclick="alert('เล่มที่ <%= index + 1 %> อยู่ในแพ็กเกจชุดเต็ม หากต้องการดาวน์โหลดครบทุกเล่ม กรุณาอัปเกรดเป็นแพ็กเกจชุดเต็ม');">
                                     <span>🔒</span>
                                     <span>ปลดล็อคเมื่อซื้อชุดเต็ม 50 เล่ม</span>
                                 </button>
