@@ -144,15 +144,16 @@
                 </div>
             </div>
 
-            <!-- Main Big Green Download All Button -->
+            <!-- Main Big Download All Section -->
             <% if (typeof isLimit20 !== 'undefined' && isLimit20) { %>
-                <button class="btn-download-all" onclick="downloadAllFiles(20)">
-                    <div class="btn-download-all-title">
+                <!-- Disabled Translucent Button for -20 Package Page -->
+                <button type="button" class="btn-download-all" onclick="alert('🔒 ปุ่มดาวน์โหลดไฟล์ทั้งหมดทีเดียว <%= books.length %> เล่มพร้อมกัน สงวนสิทธิ์เฉพาะลูกค้าโปร <%= books.length %> เล่ม (ชุดเต็ม -full) เท่านั้นครับ');" style="background: #64748b; opacity: 0.6; cursor: not-allowed; box-shadow: none; border: 1px dashed #94a3b8;">
+                    <div class="btn-download-all-title" style="font-size: 16.5px;">
                         <span>📥</span>
-                        <span>โหลด 20 เล่มแรกทีเดียว</span>
+                        <span>ดาวน์โหลดไฟล์ทั้งหมดทีเดียว <%= books.length %> เล่มพร้อมกัน (คลิกเพื่อดาวน์โหลด)</span>
                     </div>
-                    <div class="btn-download-all-sub">
-                        ดาวน์โหลดไฟล์ 20 เล่มแรกพร้อมกัน (คลิกเพื่อดาวน์โหลด)
+                    <div class="btn-download-all-sub" style="font-weight: 700; color: #fef08a; margin-top: 5px;">
+                        🔒 เฉพาะ โปร <%= books.length %> เล่มเท่านั้น
                     </div>
                 </button>
             <% } else if (typeof driveFolderUrl !== 'undefined' && driveFolderUrl) { %>
