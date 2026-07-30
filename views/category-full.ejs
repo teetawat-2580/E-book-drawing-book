@@ -207,7 +207,7 @@
 
                             <img src="<%= book.cover_image_url || 'https://via.placeholder.com/300x400?text=No+Cover' %>" alt="<%= book.title %>" class="full-card-img <%= isLocked ? 'img-is-locked' : '' %>">
                             <div class="full-card-title <%= isLocked ? 'title-is-locked' : '' %>" title="<%= book.title %>">
-                                เล่มที่ <%= index + 1 %>: <%= book.title %>
+                                <%= book.title %>
                             </div>
                             
                             <% 
@@ -215,7 +215,7 @@
                                 const isGDrive = downloadUrl && (downloadUrl.includes('drive.google.com') || downloadUrl.includes('google.com'));
                             %>
                             <% if (isLocked) { %>
-                                <button type="button" class="btn-download-item btn-is-locked" onclick="alert('เล่มที่ <%= index + 1 %> อยู่ในแพ็กเกจชุดเต็ม หากต้องการดาวน์โหลดครบทุกเล่ม กรุณาอัปเกรดเป็นแพ็กเกจชุดเต็ม');">
+                                <button type="button" class="btn-download-item btn-is-locked" onclick="alert('เล่มนี้อยู่ในแพ็กเกจชุดเต็ม (-full) หากต้องการดาวน์โหลดครบทุกเล่ม กรุณาอัปเกรดเป็นแพ็กเกจชุดเต็ม');">
                                     <span>🔒</span>
                                     <span>ปลดล็อคเมื่อซื้อชุดเต็ม 50 เล่ม</span>
                                 </button>
