@@ -108,12 +108,12 @@
         <!-- Hero Banner Header (Deep Blue Navy Theme) -->
         <div class="hero-banner">
             <div class="ready-pill-badge">
-                <span>🎁</span>
-                <span>สินค้าของคุณพร้อมแล้ว</span>
+                <span><%= (typeof isLimit20 !== 'undefined' && isLimit20) ? '⚡' : '🎁' %></span>
+                <span><%= (typeof isLimit20 !== 'undefined' && isLimit20) ? 'แพ็กเกจ 20 เล่มแรก' : 'สินค้าของคุณพร้อมแล้ว' %></span>
             </div>
             <h1 class="hero-title"><%= categoryObj ? categoryObj.name : 'สื่อการเรียนรู้' %></h1>
-            <div class="hero-subtitle">โปร 2 - ครบ <%= books.length %> เล่ม</div>
-            <div class="hero-count">ได้รับทั้งหมด <%= books.length %> ไฟล์</div>
+            <div class="hero-subtitle"><%= (typeof isLimit20 !== 'undefined' && isLimit20) ? 'สิทธิ์ดาวน์โหลด 20 เล่มแรก' : ('โปร 2 - ครบ ' + books.length + ' เล่ม') %></div>
+            <div class="hero-count"><%= (typeof isLimit20 !== 'undefined' && isLimit20) ? ('ดาวน์โหลดได้ 20 เล่มแรก (จากทั้งหมด ' + books.length + ' เล่ม)') : ('ได้รับทั้งหมด ' + books.length + ' ไฟล์') %></div>
         </div>
 
         <!-- Main Content Area -->
@@ -121,12 +121,21 @@
             
             <!-- Yellow Notice Box -->
             <div class="notice-box">
-                <div class="notice-row">
-                    <span class="notice-icon">☁️</span>
-                    <div>
-                        <strong>ดาวน์โหลดผ่าน Google Drive คมชัด 100%:</strong> กดปุ่ม "โหลดผ่าน Google Drive" เพื่อรับไฟล์ต้นฉบับคุณภาพสูงทันที หรือกด "โหลดทั้งหมดทีเดียว"
+                <% if (typeof isLimit20 !== 'undefined' && isLimit20) { %>
+                    <div class="notice-row">
+                        <span class="notice-icon">📌</span>
+                        <div>
+                            <strong>สิทธิ์แพ็กเกจ 20 เล่ม:</strong> คุณสามารถดาวน์โหลดไฟล์ 20 เล่มแรกในรายการได้ฟรี! (เล่มที่ 21 เป็นต้นไปจะถูกล็อคไว้เฉพาะแพ็กเกจชุดเต็ม -full)
+                        </div>
                     </div>
-                </div>
+                <% } else { %>
+                    <div class="notice-row">
+                        <span class="notice-icon">☁️</span>
+                        <div>
+                            <strong>ดาวน์โหลดผ่าน Google Drive คมชัด 100%:</strong> กดปุ่ม "โหลดผ่าน Google Drive" เพื่อรับไฟล์ต้นฉบับคุณภาพสูงทันที หรือกด "โหลดทั้งหมดทีเดียว"
+                        </div>
+                    </div>
+                <% } %>
                 <div class="notice-row">
                     <span class="notice-icon">💡</span>
                     <div>
@@ -136,7 +145,17 @@
             </div>
 
             <!-- Main Big Green Download All Button -->
-            <% if (typeof driveFolderUrl !== 'undefined' && driveFolderUrl) { %>
+            <% if (typeof isLimit20 !== 'undefined' && isLimit20) { %>
+                <button class="btn-download-all" onclick="downloadAllFiles(20)">
+                    <div class="btn-download-all-title">
+                        <span>📥</span>
+                        <span>โหลด 20 เล่มแรกทีเดียว</span>
+                    </div>
+                    <div class="btn-download-all-sub">
+                        ดาวน์โหลดไฟล์ 20 เล่มแรกพร้อมกัน (คลิกเพื่อดาวน์โหลด)
+                    </div>
+                </button>
+            <% } else if (typeof driveFolderUrl !== 'undefined' && driveFolderUrl) { %>
                 <a href="<%= driveFolderUrl %>" target="_blank" rel="noopener noreferrer" class="btn-download-all" style="text-decoration: none;">
                     <div class="btn-download-all-title">
                         <span>📥</span>
@@ -167,23 +186,50 @@
             <% if (books.length > 0) { %>
                 <div class="full-grid">
                     <% books.forEach((book, index) => { %>
-                        <div class="full-card">
-                            <img src="<%= book.cover_image_url || 'https://via.placeholder.com/300x400?text=No+Cover' %>" alt="<%= book.title %>" class="full-card-img">
-                            <div class="full-card-title" title="<%= book.title %>">
-                                <%= book.title %>
+                        <% const isLocked = (typeof isLimit20 !== 'undefined' && isLimit20 && index >= 20); %>
+                        <div class="full-card" style="<%= isLocked ? 'opacity: 0.75; background: #f8fafc; border: 1.5px dashed #cbd5e1; position: relative;' : '' %>">
+                            <% if (isLocked) { %>
+                                <div style="position: absolute; top: 8px; right: 8px; background: #f1f5f9; color: #64748b; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 1px solid #cbd5e1; z-index: 5;">
+                                    🔒 เฉพาะชุดเต็ม (-full)
+                                </div>
+                            <% } else if (typeof isLimit20 !== 'undefined' && isLimit20) { %>
+                                <div style="position: absolute; top: 8px; right: 8px; background: #dcfce7; color: #15803d; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 10px; border: 1px solid #86efac; z-index: 5;">
+                                    ✅ ดาวน์โหลดได้
+                                </div>
+                            <% } %>
+
+                            <img src="<%= book.cover_image_url || 'https://via.placeholder.com/300x400?text=No+Cover' %>" alt="<%= book.title %>" class="full-card-img" style="<%= isLocked ? 'filter: grayscale(35%);' : '' %>">
+                            <div class="full-card-title" title="<%= book.title %>" style="<%= isLocked ? 'color: #64748b;' : '' %>">
+                                เล่มที่ <%= index + 1 %>: <%= book.title %>
                             </div>
                             
                             <% 
                                 const downloadUrl = book.file_path || book.sample_file_path || book.cover_image_url; 
                                 const isGDrive = downloadUrl && (downloadUrl.includes('drive.google.com') || downloadUrl.includes('google.com'));
                             %>
-                            <a href="<%= downloadUrl %>" class="btn-download-item" target="_blank" rel="noopener noreferrer">
-                                <span><%= isGDrive ? '☁️' : '⬇️' %></span>
-                                <span><%= isGDrive ? 'โหลดผ่าน Google Drive' : 'โหลด' %></span>
-                            </a>
+                            <% if (isLocked) { %>
+                                <button type="button" class="btn-download-item" onclick="alert('เล่มที่ <%= index + 1 %> อยู่ในแพ็กเกจชุดเต็ม (-full) หากต้องการดาวน์โหลดครบทุกเล่ม กรุณาอัปเกรดเป็นแพ็กเกจชุดเต็ม');" style="background:#e2e8f0; color:#64748b; border:1px solid #cbd5e1; cursor:pointer;">
+                                    <span>🔒</span>
+                                    <span>ปลดล็อคเมื่อซื้อชุดเต็ม 50 เล่ม</span>
+                                </button>
+                            <% } else { %>
+                                <a href="<%= downloadUrl %>" class="btn-download-item" target="_blank" rel="noopener noreferrer">
+                                    <span><%= isGDrive ? '☁️' : '⬇️' %></span>
+                                    <span><%= isGDrive ? 'โหลดผ่าน Google Drive' : 'โหลด' %></span>
+                                </a>
+                            <% } %>
                         </div>
                     <% }) %>
                 </div>
+
+                <% if (typeof isLimit20 !== 'undefined' && isLimit20 && books.length > 20) { %>
+                    <div style="margin-top: 30px; background: linear-gradient(135deg, #1e3a8a, #0f172a); color: white; border-radius: 16px; padding: 22px; text-align: center; box-shadow: 0 8px 24px rgba(30,58,138,0.25);">
+                        <h3 style="margin: 0 0 8px 0; font-size: 19px; color: #fef08a;">✨ ต้องการดาวน์โหลดครบทุก <%= books.length %> เล่ม?</h3>
+                        <p style="margin: 0 0 16px 0; font-size: 13.5px; opacity: 0.95; line-height: 1.5;">อัปเกรดเป็นแพ็กเกจชุดเต็ม (-full) เพื่อปลดล็อคและดาวน์โหลดได้ครบทุก <%= books.length %> เล่มทันที</p>
+                        <% const fullUrl = categoryObj ? '/' + encodeURIComponent(categoryObj.id) + '-full' : '/'; %>
+                        <a href="<%= fullUrl %>" style="background: #facc15; color: #1e3a8a; font-weight: 800; padding: 12px 24px; display: inline-block; text-decoration: none; border-radius: 25px; font-size: 15px; box-shadow: 0 4px 14px rgba(250, 204, 21, 0.4); transition: transform 0.2s;">🚀 ไปที่หน้าชุดเต็ม (-full)</a>
+                    </div>
+                <% } %>
             <% } else { %>
                 <div style="text-align:center; padding: 40px; color:#94a3b8;">
                     <p>📭 ยังไม่มีไฟล์ในหมวดหมู่นี้</p>
@@ -201,15 +247,20 @@
     <script>
         const allFileUrls = JSON.parse(decodeURIComponent('<%= encodeURIComponent(JSON.stringify(books.map(b => ({ url: b.file_path || b.sample_file_path || b.cover_image_url, title: b.title })))) %>'));
 
-        function downloadAllFiles() {
+        function downloadAllFiles(limit = 0) {
             if (!allFileUrls || allFileUrls.length === 0) {
                 alert('ไม่มีไฟล์สำหรับดาวน์โหลด');
                 return;
             }
 
-            alert('กำลังเริ่มเปิดลิงก์ดาวน์โหลดทั้งหมด (' + allFileUrls.length + ' ไฟล์)...');
+            let targetList = allFileUrls;
+            if (limit > 0 && limit < allFileUrls.length) {
+                targetList = allFileUrls.slice(0, limit);
+            }
+
+            alert('กำลังเริ่มเปิดลิงก์ดาวน์โหลด (' + targetList.length + ' ไฟล์)...');
             let delay = 0;
-            allFileUrls.forEach(item => {
+            targetList.forEach(item => {
                 if (item.url) {
                     setTimeout(() => {
                         window.open(item.url, '_blank');

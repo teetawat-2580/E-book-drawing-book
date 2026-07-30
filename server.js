@@ -1073,8 +1073,8 @@ async function handleCategoryPage(req, res, slugParam) {
     }
 }
 
-// Category Full Download Page handler function
-async function handleCategoryFullPage(req, res, matchedCat) {
+// Category Full / 20 Download Page handler function
+async function handleCategoryFullPage(req, res, matchedCat, isLimit20 = false) {
     try {
         const categoryId = matchedCat ? matchedCat.id : 'all';
 
@@ -1106,7 +1106,8 @@ async function handleCategoryFullPage(req, res, matchedCat) {
         res.render('category-full', {
             books,
             categoryObj: matchedCat || { name: 'สื่อการเรียนรู้ทั้งหมด', id: 'all' },
-            driveFolderUrl
+            driveFolderUrl,
+            isLimit20: !!isLimit20
         });
     } catch (err) {
         console.error(err);
@@ -1114,17 +1115,23 @@ async function handleCategoryFullPage(req, res, matchedCat) {
     }
 }
 
-// Route for category URL prefix
+// Route for category URL prefix: /category/:categorySlug/20
+app.get('/category/:categorySlug/20', async (req, res) => {
+    const matchedCat = findCategoryBySlug(req.params.categorySlug);
+    handleCategoryFullPage(req, res, matchedCat, true);
+});
+
+// Route for category URL prefix: /category/:categorySlug/full
 app.get('/category/:categorySlug/full', async (req, res) => {
     const matchedCat = findCategoryBySlug(req.params.categorySlug);
-    handleCategoryFullPage(req, res, matchedCat);
+    handleCategoryFullPage(req, res, matchedCat, false);
 });
 
 app.get('/category/:categorySlug', async (req, res) => {
     handleCategoryPage(req, res, req.params.categorySlug);
 });
 
-// Dynamic route for direct category links and -full pages
+// Dynamic route for direct category links, -20 pages, and -full pages
 app.get('/:slug', async (req, res, next) => {
     const slug = req.params.slug;
     let decoded = '';
@@ -1134,11 +1141,19 @@ app.get('/:slug', async (req, res, next) => {
         decoded = slug.trim();
     }
 
+    if (decoded.endsWith('-20')) {
+        const baseSlug = decoded.slice(0, -3).trim();
+        const matched20 = findCategoryBySlug(baseSlug);
+        if (matched20) {
+            return handleCategoryFullPage(req, res, matched20, true);
+        }
+    }
+
     if (decoded.endsWith('-full')) {
         const baseSlug = decoded.slice(0, -5).trim();
         const matchedFull = findCategoryBySlug(baseSlug);
         if (matchedFull) {
-            return handleCategoryFullPage(req, res, matchedFull);
+            return handleCategoryFullPage(req, res, matchedFull, false);
         }
     }
 
