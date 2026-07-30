@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
 
 const BUCKET_NAME = "klangsamong-e1d13.firebasestorage.app";
 const BUCKET_GS_URL = "gs://" + BUCKET_NAME;
@@ -19,9 +19,53 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app, BUCKET_GS_URL);
 
-// Direct Firebase Storage Upload helper with REST fallback
-window.firebaseStorageUpload = async function(file, subFolder, statusCallback) {
+// Helper function to remove old file from Firebase Storage if it exists
+window.firebaseStorageDelete = async function(url) {
+    if (!url || typeof url !== 'string') return false;
+    if (!url.includes('firebasestorage.googleapis.com') && !url.includes(BUCKET_NAME) && !url.includes('klangsamong-e1d13')) return false;
+
+    try {
+        const match = url.match(/\/o\/([^?]+)/);
+        if (!match) return false;
+        
+        const objectPath = decodeURIComponent(match[1]);
+        console.log('Attempting to delete old file from Firebase Storage:', objectPath);
+
+        // 1. Try Firebase Storage SDK deleteObject
+        try {
+            const storageRef = ref(storage, objectPath);
+            await deleteObject(storageRef);
+            console.log('✅ Successfully deleted old file via Firebase SDK:', objectPath);
+            return true;
+        } catch (sdkErr) {
+            console.warn('Firebase SDK delete notice, attempting direct REST delete:', sdkErr);
+        }
+
+        // 2. Try Firebase REST API DELETE
+        const encodedPath = encodeURIComponent(objectPath);
+        const restUrl = `https://firebasestorage.googleapis.com/v0/b/${BUCKET_NAME}/o/${encodedPath}`;
+        const res = await fetch(restUrl, { method: 'DELETE' });
+        if (res.ok) {
+            console.log('✅ Successfully deleted old file via Firebase REST API:', objectPath);
+            return true;
+        }
+    } catch (err) {
+        console.error('Notice: Error removing old file from Firebase Storage:', err);
+    }
+    return false;
+};
+
+// Direct Firebase Storage Upload helper with REST fallback and old file removal
+window.firebaseStorageUpload = async function(file, subFolder, statusCallback, oldFileUrl = '') {
     if (!file) return '';
+
+    // If an old file URL was provided, attempt to delete it from Firebase Storage
+    if (oldFileUrl) {
+        try {
+            await window.firebaseStorageDelete(oldFileUrl);
+        } catch(e) { console.warn('Old file delete notice:', e); }
+    }
+
     const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const objectPath = `${subFolder}/${Date.now()}_${cleanFileName}`;
 

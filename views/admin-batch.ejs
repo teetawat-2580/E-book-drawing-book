@@ -128,17 +128,19 @@
                                     <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllRows(this)" title="เลือกทั้งหมด / ยกเลิกทั้งหมด" style="cursor: pointer; width: 16px; height: 16px;">
                                 </th>
                                 <th style="width: 40px;">ID</th>
-                                <th style="width: 160px;">ชื่อสื่อ (Title)</th>
-                                <th style="width: 100px;">ผู้จัดทำ (Author)</th>
-                                <th style="width: 110px;">สำนักพิมพ์</th>
-                                <th style="width: 130px;">หมวดหมู่ (Category)</th>
-                                <th style="width: 75px;">ราคาขาย</th>
-                                <th style="width: 75px;">ราคาปกติ</th>
-                                <th style="width: 95px;">ความยาว/หน้า</th>
-                                <th style="width: 80px;">ประเภทไฟล์</th>
-                                <th style="width: 85px;">ป้ายกำกับ</th>
-                                <th style="width: 220px;">📖 ลิงก์ PDF ฉบับเต็ม (Drive Link Only)</th>
-                                <th style="width: 200px;">รายละเอียด (Description)</th>
+                                <th style="width: 150px;">ชื่อสื่อ (Title)</th>
+                                <th style="width: 95px;">ผู้จัดทำ (Author)</th>
+                                <th style="width: 100px;">สำนักพิมพ์</th>
+                                <th style="width: 120px;">หมวดหมู่ (Category)</th>
+                                <th style="width: 70px;">ราคาขาย</th>
+                                <th style="width: 70px;">ราคาปกติ</th>
+                                <th style="width: 80px;">ความยาว/หน้า</th>
+                                <th style="width: 75px;">ประเภทไฟล์</th>
+                                <th style="width: 80px;">ป้ายกำกับ</th>
+                                <th style="width: 170px;">🖼️ รูปปก (cover_image_url)</th>
+                                <th style="width: 180px;">📖 ลิงก์ PDF ฉบับเต็ม (file_path)</th>
+                                <th style="width: 170px;">👁️ ตัวอย่าง (sample_file_path)</th>
+                                <th style="width: 160px;">รายละเอียด (Description)</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -173,12 +175,43 @@
                                         <td><input type="text" class="v-file-type" value="<%= book.file_type || 'PDF' %>"></td>
                                         <td><input type="text" class="v-badge" value="<%= book.badge || '' %>"></td>
                                         
-                                        <!-- Full PDF File (Input Link Only - Direct Link to Google Drive etc.) -->
+                                        <!-- 🖼️ Cover Image URL Column -->
                                         <td>
-                                            <input type="text" class="v-book-file" value="<%= book.file_path || '' %>" placeholder="วางลิงก์ Google Drive..." style="font-size:11px;">
-                                            <% if (book.file_path) { %>
-                                                <div style="margin-top:2px;"><a href="<%= book.file_path %>" target="_blank" style="color:#0284c7; font-size:10.5px; text-decoration:none;">📖 เปิดลิงก์เดิม</a></div>
+                                            <input type="text" class="v-cover" value="<%= book.cover_image_url || '' %>" placeholder="https://..." style="font-size:11px; margin-bottom:4px;">
+                                            <% if (book.cover_image_url) { %>
+                                                <div style="margin-bottom:3px;"><a href="<%= book.cover_image_url %>" target="_blank" style="color:#0284c7; font-size:10.5px; text-decoration:none;">🖼️ ดูรูปเดิม</a></div>
                                             <% } %>
+                                            <label class="btn-file-upload">
+                                                📁 อัปโหลดรูปปกจาก PC
+                                                <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
+                                            </label>
+                                            <div class="status-indicator" style="margin-top:2px;"><small style="color:#94a3b8; font-size:10.5px;">-</small></div>
+                                        </td>
+
+                                        <!-- 📖 Full PDF File Link Column -->
+                                        <td>
+                                            <input type="text" class="v-book-file" value="<%= book.file_path || '' %>" placeholder="วางลิงก์ Google Drive..." style="font-size:11px; margin-bottom:4px;">
+                                            <% if (book.file_path) { %>
+                                                <div style="margin-bottom:3px;"><a href="<%= book.file_path %>" target="_blank" style="color:#0284c7; font-size:10.5px; text-decoration:none;">📖 เปิดลิงก์เดิม</a></div>
+                                            <% } %>
+                                            <label class="btn-file-upload" style="background:#f0fdf4; color:#15803d; border-color:#86efac;">
+                                                📁 อัปโหลด PDF จาก PC
+                                                <input type="file" accept=".pdf,image/*" onchange="uploadRowFile(this, 'books', 'v-book-file')" style="display:none;">
+                                            </label>
+                                            <div class="status-indicator" style="margin-top:2px;"><small style="color:#94a3b8; font-size:10.5px;">-</small></div>
+                                        </td>
+
+                                        <!-- 👁️ Sample File / Image Column -->
+                                        <td>
+                                            <input type="text" class="v-sample-file" value="<%= book.sample_file_path || '' %>" placeholder="https://..." style="font-size:11px; margin-bottom:4px;">
+                                            <% if (book.sample_file_path) { %>
+                                                <div style="margin-bottom:3px;"><a href="<%= book.sample_file_path %>" target="_blank" style="color:#0284c7; font-size:10.5px; text-decoration:none;">👁️ ดูตัวอย่างเดิม</a></div>
+                                            <% } %>
+                                            <label class="btn-file-upload" style="background:#fefce8; color:#a16207; border-color:#fde047;">
+                                                📁 อัปโหลดตัวอย่างจาก PC
+                                                <input type="file" accept=".pdf,image/*" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
+                                            </label>
+                                            <div class="status-indicator" style="margin-top:2px;"><small style="color:#94a3b8; font-size:10.5px;">-</small></div>
                                         </td>
 
                                         <td><textarea class="v-description"><%= book.description || '' %></textarea></td>
@@ -197,6 +230,7 @@
                                         <select class="v-category">
                                             <option value="สมุดระบายสีเด็ก">สมุดระบายสีเด็ก</option>
                                             <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                                            <option value="พื้นฐานการบวกเลข">พื้นฐานการบวกเลข</option>
                                             <option value="ชีทฝึกเขียน">ชีทฝึกเขียน</option>
                                             <option value="แฟลชการ์ด">แฟลชการ์ด 2 ภาษา</option>
                                             <option value="เกมฝึกสมอง">เกมฝึกสมองเด็ก</option>
@@ -211,7 +245,30 @@
                                     <td><input type="text" class="v-badge" placeholder="แนะนำ"></td>
                                     
                                     <td>
-                                        <input type="text" class="v-book-file" value="" placeholder="วางลิงก์ Google Drive..." style="font-size:11px;">
+                                        <input type="text" class="v-cover" value="" placeholder="วาง URL หรืออัปโหลด..." style="font-size:11px; margin-bottom:4px;">
+                                        <label class="btn-file-upload">
+                                            📁 อัปโหลดรูปปกจาก PC
+                                            <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
+                                        </label>
+                                        <div class="status-indicator" style="margin-top:2px;"><small style="color:#94a3b8; font-size:10.5px;">-</small></div>
+                                    </td>
+
+                                    <td>
+                                        <input type="text" class="v-book-file" value="" placeholder="วางลิงก์ Google Drive..." style="font-size:11px; margin-bottom:4px;">
+                                        <label class="btn-file-upload" style="background:#f0fdf4; color:#15803d; border-color:#86efac;">
+                                            📁 อัปโหลด PDF จาก PC
+                                            <input type="file" accept=".pdf,image/*" onchange="uploadRowFile(this, 'books', 'v-book-file')" style="display:none;">
+                                        </label>
+                                        <div class="status-indicator" style="margin-top:2px;"><small style="color:#94a3b8; font-size:10.5px;">-</small></div>
+                                    </td>
+
+                                    <td>
+                                        <input type="text" class="v-sample-file" value="" placeholder="วาง URL หรืออัปโหลด..." style="font-size:11px; margin-bottom:4px;">
+                                        <label class="btn-file-upload" style="background:#fefce8; color:#a16207; border-color:#fde047;">
+                                            📁 อัปโหลดตัวอย่างจาก PC
+                                            <input type="file" accept=".pdf,image/*" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
+                                        </label>
+                                        <div class="status-indicator" style="margin-top:2px;"><small style="color:#94a3b8; font-size:10.5px;">-</small></div>
                                     </td>
 
                                     <td><textarea class="v-description" placeholder="รายละเอียด..."></textarea></td>
@@ -569,7 +626,30 @@ VALUES
                 <td><input type="text" class="v-badge" placeholder="แนะนำ"></td>
                 
                 <td>
-                    <input type="text" class="v-book-file" value="" placeholder="วางลิงก์ Google Drive..." style="font-size:11px;">
+                    <input type="text" class="v-cover" value="" placeholder="วาง URL หรืออัปโหลด..." style="font-size:11px; margin-bottom:4px;">
+                    <label class="btn-file-upload">
+                        📁 อัปโหลดรูปปกจาก PC
+                        <input type="file" accept="image/*" onchange="uploadRowFile(this, 'covers', 'v-cover')" style="display:none;">
+                    </label>
+                    <div class="status-indicator" style="margin-top:2px;"><small style="color:#94a3b8; font-size:10.5px;">-</small></div>
+                </td>
+
+                <td>
+                    <input type="text" class="v-book-file" value="" placeholder="วางลิงก์ Google Drive..." style="font-size:11px; margin-bottom:4px;">
+                    <label class="btn-file-upload" style="background:#f0fdf4; color:#15803d; border-color:#86efac;">
+                        📁 อัปโหลด PDF จาก PC
+                        <input type="file" accept=".pdf,image/*" onchange="uploadRowFile(this, 'books', 'v-book-file')" style="display:none;">
+                    </label>
+                    <div class="status-indicator" style="margin-top:2px;"><small style="color:#94a3b8; font-size:10.5px;">-</small></div>
+                </td>
+
+                <td>
+                    <input type="text" class="v-sample-file" value="" placeholder="วาง URL หรืออัปโหลด..." style="font-size:11px; margin-bottom:4px;">
+                    <label class="btn-file-upload" style="background:#fefce8; color:#a16207; border-color:#fde047;">
+                        📁 อัปโหลดตัวอย่างจาก PC
+                        <input type="file" accept=".pdf,image/*" onchange="uploadRowFile(this, 'samples', 'v-sample-file')" style="display:none;">
+                    </label>
+                    <div class="status-indicator" style="margin-top:2px;"><small style="color:#94a3b8; font-size:10.5px;">-</small></div>
                 </td>
 
                 <td><textarea class="v-description" placeholder="รายละเอียด..."></textarea></td>
@@ -618,7 +698,9 @@ VALUES
                     const pages = getVal('.v-pages');
                     const fileType = getVal('.v-file-type');
                     const badge = getVal('.v-badge');
+                    const cover = getVal('.v-cover');
                     const bookFile = getVal('.v-book-file');
+                    const sampleFile = getVal('.v-sample-file');
                     const description = getVal('.v-description');
 
                     if (title && title.trim()) {
@@ -633,7 +715,9 @@ VALUES
                             pages_count: pages,
                             file_type: fileType,
                             badge: badge,
+                            cover_image_url: cover,
                             file_path: bookFile,
+                            sample_file_path: sampleFile,
                             description: description
                         });
                     }
@@ -683,9 +767,9 @@ VALUES
 
             return data.map(b => {
                 if (b.id) {
-                    return `UPDATE books SET title = ${esc(b.title)}, author_name = ${esc(b.author_name)}, publisher = ${esc(b.publisher)}, category = ${esc(b.category)}, price = ${num(b.price)}, original_price = ${num(b.original_price)}, pages_count = ${esc(b.pages_count)}, file_type = ${esc(b.file_type)}, badge = ${esc(b.badge)}, file_path = ${esc(b.file_path)}, description = ${esc(b.description)} WHERE id = ${b.id};`;
+                    return `UPDATE books SET title = ${esc(b.title)}, author_name = ${esc(b.author_name)}, publisher = ${esc(b.publisher)}, category = ${esc(b.category)}, price = ${num(b.price)}, original_price = ${num(b.original_price)}, pages_count = ${esc(b.pages_count)}, file_type = ${esc(b.file_type)}, badge = ${esc(b.badge)}, cover_image_url = ${esc(b.cover_image_url)}, file_path = ${esc(b.file_path)}, sample_file_path = ${esc(b.sample_file_path)}, description = ${esc(b.description)} WHERE id = ${b.id};`;
                 } else {
-                    return `INSERT INTO books (title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, file_path, description) VALUES (${esc(b.title)}, ${esc(b.author_name)}, ${esc(b.publisher)}, ${esc(b.category)}, ${num(b.price)}, ${num(b.original_price)}, ${esc(b.pages_count)}, ${esc(b.file_type)}, ${esc(b.badge)}, ${esc(b.file_path)}, ${esc(b.description)});`;
+                    return `INSERT INTO books (title, author_name, publisher, category, price, original_price, pages_count, file_type, badge, cover_image_url, file_path, sample_file_path, description) VALUES (${esc(b.title)}, ${esc(b.author_name)}, ${esc(b.publisher)}, ${esc(b.category)}, ${num(b.price)}, ${num(b.original_price)}, ${esc(b.pages_count)}, ${esc(b.file_type)}, ${esc(b.badge)}, ${esc(b.cover_image_url)}, ${esc(b.file_path)}, ${esc(b.sample_file_path)}, ${esc(b.description)});`;
                 }
             }).join('\n\n');
         }

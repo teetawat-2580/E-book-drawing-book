@@ -828,11 +828,18 @@ app.get('/admin/export-sql', async (req, res) => {
 app.post('/admin/batch-update', requireAdmin, async (req, res) => {
     try {
         let booksData = [];
-        if (typeof req.body.json_data === 'string') {
-            booksData = JSON.parse(req.body.json_data);
+        if (Array.isArray(req.body.books)) {
+            booksData = req.body.books;
+        } else if (typeof req.body.json_data === 'string') {
+            try { booksData = JSON.parse(req.body.json_data); } catch(e) {}
+        } else if (typeof req.body === 'string') {
+            try { booksData = JSON.parse(req.body); } catch(e) {}
         }
 
         if (!Array.isArray(booksData)) {
+            if (req.headers['content-type']?.includes('application/json')) {
+                return res.status(400).json({ success: false, message: 'ข้อมูลไม่ถูกต้อง' });
+            }
             return res.redirect('/admin/batch?error=' + encodeURIComponent('ข้อมูลไม่ถูกต้อง'));
         }
 
@@ -853,11 +860,11 @@ app.post('/admin/batch-update', requireAdmin, async (req, res) => {
                     b.title || 'Untitled',
                     b.author_name || '',
                     b.publisher || '',
-                    b.category || 'สมุดระบายสี',
+                    b.category || 'สมุดระบายสีเด็ก',
                     parseFloat(b.price) || 0,
                     b.original_price ? parseFloat(b.original_price) : null,
                     b.pages_count || '',
-                    b.file_type || 'pdf',
+                    b.file_type || 'PDF',
                     b.badge || '',
                     b.description || '',
                     b.cover_image_url || '',
@@ -880,11 +887,11 @@ app.post('/admin/batch-update', requireAdmin, async (req, res) => {
                     parseFloat(b.price) || 0,
                     b.cover_image_url || '',
                     b.file_path || '',
-                    b.category || 'สมุดระบายสี',
+                    b.category || 'สมุดระบายสีเด็ก',
                     b.author_name || '',
                     b.publisher || '',
                     b.sample_file_path || '',
-                    b.file_type || 'pdf',
+                    b.file_type || 'PDF',
                     b.pages_count || '',
                     b.original_price ? parseFloat(b.original_price) : null,
                     b.badge || ''
@@ -893,9 +900,16 @@ app.post('/admin/batch-update', requireAdmin, async (req, res) => {
             }
         }
 
+        if (req.headers['content-type']?.includes('application/json')) {
+            return res.json({ success: true, updatedCount, insertedCount });
+        }
+
         res.redirect('/admin/batch?success=' + encodeURIComponent(`บันทึก Batch Edit สำเร็จ! (อัปเดต ${updatedCount} รายการ, เพิ่มใหม่ ${insertedCount} รายการ)`));
     } catch (err) {
         console.error(err);
+        if (req.headers['content-type']?.includes('application/json')) {
+            return res.status(500).json({ success: false, message: err.message });
+        }
         res.redirect('/admin/batch?error=' + encodeURIComponent('เกิดข้อผิดพลาดในการบันทึก Batch Edit: ' + err.message));
     }
 });
