@@ -19,15 +19,15 @@ app.use(session({
 // Educational Categories definition for คลังสมอง KLANGSAMONG
 const CATEGORIES = [
     { id: 'all', name: 'ทั้งหมด', icon: '🌐', slug: 'ทั้งหมด' },
-    { id: 'สมุดระบายสีเด็ก', name: 'สมุดระบายสีเด็ก', icon: '✏️', slug: 'สมุดระบายสีเด็ก', hash20: 'dBsZlYuk' },
-    { id: 'คณิตศาสตร์', name: 'ชีทคณิตศาสตร์', icon: '🔢', slug: 'ชีทคณิตศาสตร์', hash20: 'zqfZg0Sl' },
-    { id: 'แบบฝึกหัดคณิตศาสตร์', name: 'แบบฝึกหัดคณิตศาสตร์', icon: '📐', slug: 'แบบฝึกหัดคณิตศาสตร์', hash20: 'i2lr9oMH' },
-    { id: 'พื้นฐานการบวกเลข', name: 'พื้นฐานการบวกเลข', icon: '➕', slug: 'พื้นฐานการบวกเลข', hash20: 'QbU76dyN' },
-    { id: 'ชีทฝึกเขียน', name: 'ชีทฝึกเขียนภาษา', icon: '✍️', slug: 'ชีทฝึกเขียนภาษา', hash20: 'T8iPRfNx' },
-    { id: 'แฟลชการ์ด', name: 'แฟลชการ์ด 2 ภาษา', icon: '🎴', slug: 'แฟลชการ์ด-2-ภาษา', hash20: 'PnqW4Aeq' },
-    { id: 'เกมฝึกสมอง', name: 'เกมฝึกสมองเด็ก', icon: '🧩', slug: 'เกมฝึกสมองเด็ก', hash20: '5OoPt7WM' },
-    { id: 'นิทานเด็ก AI', name: 'นิทานและแบบเรียน', icon: '📚', slug: 'นิทานและแบบเรียน', hash20: '8GlAVF2a' },
-    { id: 'สื่อครูตกแต่ง', name: 'สื่อครูตกแต่งห้องเรียน', icon: '🏫', slug: 'สื่อครูตกแต่งห้องเรียน', hash20: 'YOdpLxMm' }
+    { id: 'สมุดระบายสีเด็ก', name: 'สมุดระบายสีเด็ก', icon: '✏️', slug: 'สมุดระบายสีเด็ก', hash20: 'dBsZlYuk', hashFull: 'OzHsM2JS' },
+    { id: 'คณิตศาสตร์', name: 'ชีทคณิตศาสตร์', icon: '🔢', slug: 'ชีทคณิตศาสตร์', hash20: 'zqfZg0Sl', hashFull: 'zHYh8GjO' },
+    { id: 'แบบฝึกหัดคณิตศาสตร์', name: 'แบบฝึกหัดคณิตศาสตร์', icon: '📐', slug: 'แบบฝึกหัดคณิตศาสตร์', hash20: 'i2lr9oMH', hashFull: 'EOvEcClq' },
+    { id: 'พื้นฐานการบวกเลข', name: 'พื้นฐานการบวกเลข', icon: '➕', slug: 'พื้นฐานการบวกเลข', hash20: 'QbU76dyN', hashFull: 'ZuMZeatt' },
+    { id: 'ชีทฝึกเขียน', name: 'ชีทฝึกเขียนภาษา', icon: '✍️', slug: 'ชีทฝึกเขียนภาษา', hash20: 'T8iPRfNx', hashFull: 'YqqmyFk6' },
+    { id: 'แฟลชการ์ด', name: 'แฟลชการ์ด 2 ภาษา', icon: '🎴', slug: 'แฟลชการ์ด-2-ภาษา', hash20: 'PnqW4Aeq', hashFull: 'Jv5iFlfS' },
+    { id: 'เกมฝึกสมอง', name: 'เกมฝึกสมองเด็ก', icon: '🧩', slug: 'เกมฝึกสมองเด็ก', hash20: '5OoPt7WM', hashFull: 'VK3gf4Dk' },
+    { id: 'นิทานเด็ก AI', name: 'นิทานและแบบเรียน', icon: '📚', slug: 'นิทานและแบบเรียน', hash20: '8GlAVF2a', hashFull: '6a5gAlnP' },
+    { id: 'สื่อครูตกแต่ง', name: 'สื่อครูตกแต่งห้องเรียน', icon: '🏫', slug: 'สื่อครูตกแต่งห้องเรียน', hash20: 'YOdpLxMm', hashFull: 'wwb4l454' }
 ];
 
 // Mapping of custom 20-book page hash codes to category IDs and slugs
@@ -41,6 +41,19 @@ const HASH_20_MAP = {
     'YOdpLxMm': { id: 'สื่อครูตกแต่ง', slug: 'สื่อครูตกแต่งห้องเรียน' },
     'QbU76dyN': { id: 'พื้นฐานการบวกเลข', slug: 'พื้นฐานการบวกเลข' },
     'i2lr9oMH': { id: 'แบบฝึกหัดคณิตศาสตร์', slug: 'แบบฝึกหัดคณิตศาสตร์' }
+};
+
+// Mapping of custom Full package page hash codes to category IDs and slugs
+const HASH_FULL_MAP = {
+    'Jv5iFlfS': { id: 'แฟลชการ์ด', slug: 'แฟลชการ์ด-2-ภาษา' },
+    'OzHsM2JS': { id: 'สมุดระบายสีเด็ก', slug: 'สมุดระบายสีเด็ก' },
+    'zHYh8GjO': { id: 'คณิตศาสตร์', slug: 'ชีทคณิตศาสตร์' },
+    'YqqmyFk6': { id: 'ชีทฝึกเขียน', slug: 'ชีทฝึกเขียนภาษา' },
+    'VK3gf4Dk': { id: 'เกมฝึกสมอง', slug: 'เกมฝึกสมองเด็ก' },
+    '6a5gAlnP': { id: 'นิทานเด็ก AI', slug: 'นิทานและแบบเรียน' },
+    'wwb4l454': { id: 'สื่อครูตกแต่ง', slug: 'สื่อครูตกแต่งห้องเรียน' },
+    'ZuMZeatt': { id: 'พื้นฐานการบวกเลข', slug: 'พื้นฐานการบวกเลข' },
+    'EOvEcClq': { id: 'แบบฝึกหัดคณิตศาสตร์', slug: 'แบบฝึกหัดคณิตศาสตร์' }
 };
 
 // Set EJS as templating engine and set explicit views directory for Vercel Serverless
@@ -1158,7 +1171,7 @@ app.get('/category/:categorySlug', async (req, res) => {
     handleCategoryPage(req, res, req.params.categorySlug);
 });
 
-// Dynamic route for direct category links, custom 20-book hash pages, and -full pages
+// Dynamic route for direct category links, custom 20-book hash pages, custom full package hash pages
 app.get('/:slug', async (req, res, next) => {
     const slug = req.params.slug;
     let decoded = '';
@@ -1169,16 +1182,26 @@ app.get('/:slug', async (req, res, next) => {
     }
 
     // 1. Check custom 20-book page hashes (e.g. /แฟลชการ์ด-2-ภาษา-PnqW4Aeq)
-    const hashKey = Object.keys(HASH_20_MAP).find(h => decoded.endsWith(`-${h}`) || decoded === h);
-    if (hashKey) {
-        const catInfo = HASH_20_MAP[hashKey];
+    const hash20Key = Object.keys(HASH_20_MAP).find(h => decoded.endsWith(`-${h}`) || decoded === h);
+    if (hash20Key) {
+        const catInfo = HASH_20_MAP[hash20Key];
         const matchedHashCat = CATEGORIES.find(c => c.id === catInfo.id);
         if (matchedHashCat) {
             return handleCategoryFullPage(req, res, matchedHashCat, true);
         }
     }
 
-    // 2. Legacy -20 URLs -> Redirect 301 to new custom Hash URL
+    // 2. Check custom Full package page hashes (e.g. /แฟลชการ์ด-2-ภาษา-Jv5iFlfS)
+    const hashFullKey = Object.keys(HASH_FULL_MAP).find(h => decoded.endsWith(`-${h}`) || decoded === h);
+    if (hashFullKey) {
+        const catInfo = HASH_FULL_MAP[hashFullKey];
+        const matchedFullCat = CATEGORIES.find(c => c.id === catInfo.id);
+        if (matchedFullCat) {
+            return handleCategoryFullPage(req, res, matchedFullCat, false);
+        }
+    }
+
+    // 3. Legacy -20 URLs -> Redirect 301 to new custom 20-book Hash URL
     if (decoded.endsWith('-20')) {
         const baseSlug = decoded.slice(0, -3).trim();
         const matched20 = findCategoryBySlug(baseSlug);
@@ -1190,16 +1213,19 @@ app.get('/:slug', async (req, res, next) => {
         }
     }
 
-    // 3. -full pages (e.g. /สมุดระบายสีเด็ก-full)
+    // 4. Legacy -full URLs -> Redirect 301 to new custom Full package Hash URL
     if (decoded.endsWith('-full')) {
         const baseSlug = decoded.slice(0, -5).trim();
         const matchedFull = findCategoryBySlug(baseSlug);
-        if (matchedFull) {
+        if (matchedFull && matchedFull.hashFull) {
+            const targetUrl = '/' + encodeURIComponent(matchedFull.slug + '-' + matchedFull.hashFull);
+            return res.redirect(301, targetUrl);
+        } else if (matchedFull) {
             return handleCategoryFullPage(req, res, matchedFull, false);
         }
     }
 
-    // 4. Normal Category page
+    // 5. Normal Category page
     const matched = findCategoryBySlug(slug);
     if (matched) {
         return handleCategoryPage(req, res, slug);
