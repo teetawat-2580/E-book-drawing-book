@@ -923,12 +923,8 @@
                                         </span>
                                     </div>
                                     <% if (isFeaturedFree) { %>
-                                        <div class="book-price gold-price">
-                                            <span style="text-decoration: line-through; color: #94a3b8; font-size: 13px; font-weight: 500;">฿<%= parseFloat(book.price).toFixed(0) %></span>
-                                            <span style="color: #d97706; font-weight: 900; font-size: 16px; margin-left: 6px;">FREE (ฟรี)</span>
-                                        </div>
-                                    <% } else { %>
-                                        <div class="book-price">฿<%= parseFloat(book.price).toFixed(0) %>
+                                        <div class="book-price gold-price" style="margin-top: 4px;">
+                                            <span style="color: #d97706; font-weight: 900; font-size: 15px;">FREE (ฟรี)</span>
                                         </div>
                                     <% } %>
                                 </div>
@@ -1004,11 +1000,6 @@
 
                 <!-- Right Info & Download Column -->
                 <div class="preview-info-col">
-                    <div class="preview-price-tag">
-                        ฿<span id="prevPrice">159</span>
-                        <small id="prevOrigPriceContainer" style="display:none;">฿<span
-                                id="prevOrigPrice">199</span></small>
-                    </div>
 
                     <div class="preview-meta-row">ผู้จัดทำ: <strong id="prevAuthor">คลังสมอง</strong></div>
                     <div class="preview-meta-row">สำนักพิมพ์: <strong id="prevPublisher">คลังสมอง KLANGSAMONG</strong>
@@ -1088,13 +1079,17 @@
             document.getElementById('prevTitle').textContent = book.title;
             document.getElementById('prevCat').textContent = book.category || 'สมุดระบายสีเด็ก';
             document.getElementById('prevImg').src = book.cover_image_url || 'https://via.placeholder.com/300x400?text=No+Cover';
-            document.getElementById('prevPrice').textContent = parseFloat(book.price).toFixed(0);
+            if (document.getElementById('prevPrice')) {
+                document.getElementById('prevPrice').textContent = parseFloat(book.price).toFixed(0);
+            }
 
-            if (book.original_price && book.original_price > book.price) {
-                document.getElementById('prevOrigPrice').textContent = parseFloat(book.original_price).toFixed(0);
-                document.getElementById('prevOrigPriceContainer').style.display = 'inline';
-            } else {
-                document.getElementById('prevOrigPriceContainer').style.display = 'none';
+            if (document.getElementById('prevOrigPriceContainer')) {
+                if (book.original_price && book.original_price > book.price) {
+                    if (document.getElementById('prevOrigPrice')) document.getElementById('prevOrigPrice').textContent = parseFloat(book.original_price).toFixed(0);
+                    document.getElementById('prevOrigPriceContainer').style.display = 'inline';
+                } else {
+                    document.getElementById('prevOrigPriceContainer').style.display = 'none';
+                }
             }
 
             document.getElementById('prevAuthor').textContent = book.author_name || 'คลังสมอง';
