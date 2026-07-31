@@ -297,9 +297,22 @@ app.get('/', async (req, res) => {
             params.push(`%${searchQuery}%`, `%${searchQuery}%`);
         }
 
-        sql += ' ORDER BY id DESC';
+        if (selectedCategory !== 'all') {
+            sql += ' ORDER BY id ASC';
+        } else {
+            sql += ' ORDER BY id DESC';
+        }
 
         const [books] = await pool.query(sql, params);
+
+        if (selectedCategory !== 'all') {
+            books.sort((a, b) => {
+                const numA = extractBookNumber(a.title);
+                const numB = extractBookNumber(b.title);
+                if (numA !== numB) return numA - numB;
+                return a.id - b.id;
+            });
+        }
 
         res.render('index', { 
             books: books, 
@@ -1074,6 +1087,13 @@ function findCategoryBySlug(param) {
     });
 }
 
+// Helper to extract numeric book number from book title
+function extractBookNumber(title) {
+    if (!title) return 999999;
+    const match = title.match(/เล่ม(?:ที่)?\s*[:\s]*(\d+)/i) || title.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 999999;
+}
+
 // Category page handler function
 async function handleCategoryPage(req, res, slugParam) {
     try {
@@ -1095,9 +1115,17 @@ async function handleCategoryPage(req, res, slugParam) {
             params.push(searchParam, searchParam, searchParam, searchParam);
         }
 
-        query += ' ORDER BY id DESC';
+        query += ' ORDER BY id ASC';
 
         const [books] = await pool.query(query, params);
+
+        // Sort books in ascending order: Book 1 (เล่มที่ 1) first, up to Book 50
+        books.sort((a, b) => {
+            const numA = extractBookNumber(a.title);
+            const numB = extractBookNumber(b.title);
+            if (numA !== numB) return numA - numB;
+            return a.id - b.id;
+        });
 
         res.render('index', {
             books,
@@ -1129,6 +1157,14 @@ async function handleCategoryFullPage(req, res, matchedCat, isLimit20 = false) {
         query += ' ORDER BY id ASC';
 
         const [books] = await pool.query(query, params);
+
+        // Sort books in ascending order: Book 1 (เล่มที่ 1) first, up to Book 50
+        books.sort((a, b) => {
+            const numA = extractBookNumber(a.title);
+            const numB = extractBookNumber(b.title);
+            if (numA !== numB) return numA - numB;
+            return a.id - b.id;
+        });
 
         // Fetch category Google Drive folder URL if available
         let driveFolderUrl = '';
