@@ -19,16 +19,29 @@ app.use(session({
 // Educational Categories definition for คลังสมอง KLANGSAMONG
 const CATEGORIES = [
     { id: 'all', name: 'ทั้งหมด', icon: '🌐', slug: 'ทั้งหมด' },
-    { id: 'สมุดระบายสีเด็ก', name: 'สมุดระบายสีเด็ก', icon: '✏️', slug: 'สมุดระบายสีเด็ก' },
-    { id: 'คณิตศาสตร์', name: 'ชีทคณิตศาสตร์', icon: '🔢', slug: 'ชีทคณิตศาสตร์' },
-    { id: 'แบบฝึกหัดคณิตศาสตร์', name: 'แบบฝึกหัดคณิตศาสตร์', icon: '📐', slug: 'แบบฝึกหัดคณิตศาสตร์' },
-    { id: 'พื้นฐานการบวกเลข', name: 'พื้นฐานการบวกเลข', icon: '➕', slug: 'พื้นฐานการบวกเลข' },
-    { id: 'ชีทฝึกเขียน', name: 'ชีทฝึกเขียนภาษา', icon: '✍️', slug: 'ชีทฝึกเขียนภาษา' },
-    { id: 'แฟลชการ์ด', name: 'แฟลชการ์ด 2 ภาษา', icon: '🎴', slug: 'แฟลชการ์ด-2-ภาษา' },
-    { id: 'เกมฝึกสมอง', name: 'เกมฝึกสมองเด็ก', icon: '🧩', slug: 'เกมฝึกสมองเด็ก' },
-    { id: 'นิทานเด็ก AI', name: 'นิทานและแบบเรียน', icon: '📚', slug: 'นิทานและแบบเรียน' },
-    { id: 'สื่อครูตกแต่ง', name: 'สื่อครูตกแต่งห้องเรียน', icon: '🏫', slug: 'สื่อครูตกแต่งห้องเรียน' }
+    { id: 'สมุดระบายสีเด็ก', name: 'สมุดระบายสีเด็ก', icon: '✏️', slug: 'สมุดระบายสีเด็ก', hash20: 'dBsZlYuk' },
+    { id: 'คณิตศาสตร์', name: 'ชีทคณิตศาสตร์', icon: '🔢', slug: 'ชีทคณิตศาสตร์', hash20: 'zqfZg0Sl' },
+    { id: 'แบบฝึกหัดคณิตศาสตร์', name: 'แบบฝึกหัดคณิตศาสตร์', icon: '📐', slug: 'แบบฝึกหัดคณิตศาสตร์', hash20: 'i2lr9oMH' },
+    { id: 'พื้นฐานการบวกเลข', name: 'พื้นฐานการบวกเลข', icon: '➕', slug: 'พื้นฐานการบวกเลข', hash20: 'QbU76dyN' },
+    { id: 'ชีทฝึกเขียน', name: 'ชีทฝึกเขียนภาษา', icon: '✍️', slug: 'ชีทฝึกเขียนภาษา', hash20: 'T8iPRfNx' },
+    { id: 'แฟลชการ์ด', name: 'แฟลชการ์ด 2 ภาษา', icon: '🎴', slug: 'แฟลชการ์ด-2-ภาษา', hash20: 'PnqW4Aeq' },
+    { id: 'เกมฝึกสมอง', name: 'เกมฝึกสมองเด็ก', icon: '🧩', slug: 'เกมฝึกสมองเด็ก', hash20: '5OoPt7WM' },
+    { id: 'นิทานเด็ก AI', name: 'นิทานและแบบเรียน', icon: '📚', slug: 'นิทานและแบบเรียน', hash20: '8GlAVF2a' },
+    { id: 'สื่อครูตกแต่ง', name: 'สื่อครูตกแต่งห้องเรียน', icon: '🏫', slug: 'สื่อครูตกแต่งห้องเรียน', hash20: 'YOdpLxMm' }
 ];
+
+// Mapping of custom 20-book page hash codes to category IDs and slugs
+const HASH_20_MAP = {
+    'PnqW4Aeq': { id: 'แฟลชการ์ด', slug: 'แฟลชการ์ด-2-ภาษา' },
+    'dBsZlYuk': { id: 'สมุดระบายสีเด็ก', slug: 'สมุดระบายสีเด็ก' },
+    'zqfZg0Sl': { id: 'คณิตศาสตร์', slug: 'ชีทคณิตศาสตร์' },
+    'T8iPRfNx': { id: 'ชีทฝึกเขียน', slug: 'ชีทฝึกเขียนภาษา' },
+    '5OoPt7WM': { id: 'เกมฝึกสมอง', slug: 'เกมฝึกสมองเด็ก' },
+    '8GlAVF2a': { id: 'นิทานเด็ก AI', slug: 'นิทานและแบบเรียน' },
+    'YOdpLxMm': { id: 'สื่อครูตกแต่ง', slug: 'สื่อครูตกแต่งห้องเรียน' },
+    'QbU76dyN': { id: 'พื้นฐานการบวกเลข', slug: 'พื้นฐานการบวกเลข' },
+    'i2lr9oMH': { id: 'แบบฝึกหัดคณิตศาสตร์', slug: 'แบบฝึกหัดคณิตศาสตร์' }
+};
 
 // Set EJS as templating engine and set explicit views directory for Vercel Serverless
 app.set('views', path.join(__dirname, 'views'));
@@ -1145,7 +1158,7 @@ app.get('/category/:categorySlug', async (req, res) => {
     handleCategoryPage(req, res, req.params.categorySlug);
 });
 
-// Dynamic route for direct category links, -20 pages, and -full pages
+// Dynamic route for direct category links, custom 20-book hash pages, and -full pages
 app.get('/:slug', async (req, res, next) => {
     const slug = req.params.slug;
     let decoded = '';
@@ -1155,14 +1168,29 @@ app.get('/:slug', async (req, res, next) => {
         decoded = slug.trim();
     }
 
+    // 1. Check custom 20-book page hashes (e.g. /แฟลชการ์ด-2-ภาษา-PnqW4Aeq)
+    const hashKey = Object.keys(HASH_20_MAP).find(h => decoded.endsWith(`-${h}`) || decoded === h);
+    if (hashKey) {
+        const catInfo = HASH_20_MAP[hashKey];
+        const matchedHashCat = CATEGORIES.find(c => c.id === catInfo.id);
+        if (matchedHashCat) {
+            return handleCategoryFullPage(req, res, matchedHashCat, true);
+        }
+    }
+
+    // 2. Legacy -20 URLs -> Redirect 301 to new custom Hash URL
     if (decoded.endsWith('-20')) {
         const baseSlug = decoded.slice(0, -3).trim();
         const matched20 = findCategoryBySlug(baseSlug);
-        if (matched20) {
+        if (matched20 && matched20.hash20) {
+            const targetUrl = '/' + encodeURIComponent(matched20.slug + '-' + matched20.hash20);
+            return res.redirect(301, targetUrl);
+        } else if (matched20) {
             return handleCategoryFullPage(req, res, matched20, true);
         }
     }
 
+    // 3. -full pages (e.g. /สมุดระบายสีเด็ก-full)
     if (decoded.endsWith('-full')) {
         const baseSlug = decoded.slice(0, -5).trim();
         const matchedFull = findCategoryBySlug(baseSlug);
@@ -1171,6 +1199,7 @@ app.get('/:slug', async (req, res, next) => {
         }
     }
 
+    // 4. Normal Category page
     const matched = findCategoryBySlug(slug);
     if (matched) {
         return handleCategoryPage(req, res, slug);
