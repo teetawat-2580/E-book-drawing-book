@@ -8,13 +8,79 @@ const session = require('express-session');
 
 const app = express();
 
-// Session configuration
+// Disable x-powered-by header for stack hiding
+app.disable('x-powered-by');
+
+// Security HTTP Headers Middleware
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+});
+
+// Session configuration with security hardening
+const SESSION_SECRET = process.env.SESSION_SECRET || 'klangsamong-secure-session-key-9a8b7c6d5e4f3a2b';
 app.use(session({
-    secret: 'ebook-marketplace-secret-key-12345',
+    secret: SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 }
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000
+    }
 }));
+
+// In-memory sliding window rate limiter
+const rateLimitStore = new Map();
+function rateLimiter(maxRequests = 300, windowMs = 60 * 1000) {
+    return (req, res, next) => {
+        const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+        const now = Date.now();
+        const record = rateLimitStore.get(clientIp) || { count: 0, resetTime: now + windowMs };
+
+        if (now > record.resetTime) {
+            record.count = 1;
+            record.resetTime = now + windowMs;
+        } else {
+            record.count++;
+        }
+
+        rateLimitStore.set(clientIp, record);
+
+        if (rateLimitStore.size > 10000) {
+            for (const [ip, data] of rateLimitStore.entries()) {
+                if (now > data.resetTime) rateLimitStore.delete(ip);
+            }
+        }
+
+        if (record.count > maxRequests) {
+            return res.status(429).send('คำขอเกินจำนวนที่กำหนด กรุณาลองใหม่อีกครั้งในภายหลัง (Too many requests)');
+        }
+        next();
+    };
+}
+app.use(rateLimiter(300, 60 * 1000));
+
+// Helper for safe referer redirect
+function safeRedirectBack(req, res, fallback = '/') {
+    const referer = req.headers.referer || req.headers.referrer;
+    if (referer) {
+        try {
+            const host = req.headers.host;
+            const urlObj = new URL(referer, `http://${host}`);
+            if (urlObj.host === host) {
+                return res.redirect(urlObj.pathname + urlObj.search);
+            }
+        } catch (e) {
+            // Fallback on parse failure
+        }
+    }
+    return res.redirect(fallback);
+}
 
 // Educational Categories definition for คลังสมอง KLANGSAMONG
 const CATEGORIES = [
@@ -112,13 +178,41 @@ async function uploadToFirebaseStorage(reqFile, subFolder) {
     return publicUrl;
 }
 
-// Helper function to resolve file URL (Firebase Storage / Vercel Blob / Local Disk)
-async function resolveFileUrl(reqFile, subFolder) {
+// File upload security whitelists & dangerous extension blocking
+const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.epub']);
+const DANGEROUS_EXTENSIONS = new Set(['.php', '.exe', '.js', '.html', '.htm', '.sh', '.bat', '.cmd', '.py', '.svg', '.asp', '.aspx', '.jsp', '.cgi', '.pl']);
+
+function validateFileUpload(reqFile) {
+    if (!reqFile || !reqFile.originalname) return;
+    const ext = path.extname(reqFile.originalname).toLowerCase();
+    if (DANGEROUS_EXTENSIONS.has(ext)) {
+        throw new Error('ไม่อนุญาตให้อัปโหลดไฟล์ประเภทนี้เพื่อความปลอดภัย');
+    }
+    if (ext && !ALLOWED_EXTENSIONS.has(ext)) {
+        throw new Error('นามสกุลไฟล์ไม่ได้รับอนุญาต (อนุญาตเฉพาะ JPG, PNG, WEBP, GIF, PDF)');
+    }
+}
+
+function sanitizeFilename(originalName) {
+    if (!originalName) return 'file_' + Date.now();
+    const ext = path.extname(originalName).toLowerCase();
+    const nameWithoutExt = path.basename(originalName, ext);
+    const cleanBase = nameWithoutExt.replace(/[^a-zA-Z0-9_\-\u0E00-\u0E7F]/g, '_').substring(0, 80);
+    return `${cleanBase}_${Date.now()}${ext}`;
+}
+
+// Helper function to resolve file URL (Firebase Storage / Vercel Blob / Local Disk) with Path Traversal Shield
+async function resolveFileUrl(reqFile, subFolder = 'books') {
     if (!reqFile || !reqFile.buffer) return '';
     
+    // 0. Validate file extension & mime type against dangerous scripts
+    validateFileUpload(reqFile);
+    
+    const safeSubFolder = subFolder.replace(/[^a-zA-Z0-9_\-]/g, '');
+
     // 1. Primary: Upload directly to Firebase Storage Bucket (klangsamong-e1d13.firebasestorage.app)
     try {
-        const firebaseUrl = await uploadToFirebaseStorage(reqFile, subFolder);
+        const firebaseUrl = await uploadToFirebaseStorage(reqFile, safeSubFolder);
         if (firebaseUrl) return firebaseUrl;
     } catch (err) {
         console.error("Firebase Storage server upload notice:", err.message);
@@ -127,8 +221,8 @@ async function resolveFileUrl(reqFile, subFolder) {
     // 2. If Vercel Blob Token is set, upload file directly to Vercel Blob Storage
     if (process.env.BLOB_READ_WRITE_TOKEN && vercelBlob) {
         try {
-            const cleanName = reqFile.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const blob = await vercelBlob.put(`${subFolder}/${Date.now()}-${cleanName}`, reqFile.buffer, {
+            const cleanName = sanitizeFilename(reqFile.originalname);
+            const blob = await vercelBlob.put(`${safeSubFolder}/${cleanName}`, reqFile.buffer, {
                 access: 'public'
             });
             console.log(`Uploaded ${reqFile.originalname} to Vercel Blob: ${blob.url}`);
@@ -138,24 +232,36 @@ async function resolveFileUrl(reqFile, subFolder) {
         }
     }
 
-    // 3. If running locally, attempt to save buffer to local disk safely wrapped in try...catch
+    // 3. If running locally, attempt to save buffer to local disk safely with path traversal checks
     const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NOW_REGION);
     if (!isVercel) {
         try {
-            const uploadDir = path.join(__dirname, 'public/uploads', subFolder);
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
+            const baseUploadsDir = path.resolve(__dirname, 'public/uploads');
+            const targetUploadDir = path.resolve(baseUploadsDir, safeSubFolder);
+
+            if (!targetUploadDir.startsWith(baseUploadsDir)) {
+                throw new Error('Path traversal violation detected');
             }
-            const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(reqFile.originalname)}`;
-            const targetPath = path.join(uploadDir, filename);
+
+            if (!fs.existsSync(targetUploadDir)) {
+                fs.mkdirSync(targetUploadDir, { recursive: true });
+            }
+
+            const safeFilename = sanitizeFilename(reqFile.originalname);
+            const targetPath = path.resolve(targetUploadDir, safeFilename);
+
+            if (!targetPath.startsWith(targetUploadDir)) {
+                throw new Error('Path traversal violation detected');
+            }
+
             fs.writeFileSync(targetPath, reqFile.buffer);
-            return `/uploads/${subFolder}/${filename}`;
+            return `/uploads/${safeSubFolder}/${safeFilename}`;
         } catch (err) {
             console.error("Local disk save notice:", err.message);
         }
     }
 
-    throw new Error('ไม่สามารถอัปโหลดไฟล์ไปยัง Firebase Storage ได้ กรุณาตรวจสอบการตั้งค่า Firebase');
+    throw new Error('ไม่สามารถอัปโหลดไฟล์ได้ กรุณาตรวจสอบการตั้งค่าพื้นที่จัดเก็บข้อมูล');
 }
 
 // MySQL Database Connection Pool - Supporting process.env.DATABASE_URL (Aiven MySQL) & Local MySQL
@@ -227,10 +333,11 @@ async function initDb() {
         ];
 
         for (const col of extraColumns) {
-            const [cols] = await connection.query(`SHOW COLUMNS FROM books LIKE '${col.name}'`);
+            const [cols] = await connection.query('SHOW COLUMNS FROM books LIKE ?', [col.name]);
             if (cols.length === 0) {
-                await connection.query(`ALTER TABLE books ADD COLUMN ${col.name} ${col.type}`);
-                console.log(`Added '${col.name}' column to 'books' table.`);
+                const safeColName = col.name.replace(/[^a-zA-Z0-9_]/g, '');
+                await connection.query(`ALTER TABLE books ADD COLUMN \`${safeColName}\` ${col.type}`);
+                console.log(`Added '${safeColName}' column to 'books' table.`);
             }
         }
 
@@ -323,8 +430,8 @@ app.get('/', async (req, res) => {
             isHomepage: !searchQuery && selectedCategory === 'all'
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Database connection error: ' + err.message);
+        console.error('Homepage route error:', err);
+        res.status(500).send('เกิดข้อผิดพลาดในการโหลดข้อมูลหน้าแรก');
     }
 });
 
@@ -340,7 +447,7 @@ app.post('/login', (req, res) => {
             name: account.name,
             role: account.role
         };
-        return res.redirect('back');
+        return safeRedirectBack(req, res);
     } else {
         return res.redirect('/?loginError=1');
     }
@@ -370,8 +477,8 @@ app.get('/book/:id', requireAdmin, async (req, res) => {
 
         res.render('book-detail', { book: books[0] });
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Database error: ' + err.message);
+        console.error('Book detail route error:', err);
+        res.status(500).send('เกิดข้อผิดพลาดในการโหลดรายละเอียดหนังสือ');
     }
 });
 
@@ -399,8 +506,8 @@ app.get('/admin/manage', requireAdmin, async (req, res) => {
 
         res.render('admin-manage', { books, categorySettingsList });
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Database error: ' + err.message);
+        console.error('Admin manage route error:', err);
+        res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้ารายการหนังสือ');
     }
 });
 
@@ -425,7 +532,7 @@ app.post('/admin/update-category-drive', requireAdmin, async (req, res) => {
         return res.json({ success: true, message: 'อัปเดตลิงก์ Google Drive สำเร็จเรียบร้อย' });
     } catch (err) {
         console.error('Update category drive error:', err);
-        return res.status(500).json({ success: false, message: err.message });
+        return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการอัปเดตลิงก์' });
     }
 });
 
@@ -478,7 +585,7 @@ app.post('/api/upload-chunk', requireAdmin, async (req, res) => {
         return res.json({ success: true, progress: Math.round((session.count / totalChunks) * 100) });
     } catch (err) {
         console.error('Chunk upload error:', err);
-        return res.status(500).json({ success: false, message: err.message });
+        return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์' });
     }
 });
 
@@ -547,11 +654,11 @@ app.post('/admin/upload-direct', requireAdmin, async (req, res) => {
         }
         res.redirect('/admin/manage');
     } catch (err) {
-        console.error(err);
+        console.error('Upload direct error:', err);
         if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json')) {
-            return res.status(500).json({ success: false, message: err.message });
+            return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการบันทึกหนังสือ' });
         }
-        res.status(500).send('Error adding book: ' + err.message);
+        res.status(500).send('เกิดข้อผิดพลาดในการบันทึกหนังสือ');
     }
 });
 
@@ -603,11 +710,11 @@ app.post(['/admin/edit-book-direct/:id', '/admin/edit-book/:id'], requireAdmin, 
         }
         res.redirect('/admin/manage');
     } catch (err) {
-        console.error(err);
+        console.error('Edit book direct error:', err);
         if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json')) {
-            return res.status(500).json({ success: false, message: err.message });
+            return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการแก้ไขหนังสือ' });
         }
-        res.status(500).send('Error updating book: ' + err.message);
+        res.status(500).send('เกิดข้อผิดพลาดในการแก้ไขหนังสือ');
     }
 });
 
@@ -653,8 +760,8 @@ app.post('/admin/upload', requireAdmin, upload.fields([
 
         res.redirect('/admin/manage');
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Error uploading book: ' + err.message);
+        console.error('Admin upload route error:', err);
+        res.status(500).send('เกิดข้อผิดพลาดในการอัปโหลดหนังสือ');
     }
 });
 
@@ -668,8 +775,8 @@ app.get('/admin/batch', requireAdmin, async (req, res) => {
             errorMessage: req.query.error || null 
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Database error: ' + err.message);
+        console.error('Admin batch route error:', err);
+        res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้า Batch');
     }
 });
 
@@ -714,8 +821,8 @@ app.post('/admin/batch-json', requireAdmin, async (req, res) => {
         await pool.query(query, [values]);
         res.redirect('/admin/batch?success=' + encodeURIComponent(`นำเข้าหนังสือสำเร็จทั้งหมด ${booksData.length} รายการ`));
     } catch (err) {
-        console.error(err);
-        res.redirect('/admin/batch?error=' + encodeURIComponent('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + err.message));
+        console.error('Batch JSON import error:', err);
+        res.redirect('/admin/batch?error=' + encodeURIComponent('เกิดข้อผิดพลาดในการบันทึกข้อมูลแบบ Batch'));
     }
 });
 
@@ -815,8 +922,8 @@ app.post('/admin/batch-sql', requireAdmin, async (req, res) => {
         await pool.query(sqlQuery);
         res.redirect('/admin/batch?success=' + encodeURIComponent('รันคำสั่ง SQL สำหรับ Batch Import สำเร็จแล้ว!'));
     } catch (err) {
-        console.error(err);
-        res.redirect('/admin/batch?error=' + encodeURIComponent('SQL Error: ' + err.message));
+        console.error('Batch SQL execution error:', err);
+        res.redirect('/admin/batch?error=' + encodeURIComponent('เกิดข้อผิดพลาดในการประมวลผลคำสั่ง SQL'));
     }
 });
 
@@ -829,9 +936,9 @@ app.get('/admin/export-sql', async (req, res) => {
             if (val === null || val === undefined || val === '') return 'NULL';
             const str = String(val);
             if (str.startsWith('data:')) return 'NULL';
-            return `'${str.replace(/'/g, "''")}'`;
+            return mysql.escape(str);
         };
-        const num = (val) => (val === null || val === undefined || val === '' || isNaN(val)) ? 'NULL' : val;
+        const num = (val) => (val === null || val === undefined || val === '' || isNaN(val)) ? 'NULL' : Number(val);
 
         const now = new Date();
         const dateStr = now.toISOString().slice(0, 10);
@@ -859,7 +966,7 @@ app.get('/admin/export-sql', async (req, res) => {
         return res.send(fullSql);
     } catch (err) {
         console.error('Export SQL error:', err);
-        res.status(500).send('Export SQL Error: ' + err.message);
+        res.status(500).send('เกิดข้อผิดพลาดในการส่งออกข้อมูล SQL');
     }
 });
 
@@ -945,11 +1052,11 @@ app.post('/admin/batch-update', requireAdmin, async (req, res) => {
 
         res.redirect('/admin/batch?success=' + encodeURIComponent(`บันทึก Batch Edit สำเร็จ! (อัปเดต ${updatedCount} รายการ, เพิ่มใหม่ ${insertedCount} รายการ)`));
     } catch (err) {
-        console.error(err);
+        console.error('Batch update interactive error:', err);
         if (req.headers['content-type']?.includes('application/json')) {
-            return res.status(500).json({ success: false, message: err.message });
+            return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการบันทึก Batch Edit' });
         }
-        res.redirect('/admin/batch?error=' + encodeURIComponent('เกิดข้อผิดพลาดในการบันทึก Batch Edit: ' + err.message));
+        res.redirect('/admin/batch?error=' + encodeURIComponent('เกิดข้อผิดพลาดในการบันทึก Batch Edit'));
     }
 });
 
@@ -963,8 +1070,8 @@ app.post('/api/upload-file', requireAdmin, upload.single('file'), async (req, re
         const fileUrl = await resolveFileUrl(req.file, subFolder);
         res.json({ success: true, file_url: fileUrl, originalname: req.file.originalname });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Upload error: ' + err.message });
+        console.error('Upload file AJAX error:', err);
+        res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์' });
     }
 });
 
@@ -1025,8 +1132,8 @@ app.post('/admin/edit-book/:id', requireAdmin, upload.fields([
 
         res.redirect('/admin/manage');
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Error updating book: ' + err.message);
+        console.error('Edit book error:', err);
+        res.status(500).send('เกิดข้อผิดพลาดในการแก้ไขข้อมูลหนังสือ');
     }
 });
 
@@ -1035,16 +1142,23 @@ app.post('/admin/delete-book/:id', requireAdmin, async (req, res) => {
     try {
         const bookId = req.params.id;
 
-        // Fetch book files to remove from disk
+        // Fetch book files to remove from disk safely with path traversal check
         const [books] = await pool.query('SELECT cover_image_url, file_path, sample_file_path FROM books WHERE id = ?', [bookId]);
         if (books.length > 0) {
             const book = books[0];
             const filesToDelete = [book.cover_image_url, book.file_path, book.sample_file_path];
+            const publicDir = path.resolve(__dirname, 'public');
+
             filesToDelete.forEach(filePath => {
-                if (filePath) {
-                    const fullPath = path.join(__dirname, 'public', filePath);
-                    if (fs.existsSync(fullPath)) {
-                        fs.unlinkSync(fullPath);
+                if (filePath && typeof filePath === 'string' && !filePath.startsWith('http') && !filePath.startsWith('data:')) {
+                    const cleanRelPath = path.normalize(filePath).replace(/^(\.\.[\/\\])+/, '');
+                    const fullPath = path.resolve(publicDir, cleanRelPath.replace(/^\//, ''));
+                    if (fullPath.startsWith(publicDir) && fs.existsSync(fullPath)) {
+                        try {
+                            fs.unlinkSync(fullPath);
+                        } catch (e) {
+                            console.error('File deletion notice:', e.message);
+                        }
                     }
                 }
             });
@@ -1053,10 +1167,10 @@ app.post('/admin/delete-book/:id', requireAdmin, async (req, res) => {
         // Delete from database
         await pool.query('DELETE FROM books WHERE id = ?', [bookId]);
 
-        res.redirect('back');
+        safeRedirectBack(req, res);
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Error deleting book: ' + err.message);
+        console.error('Delete book error:', err);
+        res.status(500).send('เกิดข้อผิดพลาดในการลบหนังสือ');
     }
 });
 
@@ -1136,8 +1250,8 @@ async function handleCategoryPage(req, res, slugParam) {
             isHomepage: false
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Database error: ' + err.message);
+        console.error('Handle category page error:', err);
+        res.status(500).send('เกิดข้อผิดพลาดในการโหลดหมวดหมู่หนังสือ');
     }
 }
 
@@ -1186,8 +1300,8 @@ async function handleCategoryFullPage(req, res, matchedCat, isLimit20 = false) {
             isLimit20: !!isLimit20
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Database error: ' + err.message);
+        console.error('Handle category full page error:', err);
+        res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้าดาวน์โหลดหนังสือ');
     }
 }
 
