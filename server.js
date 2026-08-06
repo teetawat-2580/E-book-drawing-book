@@ -444,7 +444,7 @@ app.get('/', async (req, res) => {
         });
     } catch (err) {
         console.error('Homepage route error:', err);
-        res.status(500).send('เกิดข้อผิดพลาดในการโหลดข้อมูลหน้าแรก');
+        res.status(500).send(`Error loading homepage: ${err.message}`);
     }
 });
 
@@ -559,13 +559,25 @@ app.post('/api/track-click', async (req, res) => {
         return res.json({ success: true });
     } catch (err) {
         console.error('Track click API error:', err);
-        return res.status(500).json({ error: 'Failed to record click' });
+        return res.status(500).json({ error: `Error tracking click: ${err.message}` });
     }
 });
 
 // Admin Route: Analytics & Time-Period Click Tracker Dashboard
 app.get('/admin/analytics', requireAdmin, async (req, res) => {
     try {
+        // Ensure table exists on serverless cold starts
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS click_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                button_name VARCHAR(100) NOT NULL,
+                book_id INT NULL,
+                book_title VARCHAR(255) NULL,
+                category_name VARCHAR(255) NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         const period = req.query.period || '7days'; // 'today', '7days', '30days', 'all'
         
         let dateFilter = '';
@@ -612,17 +624,17 @@ app.get('/admin/analytics', requireAdmin, async (req, res) => {
 
         res.render('admin-analytics', {
             period,
-            totalClicks: totalClicks[0].count,
-            totalDownloads: totalDownloads[0].count,
-            totalSamples: totalSamples[0].count,
-            totalDriveAll: totalDriveAll[0].count,
-            topBooks,
-            buttonBreakdown,
-            recentLogs
+            totalClicks: (totalClicks && totalClicks[0] && totalClicks[0].count) || 0,
+            totalDownloads: (totalDownloads && totalDownloads[0] && totalDownloads[0].count) || 0,
+            totalSamples: (totalSamples && totalSamples[0] && totalSamples[0].count) || 0,
+            totalDriveAll: (totalDriveAll && totalDriveAll[0] && totalDriveAll[0].count) || 0,
+            topBooks: topBooks || [],
+            buttonBreakdown: buttonBreakdown || [],
+            recentLogs: recentLogs || []
         });
     } catch (err) {
         console.error('Analytics page error:', err);
-        res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้าสถิติการใช้งาน');
+        res.status(500).send(`Error loading analytics page: ${err.message}`);
     }
 });
 
@@ -669,7 +681,7 @@ app.get('/book/:id', requireAdmin, async (req, res) => {
         res.render('book-detail', { book: books[0] });
     } catch (err) {
         console.error('Book detail route error:', err);
-        res.status(500).send('เกิดข้อผิดพลาดในการโหลดรายละเอียดหนังสือ');
+        res.status(500).send(`Error loading book detail: ${err.message}`);
     }
 });
 
@@ -698,7 +710,7 @@ app.get('/admin/manage', requireAdmin, async (req, res) => {
         res.render('admin-manage', { books, categorySettingsList });
     } catch (err) {
         console.error('Admin manage route error:', err);
-        res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้ารายการหนังสือ');
+        res.status(500).send(`Error loading admin manage page: ${err.message}`);
     }
 });
 
@@ -720,10 +732,10 @@ app.post('/admin/update-category-drive', requireAdmin, async (req, res) => {
         `;
         await pool.query(query, [category_slug, catName, drive_folder_url || '']);
 
-        return res.json({ success: true, message: 'อัปเดตลิงก์ Google Drive สำเร็จเรียบร้อย' });
+        return res.json({ success: true, message: 'Updated category Google Drive link successfully' });
     } catch (err) {
         console.error('Update category drive error:', err);
-        return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการอัปเดตลิงก์' });
+        return res.status(500).json({ success: false, message: `Error updating category drive link: ${err.message}` });
     }
 });
 
@@ -1157,7 +1169,7 @@ app.get('/admin/export-sql', async (req, res) => {
         return res.send(fullSql);
     } catch (err) {
         console.error('Export SQL error:', err);
-        res.status(500).send('เกิดข้อผิดพลาดในการส่งออกข้อมูล SQL');
+        res.status(500).send(`Error exporting SQL: ${err.message}`);
     }
 });
 
