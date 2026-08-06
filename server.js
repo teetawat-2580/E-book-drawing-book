@@ -369,6 +369,18 @@ async function initDb() {
                 [cat.id, cat.name]
             );
         }
+
+        // Create click_logs table for time-based analytics tracking
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS click_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                button_name VARCHAR(100) NOT NULL,
+                book_id INT NULL,
+                book_title VARCHAR(255) NULL,
+                category_name VARCHAR(255) NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
     } catch (err) {
         console.error("Database initialization error:", err.message);
     }
@@ -452,6 +464,17 @@ app.get('/download/:id', async (req, res) => {
         // Increment download counter atomically in DB
         await pool.query('UPDATE books SET downloads_count = COALESCE(downloads_count, 0) + 1 WHERE id = ?', [bookId]);
 
+        // Log click event into click_logs table for time-based analytics
+        try {
+            const btnName = downloadType === 'sample' ? 'download_sample' : 'download_full';
+            await pool.query(
+                'INSERT INTO click_logs (button_name, book_id, book_title, category_name) VALUES (?, ?, ?, ?)',
+                [btnName, book.id, book.title, book.category || '']
+            );
+        } catch (logErr) {
+            console.error('Log click error:', logErr);
+        }
+
         let targetUrl = '';
         if (downloadType === 'sample' && book.sample_file_path && book.sample_file_path.trim() !== '#' && book.sample_file_path.trim() !== '') {
             targetUrl = book.sample_file_path.trim();
@@ -517,6 +540,89 @@ app.get('/download/:id', async (req, res) => {
     } catch (err) {
         console.error('Download tracker error:', err);
         return res.redirect('/');
+    }
+});
+
+// Client-side Button Click Logging API Route
+app.post('/api/track-click', async (req, res) => {
+    try {
+        const { button_name, book_id, book_title, category_name } = req.body;
+        if (!button_name) {
+            return res.status(400).json({ error: 'Missing button_name' });
+        }
+
+        await pool.query(
+            'INSERT INTO click_logs (button_name, book_id, book_title, category_name) VALUES (?, ?, ?, ?)',
+            [button_name, book_id || null, book_title || null, category_name || null]
+        );
+
+        return res.json({ success: true });
+    } catch (err) {
+        console.error('Track click API error:', err);
+        return res.status(500).json({ error: 'Failed to record click' });
+    }
+});
+
+// Admin Route: Analytics & Time-Period Click Tracker Dashboard
+app.get('/admin/analytics', requireAdmin, async (req, res) => {
+    try {
+        const period = req.query.period || '7days'; // 'today', '7days', '30days', 'all'
+        
+        let dateFilter = '';
+        if (period === 'today') {
+            dateFilter = 'WHERE created_at >= CURDATE()';
+        } else if (period === '7days') {
+            dateFilter = 'WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+        } else if (period === '30days') {
+            dateFilter = 'WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
+        }
+
+        // Summary Statistics
+        const [totalClicks] = await pool.query(`SELECT COUNT(*) as count FROM click_logs ${dateFilter}`);
+        const [totalDownloads] = await pool.query(`SELECT COUNT(*) as count FROM click_logs ${dateFilter ? dateFilter + ' AND' : 'WHERE'} button_name = 'download_full'`);
+        const [totalSamples] = await pool.query(`SELECT COUNT(*) as count FROM click_logs ${dateFilter ? dateFilter + ' AND' : 'WHERE'} button_name = 'download_sample'`);
+        const [totalDriveAll] = await pool.query(`SELECT COUNT(*) as count FROM click_logs ${dateFilter ? dateFilter + ' AND' : 'WHERE'} button_name = 'category_drive_all'`);
+
+        // Top Downloaded Books in Selected Period
+        const [topBooks] = await pool.query(`
+            SELECT book_id, book_title, category_name, COUNT(*) as click_count 
+            FROM click_logs 
+            ${dateFilter ? dateFilter + ' AND' : 'WHERE'} book_title IS NOT NULL AND book_title != ''
+            GROUP BY book_id, book_title, category_name 
+            ORDER BY click_count DESC 
+            LIMIT 10
+        `);
+
+        // Click Breakdown by Button Type
+        const [buttonBreakdown] = await pool.query(`
+            SELECT button_name, COUNT(*) as click_count 
+            FROM click_logs 
+            ${dateFilter} 
+            GROUP BY button_name 
+            ORDER BY click_count DESC
+        `);
+
+        // Recent Click Logs List (Last 50 entries)
+        const [recentLogs] = await pool.query(`
+            SELECT * FROM click_logs 
+            ${dateFilter} 
+            ORDER BY created_at DESC 
+            LIMIT 50
+        `);
+
+        res.render('admin-analytics', {
+            period,
+            totalClicks: totalClicks[0].count,
+            totalDownloads: totalDownloads[0].count,
+            totalSamples: totalSamples[0].count,
+            totalDriveAll: totalDriveAll[0].count,
+            topBooks,
+            buttonBreakdown,
+            recentLogs
+        });
+    } catch (err) {
+        console.error('Analytics page error:', err);
+        res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้าสถิติการใช้งาน');
     }
 });
 

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สถิติการใช้งานและจำนวนการกดปุ่ม | คลังสมอง KLANGSAMONG</title>
+    <!-- Google Fonts: Prompt & Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-navy: #1E3A8A;
+            --sky-blue: #38BDF8;
+            --fresh-green: #22C55E;
+            --green-hover: #16a34a;
+            --sun-yellow: #FACC15;
+            --bg-light: #F8FAFC;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: 'Prompt', 'Kanit', sans-serif; background-color: var(--bg-light); margin: 0; padding: 0; color: var(--text-dark); }
+        header { background-color: var(--primary-navy); color: white; padding: 14px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2); }
+        .header-title { font-size: 19px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .header-actions { display: flex; gap: 10px; }
+        .btn-header { background: rgba(255,255,255,0.15); color: white; padding: 7px 15px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.3); transition: background 0.2s; }
+        .btn-header:hover { background: rgba(255,255,255,0.3); }
+
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--primary-navy); margin: 0; border-left: 5px solid var(--sky-blue); padding-left: 12px; }
+
+        /* Period Selector Pills */
+        .period-selector { display: flex; background: white; padding: 4px; border-radius: 12px; border: 1px solid #cbd5e1; gap: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .period-pill { padding: 8px 18px; border-radius: 8px; text-decoration: none; font-size: 13.5px; font-weight: 700; color: var(--text-muted); transition: all 0.2s; }
+        .period-pill.active { background: var(--primary-navy); color: white; box-shadow: 0 2px 8px rgba(30, 58, 138, 0.25); }
+        .period-pill:hover:not(.active) { background: #f1f5f9; color: var(--primary-navy); }
+
+        /* Summary Cards Grid */
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 30px; }
+        @media (max-width: 900px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .summary-grid { grid-template-columns: 1fr; } }
+
+        .card-stat { background: white; border-radius: 14px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+        .card-stat-icon { font-size: 28px; margin-bottom: 10px; }
+        .card-stat-val { font-size: 32px; font-weight: 800; color: var(--primary-navy); line-height: 1; margin-bottom: 6px; }
+        .card-stat-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+        .card-stat-badge { position: absolute; top: 18px; right: 18px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; background: #e0f2fe; color: #0369a1; }
+
+        /* Layout Columns */
+        .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px; }
+        @media (max-width: 850px) { .analytics-grid { grid-template-columns: 1fr; } }
+
+        .panel-box { background: white; border-radius: 14px; border: 1px solid #e2e8f0; padding: 22px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .panel-title { font-size: 17px; font-weight: 700; color: var(--primary-navy); margin: 0 0 18px 0; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+
+        /* Top Books Progress Bar Rows */
+        .top-item-row { margin-bottom: 14px; }
+        .top-item-row:last-child { margin-bottom: 0; }
+        .top-item-header { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 700; margin-bottom: 4px; }
+        .top-item-name { color: var(--text-dark); max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .top-item-count { color: var(--fresh-green); }
+        .progress-bg { background: #f1f5f9; border-radius: 8px; height: 10px; overflow: hidden; width: 100%; }
+        .progress-bar { background: linear-gradient(90deg, #38BDF8 0%, #22C55E 100%); height: 100%; border-radius: 8px; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        th { background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; padding: 12px 14px; color: var(--primary-navy); font-weight: 700; }
+        td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        tr:hover { background-color: #f8fafc; }
+
+        .btn-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; }
+        .badge-download_full { background: #dcfce7; color: #15803d; }
+        .badge-download_sample { background: #e0f2fe; color: #0369a1; }
+        .badge-category_drive_all { background: #fef08a; color: #854d0e; }
+        .badge-search_click { background: #f3e8ff; color: #6b21a8; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <span>📊</span>
+            <span>สถิติการใช้งานและสถิติการกดปุ่ม (Click Analytics)</span>
+        </div>
+        <div class="header-actions">
+            <a href="/admin/manage" class="btn-header">⚙️ ระบบจัดการสื่อ</a>
+            <a href="/" class="btn-header">← หน้าหลัก</a>
+            <a href="/logout" class="btn-header">ออกจากระบบ</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- Top Title Bar & Time Period Selector -->
+        <div class="top-bar">
+            <div>
+                <h1 class="page-title">รายงานจำนวนคนกดปุ่มแยกตามช่วงเวลา</h1>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-muted);">
+                    แสดงข้อมูลการกดดาวน์โหลดและดูตัวอย่างสื่อย้อนหลังแบบเรียลไทม์
+                </p>
+            </div>
+
+            <div class="period-selector">
+                <a href="/admin/analytics?period=today" class="period-pill <%= period === 'today' ? 'active' : '' %>">วันนี้</a>
+                <a href="/admin/analytics?period=7days" class="period-pill <%= period === '7days' ? 'active' : '' %>">7 วันล่าสุด</a>
+                <a href="/admin/analytics?period=30days" class="period-pill <%= period === '30days' ? 'active' : '' %>">30 วันล่าสุด</a>
+                <a href="/admin/analytics?period=all" class="period-pill <%= period === 'all' ? 'active' : '' %>">ทั้งหมด (All)</a>
+            </div>
+        </div>
+
+        <!-- 4 Stat Metric Cards -->
+        <div class="summary-grid">
+            <div class="card-stat">
+                <span class="card-stat-badge">รวมทุกปุ่ม</span>
+                <div class="card-stat-icon">🖱️</div>
+                <div class="card-stat-val"><%= totalClicks.toLocaleString() %></div>
+                <div class="card-stat-label">การคลิกทั้งหมด (Total Clicks)</div>
+            </div>
+
+            <div class="card-stat">
+                <span class="card-stat-badge" style="background:#dcfce7; color:#15803d;">ฉบับเต็ม</span>
+                <div class="card-stat-icon">📥</div>
+                <div class="card-stat-val" style="color:var(--fresh-green);"><%= totalDownloads.toLocaleString() %></div>
+                <div class="card-stat-label">ดาวน์โหลดไฟล์เต็ม (Full PDF)</div>
+            </div>
+
+            <div class="card-stat">
+                <span class="card-stat-badge" style="background:#e0f2fe; color:#0369a1;">ทดลองอ่าน</span>
+                <div class="card-stat-icon">👁️</div>
+                <div class="card-stat-val" style="color:#0284c7;"><%= totalSamples.toLocaleString() %></div>
+                <div class="card-stat-label">เปิดอ่านตัวอย่าง (Sample Read)</div>
+            </div>
+
+            <div class="card-stat">
+                <span class="card-stat-badge" style="background:#fef08a; color:#854d0e;">Google Drive</span>
+                <div class="card-stat-icon">📁</div>
+                <div class="card-stat-val" style="color:#ca8a04;"><%= totalDriveAll.toLocaleString() %></div>
+                <div class="card-stat-label">โหลดทั้งหมดทีเดียว (Drive All)</div>
+            </div>
+        </div>
+
+        <!-- 2 Columns: Top Downloaded Books & Breakdown by Button Type -->
+        <div class="analytics-grid">
+            
+            <!-- Panel 1: Top 10 Most Downloaded Books -->
+            <div class="panel-box">
+                <h3 class="panel-title">
+                    <span>🔥 10 อันดับสื่อที่ถูกดาวน์โหลดสูงสุด</span>
+                </h3>
+
+                <% if (topBooks && topBooks.length > 0) { %>
+                    <% const maxCount = topBooks[0].click_count || 1; %>
+                    <% topBooks.forEach((b, idx) => { %>
+                        <% const barWidth = Math.round((b.click_count / maxCount) * 100) + '%'; %>
+                        <div class="top-item-row">
+                            <div class="top-item-header">
+                                <span class="top-item-name">
+                                    <strong>#<%= idx + 1 %></strong> <%= b.book_title %>
+                                </span>
+                                <span class="top-item-count">📥 <%= b.click_count.toLocaleString() %> ครั้ง</span>
+                            </div>
+                            <div class="progress-bg">
+                                <div class="progress-bar" style="width: <%= barWidth %>;"></div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div style="text-align:center; padding:30px; color:#94a3b8;">
+                        <p>📭 ยังไม่มีข้อมูลการดาวน์โหลดในช่วงเวลานี้</p>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Panel 2: Breakdown by Button Type -->
+            <div class="panel-box">
+                <h3 class="panel-title">
+                    <span>📌 สัดส่วนการคลิกแยกตามประเภทปุ่ม</span>
+                </h3>
+
+                <% if (buttonBreakdown && buttonBreakdown.length > 0) { %>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ประเภทปุ่ม (Action Type)</th>
+                                <th style="text-align:right;">จำนวนการคลิก</th>
+                                <th style="text-align:right;">สัดส่วน</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% buttonBreakdown.forEach(row => { %>
+                                <% const pctVal = totalClicks > 0 ? ((row.click_count / totalClicks) * 100).toFixed(1) + '%' : '0%'; %>
+                                <tr>
+                                    <td>
+                                        <% if (row.button_name === 'download_full') { %>
+                                            <span class="btn-badge badge-download_full">📥 ดาวน์โหลดฉบับเต็ม</span>
+                                        <% } else if (row.button_name === 'download_sample') { %>
+                                            <span class="btn-badge badge-download_sample">👁️ ทดลองอ่านตัวอย่าง</span>
+                                        <% } else if (row.button_name === 'category_drive_all') { %>
+                                            <span class="btn-badge badge-category_drive_all">📁 โหลดรวมผ่าน Google Drive</span>
+                                        <% } else { %>
+                                            <span class="btn-badge badge-search_click">🔍 <%= row.button_name %></span>
+                                        <% } %>
+                                    </td>
+                                    <td style="text-align:right; font-weight:700;"><%= row.click_count.toLocaleString() %> ครั้ง</td>
+                                    <td style="text-align:right; font-weight:700; color:var(--sky-blue);"><%= pctVal %></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                <% } else { %>
+                    <div style="text-align:center; padding:30px; color:#94a3b8;">
+                        <p>📭 ยังไม่มีข้อมูลสัดส่วนในช่วงเวลานี้</p>
+                    </div>
+                <% } %>
+            </div>
+
+        </div>
+
+        <!-- Panel 3: Recent Activity Stream Table -->
+        <div class="panel-box" style="margin-bottom: 40px;">
+            <h3 class="panel-title">
+                <span>🕒 รายการบันทึกการกดปุ่มล่าสุด (Recent Activity Stream - 50 ล่าสุด)</span>
+            </h3>
+
+            <% if (recentLogs && recentLogs.length > 0) { %>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:160px;">วัน-เวลา</th>
+                                <th>การกระทำ (Action)</th>
+                                <th>ชื่อสื่อการเรียนรู้</th>
+                                <th>หมวดหมู่</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% recentLogs.forEach(log => { %>
+                                <% 
+                                    const d = new Date(log.created_at);
+                                    const dateStr = d.toLocaleDateString('th-TH') + ' ' + d.toLocaleTimeString('th-TH');
+                                %>
+                                <tr>
+                                    <td style="color:#64748b; font-size:12px;"><%= dateStr %></td>
+                                    <td>
+                                        <% if (log.button_name === 'download_full') { %>
+                                            <span class="btn-badge badge-download_full">📥 ดาวน์โหลดเต็ม</span>
+                                        <% } else if (log.button_name === 'download_sample') { %>
+                                            <span class="btn-badge badge-download_sample">👁️ ทดลองอ่าน</span>
+                                        <% } else if (log.button_name === 'category_drive_all') { %>
+                                            <span class="btn-badge badge-category_drive_all">📁 โหลดรวม Drive</span>
+                                        <% } else { %>
+                                            <span class="btn-badge badge-search_click">🔍 <%= log.button_name %></span>
+                                        <% } %>
+                                    </td>
+                                    <td style="font-weight:600; color:var(--primary-navy);">
+                                        <%= log.book_title || '-' %>
+                                    </td>
+                                    <td style="color:#64748b;"><%= log.category_name || '-' %></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div style="text-align:center; padding:30px; color:#94a3b8;">
+                    <p>📭 ยังไม่มีประวัติการกดปุ่มในช่วงเวลานี้</p>
+                </div>
+            <% } %>
+        </div>
+
+    </div>
+
+</body>
+</html>
