@@ -220,7 +220,7 @@
                                     <span>ปลดล็อคเมื่อซื้อชุดเต็ม 50 เล่ม</span>
                                 </button>
                             <% } else { %>
-                                <a href="<%= downloadUrl %>" class="btn-download-item" target="_blank" rel="noopener noreferrer">
+                                <a href="/download/<%= book.id %>?type=full" class="btn-download-item" target="_blank" rel="noopener noreferrer">
                                     <span><%= isGDrive ? '☁️' : '⬇️' %></span>
                                     <span><%= isGDrive ? 'โหลดผ่าน Google Drive' : 'โหลด' %></span>
                                 </a>

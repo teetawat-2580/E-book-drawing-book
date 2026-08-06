@@ -173,7 +173,7 @@
                 <!-- Action Buttons Row -->
                 <div class="action-buttons">
                     <% if (book.sample_file_path) { %>
-                        <a href="<%= book.sample_file_path %>" target="_blank" class="btn-sample">
+                        <a href="/download/<%= book.id %>?type=sample" target="_blank" class="btn-sample">
                             👁️ ทดลองอ่าน
                         </a>
                     <% } else { %>
@@ -184,7 +184,7 @@
 
                     <% if (currentUser) { %>
                         <% if (book.file_path) { %>
-                            <a href="<%= book.file_path %>" download class="btn-buy-download">
+                            <a href="/download/<%= book.id %>?type=full" target="_blank" class="btn-buy-download">
                                 📥 ดาวน์โหลด PDF (฿<%= parseFloat(book.price).toFixed(0) %>)
                             </a>
                         <% } else { %>
@@ -201,6 +201,10 @@
 
                 <!-- Metadata Table -->
                 <table class="meta-table">
+                    <tr>
+                        <td class="td-label">ยอดดาวน์โหลด:</td>
+                        <td class="td-val" style="color: #16a34a;">📥 <%= book.downloads_count || 0 %> ครั้ง</td>
+                    </tr>
                     <tr>
                         <td class="td-label">ประเภทไฟล์:</td>
                         <td class="td-val"><%= book.file_type || 'PDF' %></td>

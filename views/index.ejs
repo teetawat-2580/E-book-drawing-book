@@ -930,7 +930,7 @@
                                 </div>
                                 <div class="card-actions">
                                     <% if (isFeaturedFree) { %>
-                                        <a href="<%= book.file_path || book.sample_file_path || '#' %>" target="_blank" class="btn-free-download-gold" onclick="event.stopPropagation();">
+                                        <a href="/download/<%= book.id %>?type=full" target="_blank" class="btn-free-download-gold" onclick="event.stopPropagation();">
                                             🎁 ดาวน์โหลดฟรี (Free Download)
                                         </a>
                                         <button class="btn-preview-modal" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; margin-top: 4px;" onclick="openPreviewModalFromEl(this)">📖 ดูรายละเอียด / ตัวอย่าง</button>

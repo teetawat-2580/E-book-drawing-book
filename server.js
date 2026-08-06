@@ -329,7 +329,8 @@ async function initDb() {
             { name: 'file_type', type: "VARCHAR(100) DEFAULT 'pdf'" },
             { name: 'pages_count', type: "VARCHAR(100) DEFAULT ''" },
             { name: 'original_price', type: "DECIMAL(10, 2) DEFAULT NULL" },
-            { name: 'badge', type: "VARCHAR(100) DEFAULT ''" }
+            { name: 'badge', type: "VARCHAR(100) DEFAULT ''" },
+            { name: 'downloads_count', type: "INT DEFAULT 0" }
         ];
 
         for (const col of extraColumns) {
@@ -432,6 +433,40 @@ app.get('/', async (req, res) => {
     } catch (err) {
         console.error('Homepage route error:', err);
         res.status(500).send('เกิดข้อผิดพลาดในการโหลดข้อมูลหน้าแรก');
+    }
+});
+
+// Download Tracker & File Redirect Endpoint (Method 1)
+app.get('/download/:id', async (req, res) => {
+    try {
+        const bookId = req.params.id;
+        const downloadType = req.query.type || 'full'; // 'full' or 'sample'
+
+        const [books] = await pool.query('SELECT file_path, sample_file_path, cover_image_url FROM books WHERE id = ?', [bookId]);
+        if (books.length === 0) {
+            return res.redirect('/');
+        }
+
+        const book = books[0];
+
+        // Increment download counter atomically in DB
+        await pool.query('UPDATE books SET downloads_count = COALESCE(downloads_count, 0) + 1 WHERE id = ?', [bookId]);
+
+        let targetUrl = '';
+        if (downloadType === 'sample' && book.sample_file_path) {
+            targetUrl = book.sample_file_path;
+        } else {
+            targetUrl = book.file_path || book.sample_file_path || book.cover_image_url;
+        }
+
+        if (!targetUrl) {
+            return res.redirect('/');
+        }
+
+        return res.redirect(302, targetUrl);
+    } catch (err) {
+        console.error('Download tracker error:', err);
+        return res.redirect('/');
     }
 });
 

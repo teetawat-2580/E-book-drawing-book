@@ -155,6 +155,7 @@
                             <th>ชื่อสื่อ / รายละเอียด</th>
                             <th>หมวดหมู่</th>
                             <th style="width: 100px;">ราคา</th>
+                            <th style="width: 110px; text-align: center;">ยอดดาวน์โหลด</th>
                             <th style="width: 140px;">ไฟล์ PDF & ตัวอย่าง</th>
                             <th style="width: 180px; text-align: center;">การจัดการ</th>
                         </tr>
@@ -191,15 +192,20 @@
                                         <div style="font-size: 11px; color: #94a3b8; text-decoration: line-through;">฿<%= parseFloat(book.original_price).toFixed(0) %></div>
                                     <% } %>
                                 </td>
+                                <td style="text-align: center;">
+                                    <span style="background: #f0fdf4; color: #16a34a; font-weight: 700; font-size: 12.5px; padding: 4px 10px; border-radius: 12px; border: 1px solid #bbf7d0; display: inline-block;">
+                                        📥 <%= book.downloads_count || 0 %> ครั้ง
+                                    </span>
+                                </td>
                                 <td>
                                     <% if (book.file_path) { %>
-                                        <a href="<%= book.file_path %>" download class="btn-pdf">📖 PDF ฉบับเต็ม</a><br>
+                                        <a href="/download/<%= book.id %>?type=full" target="_blank" class="btn-pdf">📖 PDF ฉบับเต็ม</a><br>
                                     <% } else { %>
                                         <span style="color: #cbd5e1; font-size: 12px;">❌ ไม่มี PDF</span><br>
                                     <% } %>
 
                                     <% if (book.sample_file_path) { %>
-                                        <a href="<%= book.sample_file_path %>" target="_blank" class="btn-pdf" style="color: var(--fresh-green);">👁️ ตัวอย่างอ่าน</a>
+                                        <a href="/download/<%= book.id %>?type=sample" target="_blank" class="btn-pdf" style="color: var(--fresh-green);">👁️ ตัวอย่างอ่าน</a>
                                     <% } else { %>
                                         <span style="color: #cbd5e1; font-size: 12px;">❌ ไม่มีตัวอย่าง</span>
                                     <% } %>
