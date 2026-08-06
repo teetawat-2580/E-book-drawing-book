@@ -442,7 +442,7 @@ app.get('/download/:id', async (req, res) => {
         const bookId = req.params.id;
         const downloadType = req.query.type || 'full'; // 'full' or 'sample'
 
-        const [books] = await pool.query('SELECT file_path, sample_file_path, cover_image_url FROM books WHERE id = ?', [bookId]);
+        const [books] = await pool.query('SELECT id, title, file_path, sample_file_path, cover_image_url, category FROM books WHERE id = ?', [bookId]);
         if (books.length === 0) {
             return res.redirect('/');
         }
@@ -453,14 +453,64 @@ app.get('/download/:id', async (req, res) => {
         await pool.query('UPDATE books SET downloads_count = COALESCE(downloads_count, 0) + 1 WHERE id = ?', [bookId]);
 
         let targetUrl = '';
-        if (downloadType === 'sample' && book.sample_file_path) {
-            targetUrl = book.sample_file_path;
-        } else {
-            targetUrl = book.file_path || book.sample_file_path || book.cover_image_url;
+        if (downloadType === 'sample' && book.sample_file_path && book.sample_file_path.trim() !== '#' && book.sample_file_path.trim() !== '') {
+            targetUrl = book.sample_file_path.trim();
+        } else if (book.file_path && book.file_path.trim() !== '#' && book.file_path.trim() !== '') {
+            targetUrl = book.file_path.trim();
+        } else if (book.sample_file_path && book.sample_file_path.trim() !== '#' && book.sample_file_path.trim() !== '') {
+            targetUrl = book.sample_file_path.trim();
         }
 
+        // Clean up targetUrl
+        if (targetUrl === '#' || targetUrl === 'null' || targetUrl === 'undefined') {
+            targetUrl = '';
+        }
+
+        // If no direct book file URL exists, check category_settings for Google Drive folder link
+        if (!targetUrl && book.category) {
+            try {
+                const [catSettings] = await pool.query('SELECT drive_folder_url FROM category_settings WHERE category_name = ? OR category_slug = ?', [book.category, book.category]);
+                if (catSettings.length > 0 && catSettings[0].drive_folder_url) {
+                    const driveUrl = catSettings[0].drive_folder_url.trim();
+                    if (driveUrl && driveUrl !== '#' && driveUrl !== 'null') {
+                        targetUrl = driveUrl;
+                    }
+                }
+            } catch (catErr) {
+                console.error('Category settings lookup error:', catErr);
+            }
+        }
+
+        // If STILL no valid target URL exists, display a clear, helpful page instead of redirecting back to homepage
         if (!targetUrl) {
-            return res.redirect('/');
+            return res.status(200).send(`
+                <!DOCTYPE html>
+                <html lang="th">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>กำลังจัดเตรียมไฟล์ดาวน์โหลด | คลังสมอง KLANGSAMONG</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        body { font-family: 'Prompt', sans-serif; background: #f8fafc; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+                        .card { background: white; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; max-width: 480px; width: 100%; border: 1px solid #e2e8f0; }
+                        .icon { font-size: 54px; margin-bottom: 15px; }
+                        h2 { font-size: 20px; color: #1e3a8a; margin: 0 0 10px 0; }
+                        p { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 25px; }
+                        .btn { display: inline-block; background: #22c55e; color: white; padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 700; font-size: 14.5px; transition: background 0.2s; }
+                        .btn:hover { background: #16a34a; }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <div class="icon">📦</div>
+                        <h2>ไฟล์ "${book.title || 'สื่อการเรียนรู้'}" อยู่ระหว่างจัดเตรียม</h2>
+                        <p>ไฟล์สำหรับดาวน์โหลดรายการนี้กำลังอยู่ระหว่างดำเนินการอัปโหลดข้อมูล ท่านสามารถเลือกหมวดหมู่อื่น หรือติดต่อผู้ดูแลระบบได้ครับ</p>
+                        <a href="/" class="btn">← กลับไปยังหน้าหลัก</a>
+                    </div>
+                </body>
+                </html>
+            `);
         }
 
         return res.redirect(302, targetUrl);
